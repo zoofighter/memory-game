@@ -35,3 +35,4 @@
 11. **전략적 방향성 및 추가 검토서**: [docs/2026-09-10_strategic_direction_and_additions.md](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-10_strategic_direction_and_additions.md)
 12. **기업 전략 통합 방안**: [docs/2026-09-10_company_strategy_integration.md](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-10_company_strategy_integration.md)
 13. **전략적 상상력 시나리오**: [docs/2026-09-10_strategic_imagination_scenarios.md](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-10_strategic_imagination_scenarios.md)
+14. **Phase별 구현 설계도**: [docs/2026-09-10_phase_blueprint.md](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-10_phase_blueprint.md)
