@@ -36,12 +36,21 @@ def generate_report():
     # ── 1. DB 현황 요약 ──
     lines.append('## 1. DB 현황 요약')
     lines.append('')
-    tables = ['entities', 'contracts', 'financials', 'milestones', 'fab_capacity', 'entity_strategy']
-    lines.append('| 테이블 | 행 수 |')
-    lines.append('| :--- | :---: |')
+    tables = ['entities', 'contracts', 'financials', 'earnings_reports', 'milestones', 'fab_capacity', 'entity_strategy']
+    lines.append('| 테이블 | 행 수 | 설명 |')
+    lines.append('| :--- | :---: | :--- |')
+    table_desc = {
+        'entities': '21개 AI/반도체 핵심 기업 마스터',
+        'contracts': '기업 간 공급·투자·파트너십 계약',
+        'financials': '시계열 재무 지표 및 거시 Capex',
+        'earnings_reports': '분기별 실적발표 (매출/영업익/순익/EPS/가이던스/비중)',
+        'milestones': '공장 가동, 제품 출시 등 마일스톤',
+        'fab_capacity': '파운드리/메모리 Fab Capa 및 공정',
+        'entity_strategy': '기업별 전략 및 AI 로드맵'
+    }
     for t in tables:
         cnt = conn.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0]
-        lines.append(f'| `{t}` | {cnt} |')
+        lines.append(f'| `{t}` | {cnt} | {table_desc.get(t, "-")} |')
     lines.append('')
     lines.append('---')
     lines.append('')
@@ -58,118 +67,115 @@ def generate_report():
     layer_map = {
         'L1_AI_LAB': 'AI 프론티어 랩',
         'L2_HYPERSCALER': '하이퍼스케일러',
-        'L3_COMPUTE': '컴퓨팅·가속기',
-        'L4_FOUNDRY': '파운드리·장비',
-        'L5_MEMORY': '메모리·스토리지',
-        'L6_OPTICAL': '광통신',
-        'L7_INFRA': '인프라·특수',
+        'L3_DESIGN': '칩셋 설계/가속기',
+        'L4_FOUNDRY': '파운드리',
+        'L5_EQUIPMENT': '반도체 장비',
+        'L6_MEMORY': '메모리 반도체',
+        'L7_SYSTEM': '서버/인프라'
     }
     for r in rows:
-        layer_ko = layer_map.get(r['layer'], r['layer'])
-        ticker = r['ticker'] or '-'
-        lines.append(f"| {layer_ko} | **{r['name_ko']}** | `{r['entity_id']}` | {r['country']} | {ticker} |")
+        layer_name = layer_map.get(r['layer'], r['layer'])
+        ticker = r['ticker'] if r['ticker'] else '-'
+        lines.append(f"| {layer_name} | **{r['name_ko']}** | `{r['entity_id']}` | {r['country']} | {ticker} |")
     lines.append('')
     lines.append('---')
     lines.append('')
 
-    # ── 3. 핵심 계약 ──
-    lines.append('## 3. 핵심 계약 (금액순)')
+    # ── 3. 분기별 실적 발표 및 AI 전후 비교 (신규) ──
+    lines.append('## 3. 분기별 실적 발표 (어닝콜 데이터 & AI 전후 비교)')
     lines.append('')
-    lines.append('| # | 구매자 | 판매자 | 유형 | 금액($B) | 대상 | 발표 시점 | 설명 |')
-    lines.append('| :---: | :--- | :--- | :--- | :---: | :--- | :--- | :--- |')
-    rows = conn.execute('SELECT * FROM v_contract_summary').fetchall()
-    for i, r in enumerate(rows, 1):
-        val = f"${r['value_b']:.1f}" if r['value_b'] else '-'
-        prod = r['product_type'] or '-'
-        lines.append(f"| {i} | {r['buyer']} | {r['seller']} | {r['contract_type']} | {val} | {prod} | {r['announced_date']} | {r['description']} |")
+    lines.append('> **2019-Q4 (AI 붐 이전)**과 **2024-Q4 (생성형 AI 슈퍼사이클)**의 실적 및 마진 변화 비교')
+    lines.append('')
+    lines.append('| 기업 | 분기 | 발표일 | 매출 | 영업이익 | 실제 EPS | Gross Margin | 실적 판정 |')
+    lines.append('| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |')
+    
+    earnings = conn.execute('''
+        SELECT 
+            e.name_ko, r.period, r.report_date, r.revenue, r.op_income, r.unit,
+            r.eps_actual, r.gross_margin_pct, r.beat_miss_status, r.revenue_breakdown, r.guidance_next_q
+        FROM earnings_reports r
+        JOIN entities e ON r.entity_id = e.entity_id
+        ORDER BY e.layer, e.entity_id, r.period ASC
+    ''').fetchall()
+
+    for er in earnings:
+        eps_str = f"${er['eps_actual']:.2f}" if er['eps_actual'] is not None else '-'
+        gm_str = f"{er['gross_margin_pct']:.1f}%" if er['gross_margin_pct'] is not None else '-'
+        status = er['beat_miss_status'] if er['beat_miss_status'] else '-'
+        rep_date = er['report_date'] if er['report_date'] else '-'
+        lines.append(f"| **{er['name_ko']}** | {er['period']} | {rep_date} | {er['revenue']} {er['unit']} | {er['op_income']} {er['unit']} | {eps_str} | {gm_str} | {status} |")
+    
+    lines.append('')
+    lines.append('### 3-1. 주요 기업 사업부문별 매출 비중 및 차기 가이던스')
+    lines.append('')
+    for er in earnings:
+        if er['revenue_breakdown'] or er['guidance_next_q']:
+            lines.append(f"#### 📌 {er['name_ko']} ({er['period']})")
+            if er['revenue_breakdown']:
+                lines.append(f"- **매출 비중**: {er['revenue_breakdown']}")
+            if er['guidance_next_q']:
+                lines.append(f"- **차기 가이던스**: {er['guidance_next_q']}")
+            lines.append('')
+
+    lines.append('---')
+    lines.append('')
+
+    # ── 4. 핵심 계약 목록 ──
+    lines.append('## 4. 핵심 계약 및 파트너십 (10건)')
+    lines.append('')
+    lines.append('| # | 구매자/투자자 | 공급자/대상 | 계약 유형 | 규모 | 제품군 | 발표 시점 | 내용 |')
+    lines.append('| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :--- |')
+    contracts = conn.execute('''
+        SELECT * FROM v_contract_summary ORDER BY value_b DESC NULLS LAST
+    ''').fetchall()
+    for i, c in enumerate(contracts, 1):
+        val = f"${c['value_b']:.1f}" if c['value_b'] else '-'
+        date = c['announced_date'] if c['announced_date'] else '-'
+        desc = c['description'] if c['description'] else '-'
+        lines.append(f"| {i} | {c['buyer']} | {c['seller']} | {c['contract_type']} | {val} | {c['product_type']} | {date} | {desc} |")
     lines.append('')
     lines.append('---')
     lines.append('')
 
-    # ── 4. 하이퍼스케일러 Capex 추이 ──
-    lines.append('## 4. 하이퍼스케일러 Capex 추이 ($B)')
+    # ── 5. 하이퍼스케일러 Capex 추이 ──
+    lines.append('## 5. 하이퍼스케일러 Capex 추이 ($B)')
     lines.append('')
     lines.append('| 기업 | 2024 | 2025 | 2026 | YoY (25→26) |')
     lines.append('| :--- | :---: | :---: | :---: | :---: |')
 
-    capex_companies = ['GOOGLE', 'AMAZON', 'MICROSOFT', 'META', 'ORACLE']
-    for eid in capex_companies:
-        name = conn.execute('SELECT name_ko FROM entities WHERE entity_id=?', (eid,)).fetchone()['name_ko']
-        vals = {}
-        for period in ['2024-FY', '2025-FY', '2026-FY']:
-            row = conn.execute(
-                'SELECT value FROM financials WHERE entity_id=? AND period=? AND metric=?',
-                (eid, period, 'CAPEX')
-            ).fetchone()
-            vals[period] = row['value'] if row else None
+    capex_rows = conn.execute('''
+        SELECT
+            e.name_ko,
+            e.entity_id,
+            MAX(CASE WHEN f.period = '2024-FY' THEN f.value END) AS c2024,
+            MAX(CASE WHEN f.period = '2025-FY' THEN f.value END) AS c2025,
+            MAX(CASE WHEN f.period = '2026-FY' THEN f.value END) AS c2026
+        FROM financials f
+        JOIN entities e ON f.entity_id = e.entity_id
+        WHERE f.metric = 'CAPEX'
+        GROUP BY e.entity_id
+        ORDER BY c2026 DESC NULLS LAST
+    ''').fetchall()
 
-        v24 = f"${vals['2024-FY']:.1f}" if vals['2024-FY'] else '-'
-        v25 = f"${vals['2025-FY']:.1f}" if vals['2025-FY'] else '-'
-        v26 = f"${vals['2026-FY']:.1f}" if vals['2026-FY'] else '-'
+    c24_total = 0
+    c25_total = 0
+    c26_total = 0
 
-        if vals['2025-FY'] and vals['2026-FY']:
-            yoy = ((vals['2026-FY'] - vals['2025-FY']) / vals['2025-FY']) * 100
-            yoy_str = f"+{yoy:.0f}%" if yoy > 0 else f"{yoy:.0f}%"
-        else:
-            yoy_str = '-'
+    for r in capex_rows:
+        v24 = f"${r['c2024']:.1f}" if r['c2024'] else '-'
+        v25 = f"${r['c2025']:.1f}" if r['c2025'] else '-'
+        v26 = f"${r['c2026']:.1f}" if r['c2026'] else '-'
+        yoy = ''
+        if r['c2025'] and r['c2026']:
+            pct = ((r['c2026'] - r['c2025']) / r['c2025']) * 100
+            yoy = f"+{pct:.0f}%" if pct > 0 else f"{pct:.0f}%"
+        lines.append(f"| **{r['name_ko']}** | {v24} | {v25} | {v26} | {yoy} |")
+        if r['c2024']: c24_total += r['c2024']
+        if r['c2025']: c25_total += r['c2025']
+        if r['c2026']: c26_total += r['c2026']
 
-        lines.append(f"| **{name}** | {v24} | {v25} | {v26} | {yoy_str} |")
-
-    # 합계
-    totals = {}
-    for period in ['2024-FY', '2025-FY', '2026-FY']:
-        row = conn.execute('''
-            SELECT SUM(value) as total FROM financials
-            WHERE entity_id IN ('GOOGLE','AMAZON','MICROSOFT','META','ORACLE')
-            AND period=? AND metric='CAPEX'
-        ''', (period,)).fetchone()
-        totals[period] = row['total'] if row['total'] else 0
-
-    t24 = f"**${totals['2024-FY']:.1f}**" if totals['2024-FY'] else '-'
-    t25 = f"**${totals['2025-FY']:.1f}**" if totals['2025-FY'] else '-'
-    t26 = f"**${totals['2026-FY']:.1f}**" if totals['2026-FY'] else '-'
-    if totals['2025-FY'] and totals['2026-FY']:
-        tyoy = ((totals['2026-FY'] - totals['2025-FY']) / totals['2025-FY']) * 100
-        tyoy_str = f"+{tyoy:.0f}%" if tyoy > 0 else f"{tyoy:.0f}%"
-    else:
-        tyoy_str = '-'
-    lines.append(f"| **합계** | {t24} | {t25} | {t26} | {tyoy_str} |")
-
-    lines.append('')
-    lines.append('---')
-    lines.append('')
-
-    # ── 5. 핵심 기업 매출 추이 ──
-    lines.append('## 5. 핵심 기업 매출 추이 ($B)')
-    lines.append('')
-    lines.append('| 기업 | 계층 | 2024 | 2025 | 2026(E) | YoY |')
-    lines.append('| :--- | :--- | :---: | :---: | :---: | :---: |')
-
-    rev_companies = ['NVIDIA', 'TSMC', 'SAMSUNG', 'SK_HYNIX', 'BROADCOM']
-    for eid in rev_companies:
-        row = conn.execute('SELECT name_ko, layer FROM entities WHERE entity_id=?', (eid,)).fetchone()
-        name = row['name_ko']
-        layer = layer_map.get(row['layer'], row['layer'])
-        vals = {}
-        for period in ['2024-FY', '2025-FY', '2026-FY']:
-            r = conn.execute(
-                'SELECT value FROM financials WHERE entity_id=? AND period=? AND metric=?',
-                (eid, period, 'REVENUE')
-            ).fetchone()
-            vals[period] = r['value'] if r else None
-
-        v24 = f"${vals['2024-FY']:.0f}" if vals['2024-FY'] else '-'
-        v25 = f"${vals['2025-FY']:.0f}" if vals['2025-FY'] else '-'
-        v26 = f"${vals['2026-FY']:.0f}" if vals['2026-FY'] else '-'
-
-        if vals['2025-FY'] and vals['2026-FY']:
-            yoy = ((vals['2026-FY'] - vals['2025-FY']) / vals['2025-FY']) * 100
-            yoy_str = f"+{yoy:.0f}%" if yoy > 0 else f"{yoy:.0f}%"
-        else:
-            yoy_str = '-'
-
-        lines.append(f"| **{name}** | {layer} | {v24} | {v25} | {v26} | {yoy_str} |")
-
+    total_yoy = f"+{((c26_total - c25_total) / c25_total) * 100:.0f}%"
+    lines.append(f"| **합계** | **${c24_total:.1f}** | **${c25_total:.1f}** | **${c26_total:.1f}** | **{total_yoy}** |")
     lines.append('')
     lines.append('---')
     lines.append('')
@@ -185,7 +191,6 @@ def generate_report():
     lines.append('     └──→ 앤트로픽 / 오픈AI (AI 모델)')
     lines.append('')
 
-    # GPU/ASIC 계약 합계
     gpu_total = conn.execute('''
         SELECT SUM(value_b) FROM contracts WHERE product_type IN ('GPU', 'ASIC') AND value_b IS NOT NULL
     ''').fetchone()[0] or 0
@@ -212,13 +217,11 @@ def generate_report():
 
     conn.close()
 
-    # 파일 출력
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
 
     print(f'✅ 보고서 생성 완료: {OUTPUT_PATH}')
-    print(f'   기업: {len([r for r in rows])}개사')
 
 
 if __name__ == '__main__':
