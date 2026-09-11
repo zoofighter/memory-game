@@ -116,6 +116,7 @@ python3 scripts/export_report.py
 - [에이전트 운영 지침 (AGENTS.md)](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/AGENTS.md)
 - [시스템 요건정의서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/requirements_spec.md)
 - [데이터베이스 구조 설계서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/db_architecture.md)
+- [Fab 생산 캐파 및 마일스톤 심층 분석 보고서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_fab_capacity_and_milestones_report.md)
 - [데이터 소스 신뢰도 및 검증 가이드](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_data_source_reliability.md)
 - [분석용 쿼리 모음집](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_db_query_guide.md)
 - [종합 리포트 요약본](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_report_summary.md)
