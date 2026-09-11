@@ -1,5 +1,5 @@
 # Memory Claude 데이터 보고서
-**자동 생성**: 2026-09-11 12:36  
+**자동 생성**: 2026-09-11 16:11  
 **DB 경로**: `data/memory_claude.db`
 
 ---
@@ -12,8 +12,8 @@
 | `contracts` | 10 | 기업 간 공급·투자·파트너십 계약 |
 | `financials` | 33 | 시계열 재무 지표 및 거시 Capex |
 | `earnings_reports` | 208 | 분기별 실적발표 (매출/영업익/순익/EPS/가이던스/비중) |
-| `milestones` | 0 | 공장 가동, 제품 출시 등 마일스톤 |
-| `fab_capacity` | 0 | 파운드리/메모리 Fab Capa 및 공정 |
+| `milestones` | 21 | 공장 가동, 제품 출시 등 마일스톤 |
+| `fab_capacity` | 11 | 파운드리/메모리 Fab Capa 및 공정 |
 | `entity_strategy` | 0 | 기업별 전략 및 AI 로드맵 |
 
 ---
@@ -933,6 +933,52 @@
   HBM 공급 계약 합계: $32B
   AI 랩 투자 합계:    $225B
 ```
+
+---
+
+## 7. 주요 반도체 Fab 생산 캐파 및 증설 현황
+
+| 기업 | 팹 / 공장명 | 공정 노드 | 유형 | 현재 캐파 | 목표 캐파 | 완공 시점 | 상태 |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **TSMC** | TSMC CoWoS Advanced Packaging (Tonglu/Chiayi) | CoWoS-S / CoWoS-L | PACKAGING | 75,000 | 120,000 | 2026-Q4 | OPERATING |
+| **TSMC** | Fab 18 (P6/P7/P8) | 3nm (N3/N3E/N3P) | FAB | 60,000 | 85,000 | 2026-Q2 | OPERATING |
+| **TSMC** | Fab 20 (P1~P4) | 2nm (N2 / A16) | FAB | 15,000 | 65,000 | 2026-Q4 | RAMP_UP |
+| **TSMC** | Kumamoto Fab 23 (JASM Phase 1/2) | 12nm / 6nm | FAB | 25,000 | 45,000 | 2027-Q1 | OPERATING |
+| **TSMC** | Arizona Fab 21 (Phase 1) | 4nm (N4/N4P) | FAB | 8,000 | 25,000 | 2027-Q2 | RAMP_UP |
+| **삼성전자** | 평택 P3 라인 | 1b nm DRAM / V-NAND / Foundry 4nm | FAB | 70,000 | 90,000 | 2025-Q3 | OPERATING |
+| **SK하이닉스** | 용인 반도체 클러스터 1기 | 1c nm DRAM / HBM4 | FAB | - | 85,000 | 2027-Q3 | CONSTRUCTION |
+| **삼성전자** | 평택 P4 라인 | 1c nm DRAM / HBM4 / 2nm Foundry | FAB | 20,000 | 80,000 | 2026-Q4 | RAMP_UP |
+| **SK하이닉스** | 이천 M16 팹 | 1b nm (10nm급 5세대) DRAM | FAB | 55,000 | 75,000 | 2025-Q4 | OPERATING |
+| **SK하이닉스** | 청주 M15X 팹 | HBM 패키징 및 차세대 DRAM | PACKAGING | 15,000 | 50,000 | 2026-Q3 | CONSTRUCTION |
+| **삼성전자** | 미국 테일러 파운드리 팹 | 4nm / 2nm 파운드리 | FAB | - | 30,000 | 2026-Q4 | CONSTRUCTION |
+
+---
+
+## 8. 핵심 기술 및 공급망 마일스톤 타임라인
+
+| 일자 | 관련 기업 | 구분 | 상태 | 영향도 | 내용 |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| 2022-11-30 | **오픈AI** | PRODUCT_LAUNCH | 확정사건 | `CRITICAL` | ChatGPT 대중에 공식 공개 — 글로벌 생성형 AI 및 초거대 GPU 인프라 투자 사이클 촉발. |
+| 2023-03-21 | **엔비디아** | PRODUCT_LAUNCH | 확정사건 | `CRITICAL` | Hopper H100 가속기 대량 납품 개시 — 데이터센터 매출 수직 상승 및 공급 부족 심화. |
+| 2023-06-15 | **SK하이닉스** | PARTNERSHIP | 확정사건 | `HIGH` | 엔비디아 H100향 HBM3 독점 공급권 확보 — AI 고대역폭 메모리 주도권 장악. |
+| 2023-09-25 | **아마존** | PARTNERSHIP | 확정사건 | `HIGH` | 앤트로픽에 최대 $4B 투자 발표 및 AWS 전용 AI 가속기(Trainium/Inferentia) 파트너십 체결. |
+| 2024-03-18 | **엔비디아** | PRODUCT_LAUNCH | 확정사건 | `CRITICAL` | GTC 2024에서 차세대 블랙웰(Blackwell B200 / GB200 NVL72) 아키텍처 공식 발표. |
+| 2024-03-19 | **SK하이닉스** | PRODUCT_LAUNCH | 확정사건 | `HIGH` | 세계 최초 8단 HBM3E 양산 개시 및 엔비디아 블랙웰 공급망 납품 착수. |
+| 2024-06-02 | **엔비디아** | PRODUCT_LAUNCH | 확정사건 | `HIGH` | 컴퓨텍스(Computex)에서 '1년 주기 신제품 로드맵' 및 2026 루빈(Rubin) 아키텍처 예고. |
+| 2024-09-26 | **SK하이닉스** | PRODUCT_LAUNCH | 확정사건 | `HIGH` | 세계 최초 12단 HBM3E(48GB) 양산 돌입 — Blackwell Ultra 및 대용량 LLM 추론 타깃. |
+| 2024-11-22 | **아마존** | PARTNERSHIP | 확정사건 | `HIGH` | 앤트로픽에 $4B 추가 투자 (누적 $8B) 및 Project Rainier(초대형 Trainium2 클러스터) 가동 합의. |
+| 2025-01-15 | **TSMC** | FAB_MILESTONE | 확정사건 | `HIGH` | 대만 자이(Chiayi) CoWoS 첨단 패키징 신규 팹 장비 반입 및 시험 가동 개시. |
+| 2025-04-10 | **엔비디아** | PRODUCT_LAUNCH | 확정사건 | `CRITICAL` | Blackwell B200 및 GB200 NVL72 랙스케일 시스템 하이퍼스케일러 데이터센터 본격 출하. |
+| 2025-08-20 | **삼성전자** | PRODUCT_LAUNCH | 확정사건 | `HIGH` | 1b nm 기반 HBM3E 12단 주요 가속기 고객사 퀄 인증 통과 및 양산 공급망 합류. |
+| 2026-02-12 | **ASML** | PRODUCT_LAUNCH | 확정사건 | `MEDIUM` | 차세대 High-NA EUV(EXE:5200) 양산형 노광장비 TSMC 및 삼성전자 팹 인도 완료. |
+| 2026-05-18 | **TSMC** | FAB_MILESTONE | 확정사건 | `HIGH` | 3nm 풀가동 상태에서 CoWoS-L 월 8만장 달성으로 블랙웰 공급 지연 완전 해소. |
+| 2026-10-15 | **TSMC** | FAB_MILESTONE | 미래전망 | `HIGH` | 신주 Fab 20 2nm(N2) 공정 리스크 프로덕션 개시 및 주요 수율 65% 돌파 목표. |
+| 2026-11-20 | **SK하이닉스** | FAB_MILESTONE | 미래전망 | `HIGH` | 청주 M15X 클린룸 준공 및 차세대 HBM4 어드밴스드 패키징 파일럿 라인 가동. |
+| 2027-01-10 | **엔비디아** | PRODUCT_LAUNCH | 미래전망 | `CRITICAL` | 차세대 Rubin R100 GPU (HBM4 16단 64GB 탑재) 최초 샘플 출하 및 파트너사 제공. |
+| 2027-03-30 | **SK하이닉스** | PRODUCT_LAUNCH | 미래전망 | `CRITICAL` | TSMC 파운드리 베이스 다이 협력 기반 HBM4 16단 대량 양산 및 출하 개시. |
+| 2027-06-15 | **삼성전자** | PRODUCT_LAUNCH | 미래전망 | `HIGH` | 평택 P4 1c nm 기반 HBM4 턴키(메모리+파운드리 4nm 베이스다이 원스톱) 대형 고객사 납품. |
+| 2027-08-20 | **구글** | PRODUCT_LAUNCH | 미래전망 | `HIGH` | 자체 6세대 TPU(Ironwood) 인프라 비중 50% 돌파 및 외부 GPU 의존도 점진적 분산. |
+| 2028-04-15 | **TSMC** | FAB_MILESTONE | 미래전망 | `MEDIUM` | 미국 애리조나 Fab 21 2단계 2nm 라인 조기 가동 및 미국산 AI 칩 생산 본격화. |
 
 ---
 

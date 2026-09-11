@@ -299,6 +299,21 @@ ORDER BY layer;
 SELECT * FROM v_contract_summary LIMIT 5;
 ```
 
+### 팹 생산 캐파 및 증설 현황 조회 (신규 뷰)
+
+```sql
+SELECT 기업, 팹_공장명, 공정노드, 현재캐파_월장, 목표캐파_월장, 증설목표시점, 상태 
+FROM v_fab_summary;
+```
+
+### 기술 및 공급망 마일스톤 타임라인 (신규 뷰)
+
+```sql
+SELECT 일자, 관련기업, 구분, 타임라인, 영향도, 주요내용 
+FROM v_milestones_timeline
+ORDER BY 일자;
+```
+
 ### 데이터 추가 (새 계약 입력)
 
 ```sql

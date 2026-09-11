@@ -211,6 +211,50 @@ def generate_report():
     lines.append('---')
     lines.append('')
 
+    # ── 7. Fab 생산 캐파 및 증설 현황 ──
+    lines.append('## 7. 주요 반도체 Fab 생산 캐파 및 증설 현황')
+    lines.append('')
+    lines.append('| 기업 | 팹 / 공장명 | 공정 노드 | 유형 | 현재 캐파 | 목표 캐파 | 완공 시점 | 상태 |')
+    lines.append('| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |')
+    
+    fabs = conn.execute('''
+        SELECT e.name_ko, f.fab_name, f.process_node, f.fab_type, f.wspm_current, f.wspm_target, f.ramp_end_date, f.status
+        FROM fab_capacity f
+        JOIN entities e ON f.entity_id = e.entity_id
+        ORDER BY e.layer, f.wspm_target DESC
+    ''').fetchall()
+
+    for fb in fabs:
+        curr = f"{fb['wspm_current']:,.0f}" if fb['wspm_current'] else '-'
+        tgt = f"{fb['wspm_target']:,.0f}" if fb['wspm_target'] else '-'
+        lines.append(f"| **{fb['name_ko']}** | {fb['fab_name']} | {fb['process_node']} | {fb['fab_type']} | {curr} | {tgt} | {fb['ramp_end_date']} | {fb['status']} |")
+
+    lines.append('')
+    lines.append('---')
+    lines.append('')
+
+    # ── 8. 핵심 기술 및 공급망 마일스톤 타임라인 ──
+    lines.append('## 8. 핵심 기술 및 공급망 마일스톤 타임라인')
+    lines.append('')
+    lines.append('| 일자 | 관련 기업 | 구분 | 상태 | 영향도 | 내용 |')
+    lines.append('| :--- | :--- | :---: | :---: | :---: | :--- |')
+
+    ms_list = conn.execute('''
+        SELECT m.event_date, e.name_ko, m.category, 
+               CASE WHEN m.is_forecast = 1 THEN '미래전망' ELSE '확정사건' END AS status_txt,
+               m.impact_level, m.description
+        FROM milestones m
+        JOIN entities e ON m.entity_id = e.entity_id
+        ORDER BY m.event_date ASC
+    ''').fetchall()
+
+    for m in ms_list:
+        lines.append(f"| {m['event_date']} | **{m['name_ko']}** | {m['category']} | {m['status_txt']} | `{m['impact_level']}` | {m['description']} |")
+
+    lines.append('')
+    lines.append('---')
+    lines.append('')
+
     # ── 푸터 ──
     lines.append(f'> 이 보고서는 `python scripts/export_report.py` 실행으로 자동 생성되었습니다.  ')
     lines.append(f'> DB 데이터를 추가/수정 후 재실행하면 보고서가 갱신됩니다.')
