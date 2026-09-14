@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — AI·반도체 밸류체인 인텔리전스 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.7);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --forecast-badge: rgba(245, 158, 11, 0.15);
+      --actual-badge: rgba(16, 185, 129, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* 상단 헤더 */
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-card);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+    .title-group h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .title-group p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .status-tag {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* 메트릭 서머리 바 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem 2rem 0.5rem;
+    }
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .summary-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    .summary-card .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .summary-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .summary-card .sub {
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-top: 0.2rem;
+    }
+
+    /* 네비게이션 탭 */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border-card);
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-btn.active {
+      color: #ffffff;
+      background: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    /* 메인 콘텐츠 영역 */
+    main {
+      padding: 1.5rem 2rem 3rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 카드 및 차트 컨테이너 */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      margin-bottom: 1.5rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* 컨트롤 바 */
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    select {
+      background: #1f293d;
+      border: 1px solid var(--border-card);
+      color: #ffffff;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* 차트 그리드 */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 1024px) {
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      height: 380px;
+      position: relative;
+    }
+
+    /* 테이블 스타일 */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    th {
+      background: rgba(31, 41, 61, 0.6);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-card);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-actual { background: var(--actual-badge); color: #34d399; }
+    .badge-forecast { background: var(--forecast-badge); color: #fbbf24; }
+    .badge-critical { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .badge-high { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    /* 타임라인 레이아웃 */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      margin-top: 1rem;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -2rem;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid var(--bg-base);
+    }
+    .timeline-dot.future {
+      background: var(--accent-amber);
+    }
+    .timeline-card {
+      background: rgba(31, 41, 61, 0.5);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+    .timeline-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    /* 카드 그리드 */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .info-card {
+      background: rgba(26, 34, 52, 0.6);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: all 0.2s;
+    }
+    .info-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px);
+    }
+    .info-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .info-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 0.35rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .metric-row .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header>
+    <div class="logo-group">
+      <div class="logo-badge">MC-INTEL</div>
+      <div class="title-group">
+        <h1>Memory Claude Intelligence Dashboard</h1>
+        <p>AI·반도체 밸류체인 자본·기술·전력 흐름 분석 시스템 (2020 ~ 2028)</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="status-tag">📍 기준일자: 2026-09-10</div>
+      <div class="status-tag" style="border-color: rgba(16,185,129,0.3); color:#34d399;">● DB 연결 정상 (SQLite)</div>
+    </div>
+  </header>
+
+  <!-- 메트릭 요약 바 -->
+  <section class="summary-grid">
+    <div class="summary-card">
+      <div class="label">적재된 분기 실적</div>
+      <div class="value" id="val-earnings-count">208건</div>
+      <div class="sub">8대 빅테크·반도체 (2020~2026)</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">TSMC CoWoS 목표 캐파</div>
+      <div class="value">120K<span style="font-size:0.9rem; font-weight:400;"> 장/월</span></div>
+      <div class="sub">2026-Q4 병목 완전 해소 시점</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">하이퍼스케일러 목표 전력</div>
+      <div class="value">11.7<span style="font-size:0.9rem; font-weight:400;"> GW</span></div>
+      <div class="sub">13개 메가 데이터센터 (현재 2.9GW)</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">수용 가속기 클러스터</div>
+      <div class="value">1.8M<span style="font-size:0.9rem; font-weight:400;"> 대</span></div>
+      <div class="sub">Blackwell / TPU / Trainium 탑재</div>
+    </div>
+  </section>
+
+  <!-- 탭 메뉴 -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('earnings')">📊 실적 & 이익률 시계열</button>
+    <button class="tab-btn" onclick="switchTab('fabs')">🏭 Fab 생산 캐파 (WSPM)</button>
+    <button class="tab-btn" onclick="switchTab('datacenters')">⚡ 데이터센터 & 전력 (MW)</button>
+    <button class="tab-btn" onclick="switchTab('milestones')">📅 2022-2028 기술 타임라인</button>
+    <button class="tab-btn" onclick="switchTab('contracts')">🔗 기업 간 자본·공급 계약</button>
+  </nav>
+
+  <!-- 메인 콘텐츠 -->
+  <main>
+    <!-- TAB 1: 실적 & 마진 -->
+    <div id="tab-earnings" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">기업별 분기 실적 추이 (2020-Q1 ~ 2026-Q4)</div>
+          <div class="control-group">
+            <label for="company-select" style="font-size:0.85rem; color:var(--text-muted);">기업 선택:</label>
+            <select id="company-select" onchange="updateEarningsChart()">
+              <option value="NVDA">엔비디아 (NVIDIA)</option>
+              <option value="000660.KS">SK하이닉스 (SK hynix)</option>
+              <option value="005930.KS">삼성전자 (Samsung)</option>
+              <option value="TSM">TSMC</option>
+              <option value="MSFT">마이크로소프트 (Microsoft)</option>
+              <option value="GOOGL">알파벳 (Google)</option>
+              <option value="AMZN">아마존 (Amazon)</option>
+              <option value="META">메타 (Meta)</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-box">
+            <canvas id="chart-revenue"></canvas>
+          </div>
+          <div class="chart-box">
+            <canvas id="chart-margin"></canvas>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="table-earnings">
+            <thead>
+              <tr>
+                <th>분기</th>
+                <th>매출액</th>
+                <th>영업이익</th>
+                <th>영업이익률(OPM)</th>
+                <th>매출총이익률(GPM)</th>
+                <th>판정</th>
+                <th>구분</th>
+                <th>가이던스 및 비고</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Fab 생산 캐파 -->
+    <div id="tab-fabs" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">주요 반도체 Fab 및 첨단 패키징 생산 능력 (WSPM)</div>
+        </div>
+        <div class="chart-box" style="height: 340px; margin-bottom: 1.5rem;">
+          <canvas id="chart-fabs"></canvas>
+        </div>
+        <div class="card-grid" id="fab-cards"></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: 데이터센터 & 전력 -->
+    <div id="tab-datacenters" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">하이퍼스케일러 AI 메가 데이터센터 전력 증설 (MW)</div>
+        </div>
+        <div class="chart-box" style="height: 340px; margin-bottom: 1.5rem;">
+          <canvas id="chart-dc"></canvas>
+        </div>
+        <div class="card-grid" id="dc-cards"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: 마일스톤 -->
+    <div id="tab-milestones" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">2022 ~ 2028 핵심 변곡점 및 기술 로드맵 타임라인</div>
+          <div class="control-group">
+            <select id="milestone-filter" onchange="renderMilestones()">
+              <option value="ALL">전체 보기 (21건)</option>
+              <option value="ACTUAL">과거 확정 사건 (2022~2026-Q2)</option>
+              <option value="FORECAST">미래 전망 로드맵 (2026-Q3~2028)</option>
+            </select>
+          </div>
+        </div>
+        <div class="timeline" id="milestone-timeline"></div>
+      </div>
+    </div>
+
+    <!-- TAB 5: 계약 관계망 -->
+    <div id="tab-contracts" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">기업 간 대규모 공급·투자 계약 매트릭스 (자본 흐름)</div>
+        </div>
+        <div class="card-grid" id="contract-cards"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let rawData = null;
+    let revenueChart = null;
+    let marginChart = null;
+    let fabChart = null;
+    let dcChart = null;
+
+    // 데이터 패치
+    async function loadData() {
+      try {
+        const res = await fetch('/api/data');
+        rawData = await res.json();
+        initDashboard();
+      } catch (err) {
+        console.error("데이터 로드 실패:", err);
+      }
+    }
+
+    function initDashboard() {
+      updateEarningsChart();
+      initFabTab();
+      initDcTab();
+      renderMilestones();
+      initContractsTab();
+    }
+
+    // 탭 전환
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // TAB 1: 실적 차트 렌더링
+    function updateEarningsChart() {
+      const selectedId = document.getElementById('company-select').value;
+      const records = rawData.earnings.filter(r => r.entity_id === selectedId);
+
+      const labels = records.map(r => r.period);
+      const revs = records.map(r => r.revenue);
+      const ops = records.map(r => r.op_income);
+      const opms = records.map(r => r.op_margin_pct);
+      const gpms = records.map(r => r.gross_margin_pct);
+      const isForecasts = records.map(r => r.is_forecast);
+
+      // 매출 차트
+      if (revenueChart) revenueChart.destroy();
+      const ctxRev = document.getElementById('chart-revenue').getContext('2d');
+      revenueChart = new Chart(ctxRev, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '매출액 ($B)',
+              data: revs,
+              backgroundColor: isForecasts.map(f => f === 1 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(59, 130, 246, 0.7)'),
+              borderColor: isForecasts.map(f => f === 1 ? '#f59e0b' : '#3b82f6'),
+              borderWidth: 1,
+              borderRadius: 4
+            },
+            {
+              label: '영업이익 ($B)',
+              data: ops,
+              type: 'line',
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#9ca3af' } },
+            tooltip: {
+              callbacks: {
+                footer: (items) => {
+                  const idx = items[0].dataIndex;
+                  return isForecasts[idx] === 1 ? '※ 2026-Q3 이후 전망치' : '✓ 확정 실적';
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+
+      // 마진 차트
+      if (marginChart) marginChart.destroy();
+      const ctxMargin = document.getElementById('chart-margin').getContext('2d');
+      marginChart = new Chart(ctxMargin, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: '영업이익률 (%)', data: opms, borderColor: '#3b82f6', tension: 0.3 },
+            { label: '매출총이익률 (%)', data: gpms, borderColor: '#8b5cf6', tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#9ca3af' } } },
+          scales: {
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+
+      // 테이블 렌더링
+      const tbody = document.querySelector('#table-earnings tbody');
+      tbody.innerHTML = '';
+      records.slice().reverse().forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600; font-family:'JetBrains Mono'">${r.period}</td>
+          <td>$${r.revenue.toFixed(2)}B</td>
+          <td>$${r.op_income ? r.op_income.toFixed(2) + 'B' : '-'}</td>
+          <td style="color:#60a5fa">${r.op_margin_pct ? r.op_margin_pct.toFixed(1) + '%' : '-'}</td>
+          <td style="color:#a78bfa">${r.gross_margin_pct ? r.gross_margin_pct.toFixed(1) + '%' : '-'}</td>
+          <td>${r.beat_miss_status || '-'}</td>
+          <td><span class="badge ${r.is_forecast === 1 ? 'badge-forecast' : 'badge-actual'}">${r.is_forecast === 1 ? '전망' : '확정'}</span></td>
+          <td style="font-size:0.8rem; color:var(--text-muted)">${r.guidance_next_q || r.revenue_breakdown || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // TAB 2: Fab 캐파
+    function initFabTab() {
+      const fabs = rawData.fabs;
+      const ctx = document.getElementById('chart-fabs').getContext('2d');
+      fabChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: fabs.map(f => f.name_ko + ' - ' + f.fab_name.split('(')[0].trim()),
+          datasets: [
+            { label: '현재 캐파 (WSPM)', data: fabs.map(f => f.wspm_current || 0), backgroundColor: '#3b82f6' },
+            { label: '목표 캐파 (WSPM)', data: fabs.map(f => f.wspm_target || 0), backgroundColor: 'rgba(16, 185, 129, 0.7)' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { labels: { color: '#9ca3af' } } },
+          scales: {
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+
+      const container = document.getElementById('fab-cards');
+      container.innerHTML = '';
+      fabs.forEach(f => {
+        container.innerHTML += `
+          <div class="info-card">
+            <h4>${f.fab_name} <span class="badge badge-actual">${f.status}</span></h4>
+            <p>${f.key_notes || ''}</p>
+            <div class="metric-row"><span>공정 노드</span><span class="val">${f.process_node}</span></div>
+            <div class="metric-row"><span>현재 캐파</span><span class="val">${f.wspm_current ? f.wspm_current.toLocaleString() + ' 장/월' : '-'}</span></div>
+            <div class="metric-row"><span>목표 캐파</span><span class="val" style="color:#34d399">${f.wspm_target ? f.wspm_target.toLocaleString() + ' 장/월' : '-'}</span></div>
+            <div class="metric-row"><span>완공 목표</span><span class="val">${f.ramp_end_date}</span></div>
+          </div>
+        `;
+      });
+    }
+
+    // TAB 3: 데이터센터
+    function initDcTab() {
+      const dcs = rawData.datacenters;
+      const ctx = document.getElementById('chart-dc').getContext('2d');
+      dcChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: dcs.map(d => d.name_ko + ' - ' + d.dc_name),
+          datasets: [
+            { label: '현재 전력 (MW)', data: dcs.map(d => d.power_mw_current || 0), backgroundColor: '#3b82f6' },
+            { label: '목표 전력 (MW)', data: dcs.map(d => d.power_mw_target || 0), backgroundColor: '#f59e0b' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { labels: { color: '#9ca3af' } } },
+          scales: {
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+
+      const container = document.getElementById('dc-cards');
+      container.innerHTML = '';
+      dcs.forEach(d => {
+        container.innerHTML += `
+          <div class="info-card">
+            <h4>${d.dc_name} <span class="badge badge-forecast">${d.power_mw_target} MW</span></h4>
+            <p>${d.key_notes || ''}</p>
+            <div class="metric-row"><span>기업 / 위치</span><span class="val">${d.name_ko} (${d.location_state})</span></div>
+            <div class="metric-row"><span>전력원</span><span class="val" style="color:#60a5fa">${d.power_source}</span></div>
+            <div class="metric-row"><span>목표 가속기</span><span class="val">${d.gpu_cluster_target ? d.gpu_cluster_target.toLocaleString() + '대' : '-'}</span></div>
+            <div class="metric-row"><span>주력 칩</span><span class="val">${d.primary_chips}</span></div>
+            <div class="metric-row"><span>가동 목표</span><span class="val">${d.online_date}</span></div>
+          </div>
+        `;
+      });
+    }
+
+    // TAB 4: 마일스톤 타임라인
+    function renderMilestones() {
+      const filter = document.getElementById('milestone-filter').value;
+      const container = document.getElementById('milestone-timeline');
+      container.innerHTML = '';
+
+      let list = rawData.milestones;
+      if (filter === 'ACTUAL') list = list.filter(m => m.is_forecast === 0);
+      if (filter === 'FORECAST') list = list.filter(m => m.is_forecast === 1);
+
+      list.forEach(m => {
+        const isFuture = m.is_forecast === 1;
+        container.innerHTML += `
+          <div class="timeline-item">
+            <div class="timeline-dot ${isFuture ? 'future' : ''}"></div>
+            <div class="timeline-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                <span class="timeline-date">${m.event_date}</span>
+                <span class="badge ${m.impact_level === 'CRITICAL' ? 'badge-critical' : 'badge-high'}">${m.impact_level}</span>
+              </div>
+              <div style="font-weight:700; color:#ffffff; margin-bottom:0.25rem;">[${m.name_ko}] ${m.category}</div>
+              <div style="font-size:0.85rem; color:#d1d5db;">${m.description}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // TAB 5: 계약
+    function initContractsTab() {
+      const container = document.getElementById('contract-cards');
+      container.innerHTML = '';
+      rawData.contracts.forEach(c => {
+        container.innerHTML += `
+          <div class="info-card">
+            <h4>${c.buyer_name} ➔ ${c.seller_name} <span class="badge badge-actual">${c.contract_type}</span></h4>
+            <p>${c.description}</p>
+            <div class="metric-row"><span>계약 규모</span><span class="val" style="color:#34d399; font-size:1.1rem;">$${c.value_b ? c.value_b + 'B' : '비공개'}</span></div>
+            <div class="metric-row"><span>제품 / 분야</span><span class="val">${c.product_type}</span></div>
+            <div class="metric-row"><span>발표 분기</span><span class="val">${c.announced_date}</span></div>
+          </div>
+        `;
+      });
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>

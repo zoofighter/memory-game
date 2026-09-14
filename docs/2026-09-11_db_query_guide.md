@@ -314,6 +314,13 @@ FROM v_milestones_timeline
 ORDER BY 일자;
 ```
 
+### 하이퍼스케일러 AI 데이터센터 전력 및 클러스터 현황 조회 (신규 뷰)
+
+```sql
+SELECT 기업, 데이터센터명, 위치, 현재전력_MW, 목표전력_MW, 전력원, 목표가속기수, 주력칩, 가동목표, 상태 
+FROM v_datacenter_summary;
+```
+
 ### 데이터 추가 (새 계약 입력)
 
 ```sql

@@ -1,0 +1,306 @@
+{
+  "nodes": [
+    {
+      "id": "node_ANTHROPIC",
+      "x": -450,
+      "y": -300,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 앤트로픽 (ANTHROPIC)\n- **티커**: `-` | **국가**: US\n- **설명**: Claude AI 개발사, 구글·아마존 투자",
+      "color": "6"
+    },
+    {
+      "id": "node_OPENAI",
+      "x": -150,
+      "y": -300,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 오픈AI (OPENAI)\n- **티커**: `-` | **국가**: US\n- **설명**: GPT/ChatGPT 개발사, MS 투자",
+      "color": "6"
+    },
+    {
+      "id": "node_AMAZON",
+      "x": -450,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 아마존 (AMAZON)\n- **티커**: `AMZN` | **국가**: US\n- **설명**: AWS + Trainium + Bedrock",
+      "color": "5"
+    },
+    {
+      "id": "node_GOOGLE",
+      "x": -150,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 구글 (GOOGLE)\n- **티커**: `GOOGL` | **국가**: US\n- **설명**: GCP + Gemini + TPU",
+      "color": "5"
+    },
+    {
+      "id": "node_META",
+      "x": 150,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 메타 (META)\n- **티커**: `META` | **국가**: US\n- **설명**: Llama 오픈소스 + MTIA ASIC",
+      "color": "5"
+    },
+    {
+      "id": "node_MICROSOFT",
+      "x": 450,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 마이크로소프트 (MICROSOFT)\n- **티커**: `MSFT` | **국가**: US\n- **설명**: Azure + OpenAI 파트너",
+      "color": "5"
+    },
+    {
+      "id": "node_ORACLE",
+      "x": 750,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 오라클 (ORACLE)\n- **티커**: `ORCL` | **국가**: US\n- **설명**: OCI + AI 인프라 확장",
+      "color": "5"
+    },
+    {
+      "id": "node_AMD",
+      "x": -450,
+      "y": 200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### AMD (AMD)\n- **티커**: `AMD` | **국가**: US\n- **설명**: MI300/MI400 GPU + EPYC CPU",
+      "color": "4"
+    },
+    {
+      "id": "node_BROADCOM",
+      "x": -150,
+      "y": 200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 브로드컴 (BROADCOM)\n- **티커**: `AVGO` | **국가**: US\n- **설명**: AI ASIC 설계 + 네트워킹",
+      "color": "4"
+    },
+    {
+      "id": "node_NVIDIA",
+      "x": 150,
+      "y": 200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 엔비디아 (NVIDIA)\n- **티커**: `NVDA` | **국가**: US\n- **설명**: GPU + CUDA + DGX Cloud",
+      "color": "4"
+    },
+    {
+      "id": "node_ASML",
+      "x": -450,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### ASML (ASML)\n- **티커**: `ASML` | **국가**: NL\n- **설명**: EUV/High-NA EUV 독점",
+      "color": "3"
+    },
+    {
+      "id": "node_TSMC",
+      "x": -150,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### TSMC (TSMC)\n- **티커**: `TSM` | **국가**: TW\n- **설명**: N2/A16 선단공정 + CoWoS",
+      "color": "3"
+    },
+    {
+      "id": "node_MICRON",
+      "x": -450,
+      "y": 700,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 마이크론 (MICRON)\n- **티커**: `MU` | **국가**: US\n- **설명**: HBM 3위 + 미국 유일 메모리",
+      "color": "2"
+    },
+    {
+      "id": "node_SAMSUNG",
+      "x": -150,
+      "y": 700,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 삼성전자 (SAMSUNG)\n- **티커**: `005930` | **국가**: KR\n- **설명**: DRAM 1위 + HBM + 파운드리",
+      "color": "2"
+    },
+    {
+      "id": "node_SK_HYNIX",
+      "x": 150,
+      "y": 700,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### SK하이닉스 (SK_HYNIX)\n- **티커**: `000660` | **국가**: KR\n- **설명**: HBM 세계 1위 (점유율 50%+)",
+      "color": "2"
+    },
+    {
+      "id": "node_WDC",
+      "x": 450,
+      "y": 700,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 샌디스크/WDC (WDC)\n- **티커**: `WDC` | **국가**: US\n- **설명**: NAND + SSD",
+      "color": "2"
+    },
+    {
+      "id": "node_COHERENT",
+      "x": -450,
+      "y": 950,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 노발리 (COHERENT)\n- **티커**: `COHR` | **국가**: US\n- **설명**: 광트랜시버 800G/1.6T",
+      "color": "1"
+    },
+    {
+      "id": "node_MARVELL",
+      "x": -150,
+      "y": 950,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 마벨 (MARVELL)\n- **티커**: `MRVL` | **국가**: US\n- **설명**: AI DC 네트워킹 + 커스텀 ASIC",
+      "color": "1"
+    },
+    {
+      "id": "node_APPLE",
+      "x": -450,
+      "y": 1200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 애플 (APPLE)\n- **티커**: `AAPL` | **국가**: US\n- **설명**: TSMC 최대 고객 + 온디바이스 AI",
+      "color": "0"
+    },
+    {
+      "id": "node_SOFTBANK",
+      "x": -150,
+      "y": 1200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 소프트뱅크 (SOFTBANK)\n- **티커**: `9984` | **국가**: JP\n- **설명**: ARM + AI 투자 펀드",
+      "color": "0"
+    },
+    {
+      "id": "node_SPACEX",
+      "x": 150,
+      "y": 1200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 스페이스X (SPACEX)\n- **티커**: `-` | **국가**: US\n- **설명**: Starlink + 위성 인프라",
+      "color": "0"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_0_CON-GOOG-ANTH-200B",
+      "fromNode": "node_GOOGLE",
+      "fromSide": "bottom",
+      "toNode": "node_ANTHROPIC",
+      "toSide": "top",
+      "label": "[INVESTMENT] $200.0B (AI_MODEL)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_1_CON-AMZN-ANTH-12B",
+      "fromNode": "node_AMAZON",
+      "fromSide": "bottom",
+      "toNode": "node_ANTHROPIC",
+      "toSide": "top",
+      "label": "[INVESTMENT] $12.0B (AI_MODEL)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_2_CON-AMZN-OPAI",
+      "fromNode": "node_AMAZON",
+      "fromSide": "bottom",
+      "toNode": "node_OPENAI",
+      "toSide": "top",
+      "label": "[PARTNERSHIP] (AI_MODEL)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_3_CON-MSFT-OPAI-13B",
+      "fromNode": "node_MICROSOFT",
+      "fromSide": "bottom",
+      "toNode": "node_OPENAI",
+      "toSide": "top",
+      "label": "[INVESTMENT] $13.0B (AI_MODEL)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_4_CON-GOOG-NVDA-GPU",
+      "fromNode": "node_GOOGLE",
+      "fromSide": "bottom",
+      "toNode": "node_NVIDIA",
+      "toSide": "top",
+      "label": "[SUPPLY] $30.0B (GPU)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_5_CON-META-NVDA-GPU",
+      "fromNode": "node_META",
+      "fromSide": "bottom",
+      "toNode": "node_NVIDIA",
+      "toSide": "top",
+      "label": "[SUPPLY] $25.0B (GPU)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_6_CON-META-BRCM-ASIC",
+      "fromNode": "node_META",
+      "fromSide": "bottom",
+      "toNode": "node_BROADCOM",
+      "toSide": "top",
+      "label": "[SUPPLY] $10.0B (ASIC)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_7_CON-NVDA-SKH-HBM",
+      "fromNode": "node_NVIDIA",
+      "fromSide": "bottom",
+      "toNode": "node_SK_HYNIX",
+      "toSide": "top",
+      "label": "[SUPPLY] $18.0B (HBM)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_8_CON-NVDA-SAM-HBM",
+      "fromNode": "node_NVIDIA",
+      "fromSide": "bottom",
+      "toNode": "node_SAMSUNG",
+      "toSide": "top",
+      "label": "[SUPPLY] $14.0B (HBM)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_9_CON-NVDA-TSMC-FOUND",
+      "fromNode": "node_NVIDIA",
+      "fromSide": "bottom",
+      "toNode": "node_TSMC",
+      "toSide": "top",
+      "label": "[SUPPLY] $35.0B (FOUNDRY)",
+      "toEnd": "arrow"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ def generate_report():
     # ── 1. DB 현황 요약 ──
     lines.append('## 1. DB 현황 요약')
     lines.append('')
-    tables = ['entities', 'contracts', 'financials', 'earnings_reports', 'milestones', 'fab_capacity', 'entity_strategy']
+    tables = ['entities', 'contracts', 'financials', 'earnings_reports', 'milestones', 'fab_capacity', 'datacenter_capacity', 'entity_strategy']
     lines.append('| 테이블 | 행 수 | 설명 |')
     lines.append('| :--- | :---: | :--- |')
     table_desc = {
@@ -46,6 +46,7 @@ def generate_report():
         'earnings_reports': '분기별 실적발표 (매출/영업익/순익/EPS/가이던스/비중)',
         'milestones': '공장 가동, 제품 출시 등 마일스톤',
         'fab_capacity': '파운드리/메모리 Fab Capa 및 공정',
+        'datacenter_capacity': '하이퍼스케일러 AI 데이터센터 전력/클러스터 캐파',
         'entity_strategy': '기업별 전략 및 AI 로드맵'
     }
     for t in tables:
@@ -250,6 +251,32 @@ def generate_report():
 
     for m in ms_list:
         lines.append(f"| {m['event_date']} | **{m['name_ko']}** | {m['category']} | {m['status_txt']} | `{m['impact_level']}` | {m['description']} |")
+
+    lines.append('')
+    lines.append('---')
+    lines.append('')
+
+    # ── 9. 하이퍼스케일러 AI 데이터센터 전력 및 클러스터 현황 ──
+    lines.append('## 9. 하이퍼스케일러 AI 데이터센터 전력 및 가속기 클러스터 현황')
+    lines.append('')
+    lines.append('| 기업 | 데이터센터명 | 위치 | 현재 전력 | 목표 전력 | 전력원 | 목표 가속기 | 주력 칩 | 가동 시점 | 상태 |')
+    lines.append('| :--- | :--- | :--- | :---: | :---: | :--- | :---: | :--- | :---: | :---: |')
+
+    dcs = conn.execute('''
+        SELECT e.name_ko, d.dc_name, d.location_state, d.location_country,
+               d.power_mw_current, d.power_mw_target, d.power_source,
+               d.gpu_cluster_target, d.primary_chips, d.online_date, d.status
+        FROM datacenter_capacity d
+        JOIN entities e ON d.entity_id = e.entity_id
+        ORDER BY e.layer, d.power_mw_target DESC
+    ''').fetchall()
+
+    for d in dcs:
+        p_c = f"{d['power_mw_current']:,.0f} MW" if d['power_mw_current'] else '-'
+        p_t = f"{d['power_mw_target']:,.0f} MW" if d['power_mw_target'] else '-'
+        g_cnt = f"{d['gpu_cluster_target']:,}대" if d['gpu_cluster_target'] else '-'
+        loc = f"{d['location_state']} ({d['location_country']})"
+        lines.append(f"| **{d['name_ko']}** | {d['dc_name']} | {loc} | {p_c} | {p_t} | {d['power_source']} | {g_cnt} | {d['primary_chips']} | {d['online_date']} | {d['status']} |")
 
     lines.append('')
     lines.append('---')

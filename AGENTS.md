@@ -27,7 +27,8 @@
 ```plaintext
 b_0910_memory_claude/
 ├── 99.raw/     # [절대 보호 구역] 사용자가 수집한 1차 원본 자료 보관소
-├── data/       # SQLite DB 및 뷰 설정 파일
+├── data/       # SQLite DB (memory_claude.db) 및 뷰 설정 파일
+├── dashboard/  # 인터랙티브 웹 대시보드 (index.html)
 ├── docs/       # 기획, 아키텍처, 쿼리 가이드 및 분석 보고서
 └── scripts/    # 데이터 적재, DB 마이그레이션, 자동 리포트 생성 스크립트
 ```
@@ -44,7 +45,7 @@ b_0910_memory_claude/
 
 ### 📝 `docs/` 문서화 규칙
 - 분석 문서 및 정기 산출물은 식별이 쉽도록 날짜 접두사(`YYYY-MM-DD_*.md`) 또는 명확한 명명 규칙을 준수합니다.
-- DB 데이터의 신뢰도와 한계를 사용자에게 항상 투명하게 고지합니다. (참조: [docs/2026-09-11_data_source_reliability.md](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_data_source_reliability.md))
+- DB 데이터의 신뢰도와 한계를 사용자에게 항상 투명하게 고지합니다. (참조: [docs/2026-09-11_data_source_reliability.md](file:///Users/boon/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_data_source_reliability.md))
 
 ---
 
@@ -60,16 +61,18 @@ b_0910_memory_claude/
 
 ---
 
-## 5. 핵심 밸류체인 16개 기업 티커 매핑
+## 5. 핵심 밸류체인 21개 기업 — entity_id·티커 매핑
 
-에이전트는 쿼리 및 분석 시 다음 기업 마스터 체계를 준수합니다.
+에이전트는 쿼리 및 분석 시 다음 기업 마스터 체계를 준수합니다.  
+**DB `entity_id`** (대문자 스네이크) → 괄호 안은 거래소 **ticker**입니다.
 
-- **AI 모델/인프라**: Anthropic (`ANTHROPIC`), OpenAI (`OPENAI`), SoftBank (`9984.T`), SpaceX (`SPACEX`), Apple (`AAPL`)
-- **하이퍼스케일러**: Microsoft (`MSFT`), Alphabet (`GOOGL`), Amazon (`AMZN`), Meta (`META`), Oracle (`ORCL`)
-- **컴퓨팅/가속기**: NVIDIA (`NVDA`)
-- **파운드리/장비**: TSMC (`TSM`), ASML (`ASML`)
-- **메모리/스토리지**: SK하이닉스 (`000660.KS`), 삼성전자 (`005930.KS`), SanDisk/WDC (`WDC`)
-- **광통신/네트워킹**: Marvell (`MRVL`), Coherent (`COHR`)
+- **AI 프론티어 랩** (L1_AI_LAB): Anthropic (`ANTHROPIC`), OpenAI (`OPENAI`)
+- **하이퍼스케일러** (L2_HYPERSCALER): Alphabet (`GOOGLE` / GOOGL), Amazon (`AMAZON` / AMZN), Microsoft (`MICROSOFT` / MSFT), Oracle (`ORACLE` / ORCL), Meta (`META` / META)
+- **컴퓨팅/가속기** (L3_COMPUTE): NVIDIA (`NVIDIA` / NVDA), AMD (`AMD` / AMD), Broadcom (`BROADCOM` / AVGO)
+- **파운드리/장비** (L4_FOUNDRY): TSMC (`TSMC` / TSM), ASML (`ASML` / ASML)
+- **메모리/스토리지** (L5_MEMORY): SK하이닉스 (`SK_HYNIX` / 000660), 삼성전자 (`SAMSUNG` / 005930), Micron (`MICRON` / MU), WDC (`WDC` / WDC)
+- **광통신/네트워킹** (L6_OPTICAL): Marvell (`MARVELL` / MRVL), Coherent (`COHERENT` / COHR)
+- **인프라/특수** (L7_INFRA): SpaceX (`SPACEX`), SoftBank (`SOFTBANK` / 9984), Apple (`APPLE` / AAPL)
 
 ---
 

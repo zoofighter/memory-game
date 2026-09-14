@@ -62,14 +62,15 @@ b_0910_memory_claude/
 
 SQLite 기반(`data/memory_claude.db`)으로 경량화 및 독립성을 유지하며, 다음 5대 핵심 엔티티를 관리합니다.
 
-1. **`companies`**: 추적 대상 기업 마스터 (티커, 국적, 밸류체인 계층, 핵심 제품군)
+1. **`entities`**: 추적 대상 기업 마스터 (티커, 국적, 밸류체인 계층, 핵심 제품군)
 2. **`earnings_reports`**: 2020-Q1 ~ 2026-Q4 분기별 정량 실적
    - 매출액(`revenue_usd_b`), 영업이익(`operating_income_usd_b`), 영업이익률(`operating_margin_pct`)
    - 실적 발표일, 확정 실적/전망 구분(`is_forecast`), 컨센서스 대비 비트/미스(`beat_miss_status`)
    - 세부 매출 비중, 다음 분기 가이던스, 실적콜 핵심 코멘트
 3. **`financials`**: 연간/분기별 Capex 및 R&D 지출 추이
 4. **`contracts`**: 기업 간 초대형 AI 칩 공급 계약, 클라우드 파트너십, 지분 투자 내역
-5. **`fab_capacity` & `milestones`**: TSMC CoWoS, HBM 라인 증설 캐파 및 양산 마일스톤
+5. **`fab_capacity` & `milestones`**: TSMC CoWoS, HBM 라인 증설 캐파 및 기술 타임라인
+6. **`datacenter_capacity`**: 빅테크 AI 데이터센터 전력(MW/GW), 원전 PPA 및 가속기 클러스터 탑재 캐파
 
 ---
 
@@ -84,14 +85,30 @@ SQLite 기반(`data/memory_claude.db`)으로 경량화 및 독립성을 유지�
 # 1. 코어 테이블 생성 및 기초 데이터 적재
 sqlite3 data/memory_claude.db < scripts/init_db.sql
 
-# 2. 분기별 실적 테이블(earnings_reports) 생성
+# 2. 실적, 데이터센터 테이블 스키마 생성
 sqlite3 data/memory_claude.db < scripts/add_earnings_table.sql
+sqlite3 data/memory_claude.db < scripts/add_datacenter_table.sql
 
-# 3. 2020-Q1 ~ 2026-Q4 분기 실적 데이터 투입 (8대 핵심 기업 208개 분기)
+# 3. 2020-Q1 ~ 2026-Q4 분기 실적 데이터 투입 (8개사 208개 분기)
 python3 scripts/populate_quarterly_earnings.py
+
+# 4. Fab 캐파, 마일스톤 및 하이퍼스케일러 데이터센터 데이터 투입
+python3 scripts/populate_fab_and_milestones.py
+python3 scripts/populate_datacenter_capacity.py
 ```
 
-### 3) 분석 보고서 자동 추출
+### 3) 인터랙티브 웹 대시보드 및 시각화 (UI)
+```bash
+# 1. 브라우저 인터랙티브 대시보드 실행 (외부 설치 없이 표준 라이브러리로 구동)
+python3 scripts/serve_dashboard.py
+# → 브라우저에서 http://localhost:8501 접속하여 차트 및 캐파 현황 탐색
+
+# 2. 옵시디언 캔버스(Canvas) 밸류체인 관계망 맵 생성
+python3 scripts/generate_canvas.py
+# → docs/memory_claude_value_chain.canvas 파일이 생성되어 옵시디언에서 바로 열람 가능
+```
+
+### 4) 분석 보고서 자동 추출
 ```bash
 # DB 최신 데이터를 마크다운 분석 리포트로 내보내기
 python3 scripts/export_report.py
@@ -117,6 +134,7 @@ python3 scripts/export_report.py
 - [시스템 요건정의서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/requirements_spec.md)
 - [데이터베이스 구조 설계서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/db_architecture.md)
 - [Fab 생산 캐파 및 마일스톤 심층 분석 보고서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_fab_capacity_and_milestones_report.md)
+- [AI 데이터센터 전력 병목 및 인프라 전략 보고서](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_datacenter_and_power_report.md)
 - [데이터 소스 신뢰도 및 검증 가이드](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_data_source_reliability.md)
 - [분석용 쿼리 모음집](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_db_query_guide.md)
 - [종합 리포트 요약본](file:///Users/chansoojeon/Library/CloudStorage/Dropbox/03_code/b_0910_memory_claude/docs/2026-09-11_report_summary.md)

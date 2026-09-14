@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — 자본 흐름 Sankey & 시나리오 시뮬레이터</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Google Charts (Sankey 공식 지원) -->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.8);
+      --border: rgba(255,255,255,0.08);
+      --primary: #3b82f6;
+      --accent: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --text: #f3f4f6;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: rgba(17,24,39,0.9);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+    header span { font-size: 0.8rem; color: var(--muted); }
+    .tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      padding: 0 2rem; background: var(--bg-surface);
+    }
+    .tab {
+      padding: 0.85rem 1.5rem; cursor: pointer; font-size: 0.9rem;
+      color: var(--muted); border-bottom: 2px solid transparent;
+      transition: all 0.2s; font-weight: 500;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab:hover { color: var(--text); }
+    .panel { display: none; padding: 2rem; }
+    .panel.active { display: block; }
+
+    /* ── Sankey 패널 ── */
+    .sankey-header { margin-bottom: 1.5rem; }
+    .sankey-header h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .sankey-header p { color: var(--muted); font-size: 0.85rem; }
+    .sankey-controls {
+      display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 0.4rem 1rem; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--muted); cursor: pointer;
+      font-size: 0.8rem; font-family: inherit; transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    #sankey_chart {
+      background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .sankey-legend {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem; margin-top: 1.5rem;
+    }
+    .legend-item {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.75rem 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-label { font-size: 0.8rem; color: var(--muted); }
+    .legend-value { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+
+    /* ── 시나리오 시뮬레이터 패널 ── */
+    .sim-layout {
+      display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start;
+    }
+    @media(max-width: 900px) { .sim-layout { grid-template-columns: 1fr; } }
+    .sim-controls-panel {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem;
+    }
+    .sim-controls-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem; }
+    .slider-group { margin-bottom: 1.2rem; }
+    .slider-label {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .slider-label span { font-size: 0.82rem; color: var(--muted); }
+    .slider-label strong { font-size: 0.9rem; color: var(--text); font-weight: 600; }
+    input[type=range] {
+      width: 100%; accent-color: var(--primary); cursor: pointer;
+    }
+    .scenario-presets {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 1.2rem 0;
+    }
+    .preset-btn {
+      padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-size: 0.75rem; font-family: inherit; text-align: center;
+      transition: all 0.2s; line-height: 1.4;
+    }
+    .preset-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .preset-btn.bull { border-color: rgba(16,185,129,0.4); }
+    .preset-btn.bull:hover { background: rgba(16,185,129,0.1); color: var(--accent); }
+    .preset-btn.bear { border-color: rgba(239,68,68,0.4); }
+    .preset-btn.bear:hover { background: rgba(239,68,68,0.1); color: var(--red); }
+    .sim-results { display: flex; flex-direction: column; gap: 1rem; }
+    .result-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+    }
+    .result-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .result-card-header h4 { font-size: 0.95rem; font-weight: 600; }
+    .impact-badge {
+      padding: 0.2rem 0.6rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .impact-positive { background: rgba(16,185,129,0.15); color: var(--accent); }
+    .impact-negative { background: rgba(239,68,68,0.15); color: var(--red); }
+    .impact-neutral  { background: rgba(107,114,128,0.2); color: var(--muted); }
+    .company-impacts { display: flex; flex-direction: column; gap: 0.5rem; }
+    .company-impact-row {
+      display: grid; grid-template-columns: 100px 1fr 60px;
+      align-items: center; gap: 0.75rem;
+    }
+    .company-name { font-size: 0.82rem; color: var(--muted); }
+    .impact-bar-bg {
+      background: rgba(255,255,255,0.05); border-radius: 4px;
+      height: 8px; overflow: hidden; position: relative;
+    }
+    .impact-bar {
+      height: 100%; border-radius: 4px; transition: width 0.4s ease;
+    }
+    .bar-positive { background: linear-gradient(90deg, #10b981, #34d399); }
+    .bar-negative { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .impact-num { font-size: 0.82rem; font-weight: 600; text-align: right; }
+    .narrative-box {
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 8px; padding: 1rem; margin-top: 1rem;
+      font-size: 0.85rem; line-height: 1.6; color: #cbd5e1;
+    }
+    .narrative-box strong { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚡ Memory Claude — 고급 분석 모듈</h1>
+    <span>자본 흐름 Sankey · 전략적 시나리오 시뮬레이터</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('sankey')">💹 자본 흐름 Sankey</div>
+  <div class="tab" onclick="switchTab('scenario')">🎮 시나리오 시뮬레이터</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANEL 1: Sankey Diagram
+══════════════════════════════════════ -->
+<div class="panel active" id="panel-sankey">
+  <div class="sankey-header">
+    <h2>AI 밸류체인 자본 흐름 — 계약 기반 ($B)</h2>
+    <p>DB contracts 테이블 기준 · 화살표 두께 = 계약 금액 비례 · 클릭으로 필터</p>
+  </div>
+  <div class="sankey-controls">
+    <button class="filter-btn active" onclick="filterSankey('all', this)">전체</button>
+    <button class="filter-btn" onclick="filterSankey('INVESTMENT', this)">투자/지분</button>
+    <button class="filter-btn" onclick="filterSankey('SUPPLY', this)">공급 계약</button>
+    <button class="filter-btn" onclick="filterSankey('GPU', this)">GPU</button>
+    <button class="filter-btn" onclick="filterSankey('HBM', this)">HBM</button>
+  </div>
+  <div id="sankey_chart"></div>
+  <div class="sankey-legend" id="sankey-legend"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANEL 2: Scenario Simulator
+══════════════════════════════════════ -->
+<div class="panel" id="panel-scenario">
+  <div style="margin-bottom:1.5rem">
+    <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.4rem">전략적 시나리오 시뮬레이터</h2>
+    <p style="color:var(--muted);font-size:0.85rem">슬라이더를 조정해 가설 시나리오를 설정하면, 밸류체인 21개사의 매출 영향을 즉시 계산합니다.</p>
+  </div>
+  <div class="sim-layout">
+    <!-- 좌측: 컨트롤 패널 -->
+    <div class="sim-controls-panel">
+      <h3>📊 시나리오 변수 설정</h3>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>하이퍼스케일러 Capex 성장률</span>
+          <strong id="v-capex">+20%</strong>
+        </div>
+        <input type="range" id="s-capex" min="-40" max="60" value="20" step="5" oninput="updateSimulator()">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>HBM 수요 성장률</span>
+          <strong id="v-hbm">+30%</strong>
+        </div>
+        <input type="range" id="s-hbm" min="-50" max="100" value="30" step="5" oninput="updateSimulator()">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>GPU ASP (평균 판매단가) 변동</span>
+          <strong id="v-asp">0%</strong>
+        </div>
+        <input type="range" id="s-asp" min="-30" max="30" value="0" step="5" oninput="updateSimulator()">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>TSMC 선단 공정 수율</span>
+          <strong id="v-yield">+0%p</strong>
+        </div>
+        <input type="range" id="s-yield" min="-20" max="20" value="0" step="2" oninput="updateSimulator()">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>AI 규제 강도 (EU/US)</span>
+          <strong id="v-reg">중립</strong>
+        </div>
+        <input type="range" id="s-reg" min="-2" max="2" value="0" step="1" oninput="updateSimulator()">
+      </div>
+
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.75rem">📌 프리셋 시나리오</p>
+        <div class="scenario-presets">
+          <button class="preset-btn bull" onclick="setPreset('ai_supercycle')">🚀 AI 슈퍼사이클<br>2027 가속</button>
+          <button class="preset-btn bull" onclick="setPreset('hbm_shortage')">⚠️ HBM 공급<br>병목 심화</button>
+          <button class="preset-btn bear" onclick="setPreset('capex_peak')">📉 Capex<br>피크아웃</button>
+          <button class="preset-btn bear" onclick="setPreset('regulation')">🏛️ AI 규제<br>강화</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우측: 결과 -->
+    <div class="sim-results">
+      <div class="result-card">
+        <div class="result-card-header">
+          <h4>📈 매출 영향도 — 계층별</h4>
+          <span class="impact-badge impact-positive" id="overall-badge">전체 +12.4%</span>
+        </div>
+        <div class="company-impacts" id="impact-list"></div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-header">
+          <h4>💬 시나리오 내러티브</h4>
+        </div>
+        <div class="narrative-box" id="narrative-text"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA — DB contracts 테이블 기반
+// ══════════════════════════════════════
+const ALL_FLOWS = [
+  // [source, target, value, type, product]
+  ['구글', '앤트로픽', 200, 'INVESTMENT', 'AI_MODEL'],
+  ['구글', '엔비디아', 30,  'SUPPLY',     'GPU'],
+  ['메타', '엔비디아', 25,  'SUPPLY',     'GPU'],
+  ['MS',   '오픈AI',   13,  'INVESTMENT', 'AI_MODEL'],
+  ['아마존','앤트로픽', 12,  'INVESTMENT', 'AI_MODEL'],
+  ['메타', '브로드컴',  10,  'SUPPLY',     'ASIC'],
+  ['엔비디아','TSMC',  35,  'SUPPLY',     'FOUNDRY'],
+  ['엔비디아','SK하이닉스', 18, 'SUPPLY', 'HBM'],
+  ['엔비디아','삼성전자', 14, 'SUPPLY',   'HBM'],
+];
+
+// 레이어별 색상
+const NODE_COLORS = {
+  '구글':    '#4285f4', '아마존':  '#ff9900', 'MS':      '#00a4ef',
+  '메타':    '#0866ff', '오라클':  '#f80000',
+  '엔비디아':'#76b900', 'AMD':     '#ed1c24',  '브로드컴':'#cc0033',
+  'TSMC':   '#e05e2b', 'ASML':    '#ff6600',
+  'SK하이닉스':'#00bcd4','삼성전자':'#1428a0', '마이크론':'#009bdf',
+  '앤트로픽':'#c97839', '오픈AI':  '#10a37f',
+};
+
+let currentFilter = 'all';
+
+// ══════════════════════════════════════
+// TAB SWITCH
+// ══════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'sankey') drawSankey(currentFilter);
+  if (tab === 'scenario') updateSimulator();
+}
+
+// ══════════════════════════════════════
+// SANKEY
+// ══════════════════════════════════════
+google.charts.load('current', {packages: ['sankey']});
+google.charts.setOnLoadCallback(() => drawSankey('all'));
+
+function filterSankey(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = type;
+  drawSankey(type);
+}
+
+function drawSankey(filter) {
+  const filtered = filter === 'all'
+    ? ALL_FLOWS
+    : ALL_FLOWS.filter(f => f[2] === filter || f[3] === filter || f[4] === filter);
+
+  const data = new google.visualization.DataTable();
+  data.addColumn('string', 'From');
+  data.addColumn('string', 'To');
+  data.addColumn('number', 'Weight');
+  data.addColumn({type:'string', role:'tooltip'});
+
+  filtered.forEach(f => {
+    data.addRow([f[0], f[1], f[2], `${f[0]} → ${f[1]}\n$${f[2]}B · ${f[4]}`]);
+  });
+
+  const options = {
+    width: '100%',
+    height: 480,
+    sankey: {
+      node: {
+        colors: Object.values(NODE_COLORS),
+        label: {
+          fontName: 'Inter',
+          fontSize: 13,
+          color: '#f3f4f6',
+          bold: true,
+        },
+        nodePadding: 24,
+        width: 18,
+      },
+      link: {
+        colorMode: 'gradient',
+        fillOpacity: 0.55,
+      },
+      iterations: 64,
+    },
+    backgroundColor: { fill: 'transparent' },
+    tooltip: { isHtml: false },
+  };
+
+  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));
+  chart.draw(data, options);
+
+  // 범례
+  const legend = document.getElementById('sankey-legend');
+  const nodes = [...new Set(filtered.flatMap(f => [f[0], f[1]]))];
+  const totals = {};
+  filtered.forEach(f => {
+    totals[f[0]] = (totals[f[0]] || 0) + f[2];
+    totals[f[1]] = (totals[f[1]] || 0) + f[2];
+  });
+  legend.innerHTML = nodes.map(n => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${NODE_COLORS[n] || '#6b7280'}"></div>
+      <div>
+        <div class="legend-value">${n}</div>
+        <div class="legend-label">$${totals[n]}B 관여</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// SCENARIO SIMULATOR
+// ══════════════════════════════════════
+// 기업별 각 변수에 대한 민감도 (0~1 스케일, 양수=수혜, 음수=피해)
+const COMPANIES = [
+  { name: '엔비디아', layer: 'GPU', base: 160,
+    sens: { capex: 0.70, hbm: 0.10, asp: 0.85, yield: 0.30, reg: -0.40 } },
+  { name: 'SK하이닉스', layer: 'HBM', base: 75,
+    sens: { capex: 0.35, hbm: 0.90, asp: 0.20, yield: 0.10, reg: -0.15 } },
+  { name: 'TSMC', layer: 'Foundry', base: 120,
+    sens: { capex: 0.50, hbm: 0.15, asp: 0.30, yield: 0.65, reg: -0.20 } },
+  { name: '브로드컴', layer: 'ASIC', base: 70,
+    sens: { capex: 0.45, hbm: 0.05, asp: 0.10, yield: 0.20, reg: -0.25 } },
+  { name: '삼성전자', layer: 'Memory', base: 270,
+    sens: { capex: 0.20, hbm: 0.50, asp: 0.15, yield: 0.40, reg: -0.10 } },
+  { name: '마벨', layer: 'Optical', base: 8,
+    sens: { capex: 0.55, hbm: 0.05, asp: 0.05, yield: 0.10, reg: -0.30 } },
+  { name: 'AMD', layer: 'GPU', base: 25,
+    sens: { capex: 0.40, hbm: 0.08, asp: 0.50, yield: 0.15, reg: -0.20 } },
+  { name: 'ASML', layer: 'Equipment', base: 42,
+    sens: { capex: 0.30, hbm: 0.20, asp: 0.05, yield: -0.10, reg: -0.15 } },
+  { name: '마이크론', layer: 'Memory', base: 38,
+    sens: { capex: 0.25, hbm: 0.60, asp: 0.15, yield: 0.30, reg: -0.12 } },
+];
+
+const REG_LABELS = { '-2':'강규제', '-1':'규제강화', '0':'중립', '1':'규제완화', '2':'무규제' };
+
+const NARRATIVES = {
+  ai_supercycle: `<strong>🚀 AI 슈퍼사이클 가속</strong> 시나리오: 하이퍼스케일러의 Capex가 전년 대비 40% 급증하고 HBM 수요가 100% 폭등합니다. <strong>엔비디아</strong>는 공급 부족 속 ASP 프리미엄을 누리며 매출 $200B+를 돌파합니다. <strong>SK하이닉스</strong>는 HBM4 독점 양산으로 메모리 사이클 정점 수혜를 봅니다. 단, 전력 인프라·냉각 병목이 실행 속도의 최대 리스크입니다.`,
+  hbm_shortage: `<strong>⚠️ HBM 공급 병목</strong> 시나리오: SK하이닉스·삼성의 HBM 수율 문제로 공급이 수요의 70%에 그칩니다. <strong>엔비디아</strong> GPU 출하 지연 → 하이퍼스케일러 데이터센터 일정 지연 → Capex 이월. <strong>SK하이닉스</strong> 단기 ASP 급등 수혜이나 장기 고객 신뢰 훼손 위험. <strong>AMD</strong> 반사 수혜 가능성.`,
+  capex_peak: `<strong>📉 Capex 피크아웃</strong> 시나리오: 하이퍼스케일러들이 2027년부터 Capex를 20% 삭감합니다. ROI 압박으로 AI 인프라 투자를 재검토합니다. <strong>엔비디아</strong> 수주 잔고 소진 후 매출 하락. <strong>메모리</strong> 섹터는 공급 과잉 진입 → 가격 하락. 반면 <strong>소프트웨어/추론 최적화</strong> 기업이 상대적 수혜.`,
+  regulation: `<strong>🏛️ AI 규제 강화</strong> 시나리오: EU AI Act 이행 + 미국 Export Control 확대로 첨단 GPU 수출 제한. <strong>엔비디아</strong> 중국향 매출 30% 추가 제한. <strong>TSMC</strong> 미국 반도체법 요건 충족 비용 상승. 반면 규제 컴플라이언스 인프라 수요 증가로 <strong>Broadcom·Marvell</strong> 일부 수혜.`,
+};
+
+function setPreset(name) {
+  const presets = {
+    ai_supercycle: { capex: 40, hbm: 100, asp: 15, yield: 10, reg: 1 },
+    hbm_shortage:  { capex: 10, hbm: -30, asp: 20, yield: -15, reg: 0 },
+    capex_peak:    { capex: -30, hbm: -20, asp: -10, yield: 0, reg: -1 },
+    regulation:    { capex: -15, hbm: -10, asp: -5, yield: 0, reg: -2 },
+  };
+  const p = presets[name];
+  document.getElementById('s-capex').value  = p.capex;
+  document.getElementById('s-hbm').value    = p.hbm;
+  document.getElementById('s-asp').value    = p.asp;
+  document.getElementById('s-yield').value  = p.yield;
+  document.getElementById('s-reg').value    = p.reg;
+
+  // 내러티브 즉시 적용
+  document.getElementById('narrative-text').innerHTML = NARRATIVES[name];
+  updateSimulator(true);
+}
+
+function updateSimulator(skipNarrative = false) {
+  const capex = +document.getElementById('s-capex').value / 100;
+  const hbm   = +document.getElementById('s-hbm').value   / 100;
+  const asp   = +document.getElementById('s-asp').value   / 100;
+  const yld   = +document.getElementById('s-yield').value / 100;
+  const reg   = +document.getElementById('s-reg').value;
+
+  document.getElementById('v-capex').textContent = `${capex >= 0 ? '+' : ''}${(capex*100).toFixed(0)}%`;
+  document.getElementById('v-hbm').textContent   = `${hbm   >= 0 ? '+' : ''}${(hbm  *100).toFixed(0)}%`;
+  document.getElementById('v-asp').textContent   = `${asp   >= 0 ? '+' : ''}${(asp  *100).toFixed(0)}%`;
+  document.getElementById('v-yield').textContent = `${yld   >= 0 ? '+' : ''}${(yld  *100).toFixed(0)}%p`;
+  document.getElementById('v-reg').textContent   = REG_LABELS[reg.toString()];
+
+  // 각 기업 영향 계산
+  const impacts = COMPANIES.map(c => {
+    const delta =
+      c.sens.capex * capex +
+      c.sens.hbm   * hbm   +
+      c.sens.asp   * asp   +
+      c.sens.yield * yld   +
+      c.sens.reg   * (reg / 2) * 0.3;
+    const pct = Math.round(delta * 100 * 10) / 10;
+    return { ...c, pct };
+  }).sort((a, b) => b.pct - a.pct);
+
+  // 전체 평균
+  const avg = (impacts.reduce((s, c) => s + c.pct, 0) / impacts.length).toFixed(1);
+  const badge = document.getElementById('overall-badge');
+  badge.textContent = `전체 ${avg >= 0 ? '+' : ''}${avg}%`;
+  badge.className = `impact-badge ${avg >= 2 ? 'impact-positive' : avg <= -2 ? 'impact-negative' : 'impact-neutral'}`;
+
+  const maxAbs = Math.max(...impacts.map(c => Math.abs(c.pct)), 1);
+
+  document.getElementById('impact-list').innerHTML = impacts.map(c => `
+    <div class="company-impact-row">
+      <div class="company-name">${c.name} <span style="font-size:0.7rem;opacity:0.6">${c.layer}</span></div>
+      <div class="impact-bar-bg">
+        <div class="impact-bar ${c.pct >= 0 ? 'bar-positive' : 'bar-negative'}"
+             style="width:${Math.abs(c.pct)/maxAbs*100}%;
+                    ${c.pct < 0 ? 'margin-left:auto' : ''}">
+        </div>
+      </div>
+      <div class="impact-num" style="color:${c.pct >= 0 ? '#10b981' : '#ef4444'}">
+        ${c.pct >= 0 ? '+' : ''}${c.pct}%
+      </div>
+    </div>
+  `).join('');
+
+  if (!skipNarrative) {
+    const dominant = impacts[0];
+    const loser    = impacts[impacts.length - 1];
+    document.getElementById('narrative-text').innerHTML =
+      `현재 설정: Capex <strong>${document.getElementById('v-capex').textContent}</strong>,
+       HBM 수요 <strong>${document.getElementById('v-hbm').textContent}</strong>,
+       GPU ASP <strong>${document.getElementById('v-asp').textContent}</strong>.<br><br>
+       가장 큰 수혜 기업: <strong>${dominant.name}</strong> (${dominant.pct >= 0 ? '+' : ''}${dominant.pct}%),
+       가장 큰 피해 기업: <strong>${loser.name}</strong> (${loser.pct}%).<br><br>
+       ${avg >= 5 ? '강한 상승 시나리오 — 전 밸류체인 업황 호조를 의미합니다.' :
+         avg <= -5 ? '하강 시나리오 — 업황 조정 국면 진입 가능성이 높습니다.' :
+         '중립 시나리오 — 기업별 선별적 접근이 필요한 구간입니다.'}`;
+  }
+}
+
+// 초기 실행
+updateSimulator();
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 # Memory Claude 데이터 보고서
-**자동 생성**: 2026-09-11 16:11  
+**자동 생성**: 2026-09-11 16:48  
 **DB 경로**: `data/memory_claude.db`
 
 ---
@@ -14,6 +14,7 @@
 | `earnings_reports` | 208 | 분기별 실적발표 (매출/영업익/순익/EPS/가이던스/비중) |
 | `milestones` | 21 | 공장 가동, 제품 출시 등 마일스톤 |
 | `fab_capacity` | 11 | 파운드리/메모리 Fab Capa 및 공정 |
+| `datacenter_capacity` | 13 | 하이퍼스케일러 AI 데이터센터 전력/클러스터 캐파 |
 | `entity_strategy` | 0 | 기업별 전략 및 AI 로드맵 |
 
 ---
@@ -979,6 +980,23 @@
 | 2027-06-15 | **삼성전자** | PRODUCT_LAUNCH | 미래전망 | `HIGH` | 평택 P4 1c nm 기반 HBM4 턴키(메모리+파운드리 4nm 베이스다이 원스톱) 대형 고객사 납품. |
 | 2027-08-20 | **구글** | PRODUCT_LAUNCH | 미래전망 | `HIGH` | 자체 6세대 TPU(Ironwood) 인프라 비중 50% 돌파 및 외부 GPU 의존도 점진적 분산. |
 | 2028-04-15 | **TSMC** | FAB_MILESTONE | 미래전망 | `MEDIUM` | 미국 애리조나 Fab 21 2단계 2nm 라인 조기 가동 및 미국산 AI 칩 생산 본격화. |
+
+---
+
+## 9. 하이퍼스케일러 AI 데이터센터 전력 및 가속기 클러스터 현황
+
+| 기업 | 데이터센터명 | 위치 | 현재 전력 | 목표 전력 | 전력원 | 목표 가속기 | 주력 칩 | 가동 시점 | 상태 |
+| :--- | :--- | :--- | :---: | :---: | :--- | :---: | :--- | :---: | :---: |
+| **아마존** | 북부 버지니아 데이터센터 클러스터 | Virginia (USA) | 800 MW | 1,500 MW | Dominion Energy Grid + 신재생 PPA | 120,000대 | NVIDIA Hopper / Blackwell | 2025-Q3 | OPERATING |
+| **메타** | 루이지애나 리치랜드 패리시 AI 슈퍼캠퍼스 | Louisiana (USA) | - | 1,500 MW | Entergy Grid + 원자력/가스 복합 | 250,000대 | NVIDIA Rubin R100 / MTIA v3 | 2027-Q3 | PLANNED |
+| **아마존** | 오하이오 뉴올버니 AI 메가 허브 (Project Rainier) | Ohio (USA) | 400 MW | 1,200 MW | AEP Grid + 전용 가스 발전 백업 | 200,000대 | Trainium2 / Inferentia2 / B200 | 2026-Q3 | CONSTRUCTION |
+| **마이크로소프트** | 마운트 플레전트 AI 슈퍼캠퍼스 | Wisconsin (USA) | 200 MW | 1,000 MW | Grid + 전력사 가스/신재생 | 100,000대 | NVIDIA Blackwell (GB200 NVL72) | 2026-Q4 | CONSTRUCTION |
+| **오라클** | 기가와트(GW)급 소형원전(SMR) 데이터센터 캠퍼스 | Location Pending (USA) | - | 1,000 MW | SMR 소형 원자로 3기 (총 1GW) | 200,000대 | Blackwell / Rubin / Custom ASIC | 2028-Q2 | PLANNED |
+| **아마존** | 서스퀘하나 원전 직결 캠퍼스 (Cumulus Data Center) | Pennsylvania (USA) | 120 MW | 960 MW | Susquehanna Nuclear (탈렌 에너지 100% 원전 PPA) | 150,000대 | AWS Trainium2 / NVIDIA Blackwell | 2026-Q4 | CONSTRUCTION |
+| **마이크로소프트** | 3마일 원전(Crane Clean Energy) 직결 캠퍼스 | Pennsylvania (USA) | - | 835 MW | Nuclear PPA (100% 원자력 직결) | 150,000대 | Blackwell Ultra / Rubin R100 | 2028-Q1 | PLANNED |
+| **메타** | 인디애나 제퍼슨빌 AI 데이터센터 | Indiana (USA) | 150 MW | 800 MW | Duke Energy Grid + 솔라 PPA | 150,000대 | Meta MTIA v2 / NVIDIA B200 | 2026-Q4 | CONSTRUCTION |
+| **마이크로소프트** | 보이드턴 버지니아 메가 캠퍼스 | Virginia (USA) | 350 MW | 600 MW | PJM Grid + 원전 전력 PPA | 80,000대 | NVIDIA H100 / H200 / B200 | 2025-Q4 | OPERATING |
+| **오라클** | 멤피스 '콜로서스(Colossus)' 클러스터 (xAI 파트너십) | Tennessee (USA) | 150 MW | 300 MW | TVA Grid + 현장 이동형 천연가스 터빈 발전 | 100,000대 | NVIDIA H100 (10만장) → H200/GB200 (30만장) | 2026-Q2 | OPERATING |
 
 ---
 
