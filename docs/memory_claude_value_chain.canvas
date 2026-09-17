@@ -31,8 +31,18 @@
       "color": "5"
     },
     {
-      "id": "node_GOOGLE",
+      "id": "node_COREWEAVE",
       "x": -150,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 코어위브 (COREWEAVE)\n- **티커**: `-` | **국가**: US\n- **설명**: 엔비디아 전략 투자 GPU 특화 네오클라우드, 앤트로픽 $518B 공급 파트너",
+      "color": "5"
+    },
+    {
+      "id": "node_GOOGLE",
+      "x": 150,
       "y": -50,
       "width": 260,
       "height": 150,
@@ -42,7 +52,7 @@
     },
     {
       "id": "node_META",
-      "x": 150,
+      "x": 450,
       "y": -50,
       "width": 260,
       "height": 150,
@@ -52,7 +62,7 @@
     },
     {
       "id": "node_MICROSOFT",
-      "x": 450,
+      "x": 750,
       "y": -50,
       "width": 260,
       "height": 150,
@@ -61,8 +71,18 @@
       "color": "5"
     },
     {
+      "id": "node_NEBIUS",
+      "x": 1050,
+      "y": -50,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 네비우스 (NEBIUS)\n- **티커**: `NBIS` | **국가**: NL\n- **설명**: 나스닥 상장 대규모 AI 인프라 및 GPU 네오클라우드",
+      "color": "5"
+    },
+    {
       "id": "node_ORACLE",
-      "x": 750,
+      "x": 1350,
       "y": -50,
       "width": 260,
       "height": 150,
@@ -81,8 +101,18 @@
       "color": "4"
     },
     {
-      "id": "node_BROADCOM",
+      "id": "node_ARM",
       "x": -150,
+      "y": 200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### Arm (ARM)\n- **티커**: `ARM` | **국가**: UK\n- **설명**: 빅테크 자체 가속기(Axion, Graviton) CPU 아키텍처 독점 라이선스",
+      "color": "4"
+    },
+    {
+      "id": "node_BROADCOM",
+      "x": 150,
       "y": 200,
       "width": 260,
       "height": 150,
@@ -91,8 +121,18 @@
       "color": "4"
     },
     {
+      "id": "node_INTEL",
+      "x": 450,
+      "y": 200,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 인텔 (INTEL)\n- **티커**: `INTC` | **국가**: US\n- **설명**: 데이터센터 x86 제온 CPU 및 파운드리",
+      "color": "4"
+    },
+    {
       "id": "node_NVIDIA",
-      "x": 150,
+      "x": 750,
       "y": 200,
       "width": 260,
       "height": 150,
@@ -101,8 +141,38 @@
       "color": "4"
     },
     {
-      "id": "node_ASML",
+      "id": "node_AMKOR",
       "x": -450,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 앰코 (AMKOR)\n- **티커**: `AMKR` | **국가**: US\n- **설명**: 미국 애리조나 첨단 2.5D 패키징 협력사",
+      "color": "3"
+    },
+    {
+      "id": "node_APPLIED_MATERIALS",
+      "x": -150,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 어플라이드 (APPLIED_MATERIALS)\n- **티커**: `AMAT` | **국가**: US\n- **설명**: 반도체 증착·배선 및 첨단 패키징 장비 1위",
+      "color": "3"
+    },
+    {
+      "id": "node_ASE",
+      "x": 150,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### ASE (ASE)\n- **티커**: `ASX` | **국가**: TW\n- **설명**: 글로벌 1위 OSAT, TSMC CoWoS 패키징 외주 파트너",
+      "color": "3"
+    },
+    {
+      "id": "node_ASML",
+      "x": 450,
       "y": 450,
       "width": 260,
       "height": 150,
@@ -111,8 +181,28 @@
       "color": "3"
     },
     {
+      "id": "node_KLA",
+      "x": 750,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### KLA (KLA)\n- **티커**: `KLAC` | **국가**: US\n- **설명**: 선단공정 및 패키징 수율 검사·계측 장비 독점",
+      "color": "3"
+    },
+    {
+      "id": "node_LAM_RESEARCH",
+      "x": 1050,
+      "y": 450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 램리서치 (LAM_RESEARCH)\n- **티커**: `LRCX` | **국가**: US\n- **설명**: HBM 3D 적층 및 고단화 DRAM 식각 장비 독점",
+      "color": "3"
+    },
+    {
       "id": "node_TSMC",
-      "x": -150,
+      "x": 1350,
       "y": 450,
       "width": 260,
       "height": 150,
@@ -121,8 +211,18 @@
       "color": "3"
     },
     {
-      "id": "node_MICRON",
+      "id": "node_KIOXIA",
       "x": -450,
+      "y": 700,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 키옥시아 (KIOXIA)\n- **티커**: `285A` | **국가**: JP\n- **설명**: NAND 플래시 및 AI 추론용 엔터프라이즈 eSSD 팹 운영",
+      "color": "2"
+    },
+    {
+      "id": "node_MICRON",
+      "x": -150,
       "y": 700,
       "width": 260,
       "height": 150,
@@ -132,7 +232,7 @@
     },
     {
       "id": "node_SAMSUNG",
-      "x": -150,
+      "x": 150,
       "y": 700,
       "width": 260,
       "height": 150,
@@ -142,7 +242,7 @@
     },
     {
       "id": "node_SK_HYNIX",
-      "x": 150,
+      "x": 450,
       "y": 700,
       "width": 260,
       "height": 150,
@@ -152,7 +252,7 @@
     },
     {
       "id": "node_WDC",
-      "x": 450,
+      "x": 750,
       "y": 700,
       "width": 260,
       "height": 150,
@@ -161,8 +261,18 @@
       "color": "2"
     },
     {
-      "id": "node_COHERENT",
+      "id": "node_ARISTA",
       "x": -450,
+      "y": 950,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 아리스타 (ARISTA)\n- **티커**: `ANET` | **국가**: US\n- **설명**: AI 백엔드 클러스터용 800G/1.6T 고속 Ethernet 스위치 패브릭 독점적 지위",
+      "color": "1"
+    },
+    {
+      "id": "node_COHERENT",
+      "x": -150,
       "y": 950,
       "width": 260,
       "height": 150,
@@ -172,7 +282,7 @@
     },
     {
       "id": "node_MARVELL",
-      "x": -150,
+      "x": 150,
       "y": 950,
       "width": 260,
       "height": 150,
@@ -207,8 +317,48 @@
       "width": 260,
       "height": 150,
       "type": "text",
-      "text": "### 스페이스X (SPACEX)\n- **티커**: `-` | **국가**: US\n- **설명**: Starlink + 위성 인프라",
+      "text": "### 스페이스X / xAI (SPACEX)\n- **티커**: `-` | **국가**: US\n- **설명**: Starlink 저궤도 위성 통신망 + xAI Colossus 100k GPU 슈퍼컴퓨터 및 자체 가스터빈 전력 인프라",
       "color": "0"
+    },
+    {
+      "id": "node_EATON",
+      "x": -450,
+      "y": 1450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 이튼 (EATON)\n- **티커**: `ETN` | **국가**: US\n- **설명**: 데이터센터 배전, 변압기, 고전압 UPS 및 전력 관리 솔루션",
+      "color": "4"
+    },
+    {
+      "id": "node_GE_VERNOVA",
+      "x": -150,
+      "y": 1450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### GE 버노바 (GE_VERNOVA)\n- **티커**: `GEV` | **국가**: US\n- **설명**: 데이터센터 전력 공급용 가스터빈, 독립 발전 및 전력망 솔루션",
+      "color": "4"
+    },
+    {
+      "id": "node_SCHNEIDER",
+      "x": 150,
+      "y": 1450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 슈나이더 (SCHNEIDER)\n- **티커**: `SU` | **국가**: FR\n- **설명**: 데이터센터 전력 분배 장비, 냉각 및 인프라 자동화 솔루션",
+      "color": "4"
+    },
+    {
+      "id": "node_VERTIV",
+      "x": 450,
+      "y": 1450,
+      "width": 260,
+      "height": 150,
+      "type": "text",
+      "text": "### 버티브 (VERTIV)\n- **티커**: `VRT` | **국가**: US\n- **설명**: AI 데이터센터 고밀도 액체냉각(Liquid Cooling) 및 전력 분배 인프라 1위",
+      "color": "4"
     }
   ],
   "edges": [
@@ -300,6 +450,51 @@
       "toNode": "node_TSMC",
       "toSide": "top",
       "label": "[SUPPLY] $35.0B (FOUNDRY)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_10_CON-2026-OPAI-BRCM",
+      "fromNode": "node_OPENAI",
+      "fromSide": "bottom",
+      "toNode": "node_BROADCOM",
+      "toSide": "top",
+      "label": "[PARTNERSHIP] $65.0B (CUSTOM_ASIC)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_11_CON-2026-ANTH-AWS",
+      "fromNode": "node_ANTHROPIC",
+      "fromSide": "bottom",
+      "toNode": "node_AMAZON",
+      "toSide": "top",
+      "label": "[INFRA_COMPUTE] $280.0B (CLOUD_COMPUTE)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_12_CON-2026-ANTH-GOOG",
+      "fromNode": "node_ANTHROPIC",
+      "fromSide": "bottom",
+      "toNode": "node_GOOGLE",
+      "toSide": "top",
+      "label": "[INFRA_COMPUTE] $150.0B (TPU_CLOUD)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_13_CON-2026-ANTH-SKH",
+      "fromNode": "node_ANTHROPIC",
+      "fromSide": "bottom",
+      "toNode": "node_SK_HYNIX",
+      "toSide": "top",
+      "label": "[SUPPLY] $15.0B (HBM_DRAM)",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge_14_CON-2026-ANTH-MU",
+      "fromNode": "node_ANTHROPIC",
+      "fromSide": "bottom",
+      "toNode": "node_MICRON",
+      "toSide": "top",
+      "label": "[SUPPLY] $10.0B (HBM_DRAM)",
       "toEnd": "arrow"
     }
   ]

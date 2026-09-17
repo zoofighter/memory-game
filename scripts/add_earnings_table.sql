@@ -13,7 +13,18 @@ CREATE TABLE IF NOT EXISTS earnings_reports (
     revenue             REAL NOT NULL,          -- 매출
     op_income           REAL,                   -- 영업이익
     net_income          REAL,                   -- 당기순이익
-    unit                TEXT DEFAULT 'B_USD',   -- 단위: B_USD(10억 달러), T_KRW(조 원)
+    unit                TEXT DEFAULT 'B_USD',   -- 분석용 단위: B_USD(10억 달러)
+    reported_revenue    REAL,                   -- 원 공시 통화 매출
+    reported_op_income  REAL,                   -- 원 공시 통화 영업이익
+    reported_net_income REAL,                   -- 원 공시 통화 순이익
+    reported_consensus_revenue REAL,            -- 원 공시 통화 컨센서스 매출
+    reported_capex      REAL,                   -- 원 공시 통화 설비투자
+    reported_currency   TEXT DEFAULT 'USD',     -- 원 공시 통화 ISO 코드
+    reported_unit       TEXT DEFAULT 'B_USD',   -- 원 공시값 단위/배율
+    fx_rate             REAL,                   -- 현지통화 / 1 USD
+    fx_rate_type        TEXT,                   -- QUARTER_AVG/REPORT_DATE/GUIDANCE
+    fx_source           TEXT,
+    fx_as_of_date       TEXT,
     
     -- [2] 주당순이익 (EPS) & 시장 기대치
     eps_actual          REAL,                   -- 발표된 실제 EPS ($ 또는 원)

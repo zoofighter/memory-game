@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — 밸류체인 의존도 네트워크 (Force-Directed Graph)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- D3.js v7 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.75);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(17, 24, 39, 0.9);
+      border-bottom: 1px solid var(--border-card);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+    .header-titles h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .header-titles p {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+    .header-nav {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .nav-btn {
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid rgba(147, 197, 253, 0.25);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      background: rgba(147, 197, 253, 0.06);
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: rgba(147, 197, 253, 0.18);
+      border-color: rgba(147, 197, 253, 0.5);
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 70px);
+      position: relative;
+    }
+
+    /* Left Graph Area */
+    .graph-pane {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at center, #111a2e 0%, #0a0e17 80%);
+      overflow: hidden;
+    }
+
+    /* Top Stats Ribbon */
+    .stats-ribbon {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.85rem 1.5rem;
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid var(--border-card);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-card);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+    .stat-pill .label { color: var(--text-muted); }
+    .stat-pill .val { font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace; }
+
+    /* Control Floating Toolbar */
+    .controls-bar {
+      position: absolute;
+      top: 4.5rem;
+      left: 1.5rem;
+      z-index: 20;
+      background: rgba(17, 24, 39, 0.88);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .control-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .btn-toggle-group {
+      display: flex;
+      background: rgba(0,0,0,0.3);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .btn-toggle {
+      flex: 1;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.75rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .btn-toggle.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+    }
+    .search-box {
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 0.4rem 0.6rem 0.4rem 1.8rem;
+      color: #fff;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.55rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Layer Filter Pills */
+    .layer-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .layer-pill {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .layer-pill.active {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Zoom Buttons */
+    .zoom-controls {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .btn-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .btn-circle:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* SVG Canvas */
+    #graph-svg {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+    #graph-svg:active {
+      cursor: grabbing;
+    }
+
+    /* Nodes and Links Styling */
+    .link {
+      stroke-opacity: 0.6;
+      transition: stroke-opacity 0.2s, stroke-width 0.2s;
+    }
+    .link.highlighted {
+      stroke-opacity: 1 !important;
+      filter: drop-shadow(0 0 5px currentColor);
+    }
+    .link.dimmed {
+      stroke-opacity: 0.08 !important;
+    }
+    .node-group {
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .node-group.dimmed {
+      opacity: 0.12 !important;
+    }
+    .node-circle {
+      stroke-width: 2.5px;
+      transition: transform 0.2s, stroke-width 0.2s;
+    }
+    .node-group:hover .node-circle,
+    .node-group.selected .node-circle {
+      stroke-width: 4px;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+    .node-label {
+      font-size: 11px;
+      font-weight: 600;
+      fill: #f3f4f6;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+    .node-sublabel {
+      font-size: 9px;
+      fill: #9ca3af;
+      pointer-events: none;
+    }
+
+    /* Right Detail Drawer */
+    .detail-drawer {
+      width: 380px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-card);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 30;
+      box-shadow: -8px 0 24px rgba(0,0,0,0.4);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .drawer-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.02);
+    }
+    .drawer-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .drawer-subtitle {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+    .badge-layer {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.4rem;
+    }
+    .drawer-body {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .info-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .info-item .lbl { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; }
+    .info-item .val { font-size: 0.95rem; font-weight: 600; color: #fff; margin-top: 0.15rem; font-family: 'JetBrains Mono', monospace; }
+
+    .section-head {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .contract-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 0.6rem;
+      transition: all 0.2s;
+    }
+    .contract-card:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.18);
+    }
+    .contract-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .type-badge {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .contract-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #38bdf8;
+    }
+    .contract-target {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+    .contract-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .contract-meta {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.78rem;
+      color: #f3f4f6;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.15s;
+      max-width: 260px;
+    }
+    .tooltip-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 0.2rem;
+      color: #fff;
+    }
+
+    /* Bottom Legend */
+    .legend-bar {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.72rem;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .legend-row {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .legend-line {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-titles">
+      <h1>🕸 밸류체인 의존도 네트워크 (Force-Directed Graph)</h1>
+      <p>하이퍼스케일러-AI랩-컴퓨팅-파운드리-메모리 간 $877B 규모의 공급·투자·약정 의존도 네트워크 매핑</p>
+    </div>
+    <div class="header-nav">
+      <a href="index.html" class="nav-btn">← 메인 대시보드</a>
+      <a href="hbm_market_balance.html" class="nav-btn" style="color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.08);">💾 HBM 수급 분석 ↗</a>
+      <a href="multi_company_overlay.html" class="nav-btn" style="color:#10b981; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.08);">🏆 멀티 기업 비교 ↗</a>
+      <a href="layer_capital_absorption.html" class="nav-btn">⚡ 레이어별 자본 흡수 ↗</a>
+      <a href="sankey_scenario.html" class="nav-btn">💹 자본 흐름 Sankey ↗</a>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="main-wrapper">
+    <!-- Left Graph Pane -->
+    <div class="graph-pane">
+      <!-- Top Stats Ribbon -->
+      <div class="stats-ribbon">
+        <div class="stat-pill">
+          <span class="label">식별 계약 총액:</span>
+          <span class="val">$877.0B</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">체결 계약 건수:</span>
+          <span class="val">15건</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">핵심 허브 노드:</span>
+          <span class="val">앤트로픽 (6건) · 엔비디아 (5건)</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">메모리 직납 축:</span>
+          <span class="val">앤트로픽 → SK하이닉스·마이크론 ($25B)</span>
+        </div>
+      </div>
+
+      <!-- Floating Controls -->
+      <div class="controls-bar">
+        <!-- Search -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="company-search" placeholder="기업명, 티커 검색..." oninput="onSearchInput()">
+        </div>
+
+        <!-- View Scope Toggle -->
+        <div class="control-group">
+          <div class="control-title">표시 대상</div>
+          <div class="btn-toggle-group">
+            <button class="btn-toggle active" id="scope-contracted" onclick="setScope('contracted')">계약 기업만 (12개)</button>
+            <button class="btn-toggle" id="scope-all" onclick="setScope('all')">전체 기업 (36개)</button>
+          </div>
+        </div>
+
+        <!-- Layout Mode Toggle -->
+        <div class="control-group">
+          <div class="control-title">배치 알고리즘</div>
+          <div class="btn-toggle-group">
+            <button class="btn-toggle active" id="layout-force" onclick="setLayout('force')">자유 물리 (Force)</button>
+            <button class="btn-toggle" id="layout-layer" onclick="setLayout('layer')">밸류체인 순서 (L1→L8)</button>
+          </div>
+        </div>
+
+        <!-- Contract Type Filter -->
+        <div class="control-group">
+          <div class="control-title">계약 유형 필터</div>
+          <div class="btn-toggle-group" style="display:grid; grid-template-columns:1fr 1fr;">
+            <button class="btn-toggle active" id="type-ALL" onclick="setTypeFilter('ALL')">전체</button>
+            <button class="btn-toggle" id="type-SUPPLY" onclick="setTypeFilter('SUPPLY')">공급 (SUPPLY)</button>
+            <button class="btn-toggle" id="type-INVESTMENT" onclick="setTypeFilter('INVESTMENT')">투자 (INVEST)</button>
+            <button class="btn-toggle" id="type-INFRA_COMPUTE" onclick="setTypeFilter('INFRA_COMPUTE')">컴퓨트 (INFRA)</button>
+          </div>
+        </div>
+
+        <!-- Layer Filter -->
+        <div class="control-group">
+          <div class="control-title">레이어 필터</div>
+          <div class="layer-pills" id="layer-pills-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button class="btn-circle" onclick="zoomIn()" title="확대">+</button>
+        <button class="btn-circle" onclick="zoomOut()" title="축소">−</button>
+        <button class="btn-circle" onclick="resetZoom()" title="화면 맞춤" style="font-size:0.75rem;">⟲</button>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend-bar">
+        <div class="legend-row">
+          <span style="color:var(--text-dim); font-weight:700;">계약 유형:</span>
+          <div class="legend-item"><div class="legend-line" style="background:#3b82f6;"></div>부품·칩 공급</div>
+          <div class="legend-item"><div class="legend-line" style="background:#ec4899;"></div>자본 투자</div>
+          <div class="legend-item"><div class="legend-line" style="background:#10b981;"></div>인프라 약정</div>
+          <div class="legend-item"><div class="legend-line" style="background:#f59e0b;"></div>협력·ASIC</div>
+        </div>
+        <div class="legend-row">
+          <span style="color:var(--text-dim); font-weight:700;">노드 크기:</span>
+          <span style="color:var(--text-muted);">2025 연간 매출 규모 반영 (반지름 비례)</span>
+        </div>
+      </div>
+
+      <!-- SVG Container -->
+      <svg id="graph-svg"></svg>
+
+      <!-- Tooltip -->
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <!-- Right Detail Drawer -->
+    <aside class="detail-drawer" id="detail-drawer">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-title" id="drawer-name">기업을 선택하세요</div>
+          <div class="drawer-subtitle" id="drawer-ticker">-</div>
+          <div class="badge-layer" id="drawer-layer">-</div>
+        </div>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Quick Stats -->
+        <div class="info-card">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="lbl">2025 연간 매출</div>
+              <div class="val" id="drawer-rev">-</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">식별 계약 총액</div>
+              <div class="val" id="drawer-contract-sum">-</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">구매(Buyer) 계약</div>
+              <div class="val" id="drawer-buy-cnt">-</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">공급(Seller) 계약</div>
+              <div class="val" id="drawer-sell-cnt">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <div class="section-head">🏢 기업 개요 및 밸류체인 역할</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; background:rgba(255,255,255,0.02); padding:0.8rem; border-radius:6px; border:1px solid var(--border-card);" id="drawer-desc">
+            좌측 그래프에서 노드를 클릭하면 해당 기업의 밸류체인 의존도와 세부 계약 내역이 표시됩니다.
+          </div>
+        </div>
+
+        <!-- Contracts: Buyer -->
+        <div>
+          <div class="section-head">📥 구매 계약 (Buyer로서 조달) <span id="buy-cnt-badge" style="color:#38bdf8; font-weight:700;">(0)</span></div>
+          <div id="drawer-buyer-contracts">
+            <div style="font-size:0.75rem; color:var(--text-dim);">관련 계약이 없습니다.</div>
+          </div>
+        </div>
+
+        <!-- Contracts: Seller -->
+        <div>
+          <div class="section-head">📤 공급/수주 계약 (Seller로서 납품/투자유치) <span id="sell-cnt-badge" style="color:#10b981; font-weight:700;">(0)</span></div>
+          <div id="drawer-seller-contracts">
+            <div style="font-size:0.75rem; color:var(--text-dim);">관련 계약이 없습니다.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Data Script -->
+  <script>
+    const RAW_NODES = [{"entity_id": "ANTHROPIC", "name_en": "Anthropic", "name_ko": "앤트로픽", "layer": "L1_AI_LAB", "country": "US", "ticker": null, "is_public": 0, "description": "Claude AI 개발사, 구글·아마존 투자", "rev_2025": 0, "in_degree": 2, "out_degree": 4, "total_degree": 6, "contract_val_sum": 667.0, "has_contract": true, "layer_name_ko": "L1 프론티어 AI 랩", "layer_color": "#ec4899"}, {"entity_id": "OPENAI", "name_en": "OpenAI", "name_ko": "오픈AI", "layer": "L1_AI_LAB", "country": "US", "ticker": null, "is_public": 0, "description": "GPT/ChatGPT 개발사, MS 투자", "rev_2025": 0, "in_degree": 2, "out_degree": 1, "total_degree": 3, "contract_val_sum": 78.0, "has_contract": true, "layer_name_ko": "L1 프론티어 AI 랩", "layer_color": "#ec4899"}, {"entity_id": "AMAZON", "name_en": "Amazon/AWS", "name_ko": "아마존", "layer": "L2_HYPERSCALER", "country": "US", "ticker": "AMZN", "is_public": 1, "description": "AWS + Trainium + Bedrock", "rev_2025": 717.225, "in_degree": 1, "out_degree": 2, "total_degree": 3, "contract_val_sum": 292.0, "has_contract": true, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "GOOGLE", "name_en": "Alphabet/Google", "name_ko": "구글", "layer": "L2_HYPERSCALER", "country": "US", "ticker": "GOOGL", "is_public": 1, "description": "GCP + Gemini + TPU", "rev_2025": 402.832, "in_degree": 1, "out_degree": 2, "total_degree": 3, "contract_val_sum": 380.0, "has_contract": true, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "MICROSOFT", "name_en": "Microsoft", "name_ko": "마이크로소프트", "layer": "L2_HYPERSCALER", "country": "US", "ticker": "MSFT", "is_public": 1, "description": "Azure + OpenAI 파트너", "rev_2025": 305.457, "in_degree": 0, "out_degree": 1, "total_degree": 1, "contract_val_sum": 13.0, "has_contract": true, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "META", "name_en": "Meta Platforms", "name_ko": "메타", "layer": "L2_HYPERSCALER", "country": "US", "ticker": "META", "is_public": 1, "description": "Llama 오픈소스 + MTIA ASIC", "rev_2025": 200.961, "in_degree": 0, "out_degree": 2, "total_degree": 2, "contract_val_sum": 35.0, "has_contract": true, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "ORACLE", "name_en": "Oracle", "name_ko": "오라클", "layer": "L2_HYPERSCALER", "country": "US", "ticker": "ORCL", "is_public": 1, "description": "OCI + AI 인프라 확장", "rev_2025": 61.017, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "COREWEAVE", "name_en": "CoreWeave", "name_ko": "코어위브", "layer": "L2_HYPERSCALER", "country": "US", "ticker": null, "is_public": 0, "description": "엔비디아 전략 투자 GPU 특화 네오클라우드, 앤트로픽 $518B 공급 파트너", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "NEBIUS", "name_en": "Nebius Group", "name_ko": "네비우스", "layer": "L2_HYPERSCALER", "country": "NL", "ticker": "NBIS", "is_public": 1, "description": "나스닥 상장 대규모 AI 인프라 및 GPU 네오클라우드", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "NVIDIA", "name_en": "NVIDIA", "name_ko": "엔비디아", "layer": "L3_COMPUTE", "country": "US", "ticker": "NVDA", "is_public": 1, "description": "GPU + CUDA + DGX Cloud", "rev_2025": 215.936, "in_degree": 2, "out_degree": 3, "total_degree": 5, "contract_val_sum": 122.0, "has_contract": true, "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "BROADCOM", "name_en": "Broadcom", "name_ko": "브로드컴", "layer": "L3_COMPUTE", "country": "US", "ticker": "AVGO", "is_public": 1, "description": "AI ASIC 설계 + 네트워킹", "rev_2025": 63.887, "in_degree": 2, "out_degree": 0, "total_degree": 2, "contract_val_sum": 75.0, "has_contract": true, "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "INTEL", "name_en": "Intel", "name_ko": "인텔", "layer": "L3_COMPUTE", "country": "US", "ticker": "INTC", "is_public": 1, "description": "데이터센터 x86 제온 CPU 및 파운드리", "rev_2025": 52.853, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "AMD", "name_en": "AMD", "name_ko": "AMD", "layer": "L3_COMPUTE", "country": "US", "ticker": "AMD", "is_public": 1, "description": "MI300/MI400 GPU + EPYC CPU", "rev_2025": 34.638999999999996, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "ARM", "name_en": "Arm Holdings", "name_ko": "Arm", "layer": "L3_COMPUTE", "country": "UK", "ticker": "ARM", "is_public": 1, "description": "빅테크 자체 가속기(Axion, Graviton) CPU 아키텍처 독점 라이선스", "rev_2025": 4.671, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "TSMC", "name_en": "TSMC", "name_ko": "TSMC", "layer": "L4_FOUNDRY", "country": "TW", "ticker": "TSM", "is_public": 1, "description": "N2/A16 선단공정 + CoWoS", "rev_2025": 118.10090542861624, "in_degree": 1, "out_degree": 0, "total_degree": 1, "contract_val_sum": 35.0, "has_contract": true, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "APPLIED_MATERIALS", "name_en": "Applied Materials", "name_ko": "어플라이드", "layer": "L4_FOUNDRY", "country": "US", "ticker": "AMAT", "is_public": 1, "description": "반도체 증착·배선 및 첨단 패키징 장비 1위", "rev_2025": 28.368, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "LAM_RESEARCH", "name_en": "Lam Research", "name_ko": "램리서치", "layer": "L4_FOUNDRY", "country": "US", "ticker": "LRCX", "is_public": 1, "description": "HBM 3D 적층 및 고단화 DRAM 식각 장비 독점", "rev_2025": 20.560532000000002, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "KLA", "name_en": "KLA Corporation", "name_ko": "KLA", "layer": "L4_FOUNDRY", "country": "US", "ticker": "KLAC", "is_public": 1, "description": "선단공정 및 패키징 수율 검사·계측 장비 독점", "rev_2025": 12.744612, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "AMKOR", "name_en": "Amkor Technology", "name_ko": "앰코", "layer": "L4_FOUNDRY", "country": "US", "ticker": "AMKR", "is_public": 1, "description": "미국 애리조나 첨단 2.5D 패키징 협력사", "rev_2025": 6.707981, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "ASE", "name_en": "ASE Technology", "name_ko": "ASE", "layer": "L4_FOUNDRY", "country": "TW", "ticker": "ASX", "is_public": 1, "description": "글로벌 1위 OSAT, TSMC CoWoS 패키징 외주 파트너", "rev_2025": 4.834830019243104, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "ASML", "name_en": "ASML", "name_ko": "ASML", "layer": "L4_FOUNDRY", "country": "NL", "ticker": "ASML", "is_public": 1, "description": "EUV/High-NA EUV 독점", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "SAMSUNG", "name_en": "Samsung Electronics", "name_ko": "삼성전자", "layer": "L5_MEMORY", "country": "KR", "ticker": "005930", "is_public": 1, "description": "DRAM 1위 + HBM + 파운드리", "rev_2025": 240.16722798816755, "in_degree": 1, "out_degree": 0, "total_degree": 1, "contract_val_sum": 14.0, "has_contract": true, "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "SK_HYNIX", "name_en": "SK hynix", "name_ko": "SK하이닉스", "layer": "L5_MEMORY", "country": "KR", "ticker": "000660", "is_public": 1, "description": "HBM 세계 1위 (점유율 50%+)", "rev_2025": 68.3163910245475, "in_degree": 2, "out_degree": 0, "total_degree": 2, "contract_val_sum": 33.0, "has_contract": true, "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "MICRON", "name_en": "Micron Technology", "name_ko": "마이크론", "layer": "L5_MEMORY", "country": "US", "ticker": "MU", "is_public": 1, "description": "HBM 3위 + 미국 유일 메모리", "rev_2025": 42.312, "in_degree": 1, "out_degree": 0, "total_degree": 1, "contract_val_sum": 10.0, "has_contract": true, "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "WDC", "name_en": "Western Digital", "name_ko": "샌디스크/WDC", "layer": "L5_MEMORY", "country": "US", "ticker": "WDC", "is_public": 1, "description": "NAND + SSD", "rev_2025": 7.7170000000000005, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "KIOXIA", "name_en": "Kioxia Holdings", "name_ko": "키옥시아", "layer": "L5_MEMORY", "country": "JP", "ticker": "285A", "is_public": 1, "description": "NAND 플래시 및 AI 추론용 엔터프라이즈 eSSD 팹 운영", "rev_2025": 2.3641310344827584, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "ARISTA", "name_en": "Arista Networks", "name_ko": "아리스타", "layer": "L6_OPTICAL", "country": "US", "ticker": "ANET", "is_public": 1, "description": "AI 백엔드 클러스터용 800G/1.6T 고속 Ethernet 스위치 패브릭 독점적 지위", "rev_2025": 9.005700000000001, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "MARVELL", "name_en": "Marvell Technology", "name_ko": "마벨", "layer": "L6_OPTICAL", "country": "US", "ticker": "MRVL", "is_public": 1, "description": "AI DC 네트워킹 + 커스텀 ASIC", "rev_2025": 7.7933, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "COHERENT", "name_en": "Coherent/Novalit", "name_ko": "노발리", "layer": "L6_OPTICAL", "country": "US", "ticker": "COHR", "is_public": 1, "description": "광트랜시버 800G/1.6T", "rev_2025": 6.294322, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "APPLE", "name_en": "Apple", "name_ko": "애플", "layer": "L7_INFRA", "country": "US", "ticker": "AAPL", "is_public": 1, "description": "TSMC 최대 고객 + 온디바이스 AI", "rev_2025": 435.61699999999996, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L7 인프라/특수", "layer_color": "#64748b"}, {"entity_id": "SOFTBANK", "name_en": "SoftBank Group", "name_ko": "소프트뱅크", "layer": "L7_INFRA", "country": "JP", "ticker": "9984", "is_public": 1, "description": "ARM + AI 투자 펀드", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L7 인프라/특수", "layer_color": "#64748b"}, {"entity_id": "SPACEX", "name_en": "SpaceX / xAI", "name_ko": "스페이스X / xAI", "layer": "L7_INFRA", "country": "US", "ticker": null, "is_public": 0, "description": "Starlink 저궤도 위성 통신망 + xAI Colossus 100k GPU 슈퍼컴퓨터 및 자체 가스터빈 전력 인프라", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L7 인프라/특수", "layer_color": "#64748b"}, {"entity_id": "GE_VERNOVA", "name_en": "GE Vernova", "name_ko": "GE 버노바", "layer": "L8_POWER", "country": "US", "ticker": "GEV", "is_public": 1, "description": "데이터센터 전력 공급용 가스터빈, 독립 발전 및 전력망 솔루션", "rev_2025": 38.068, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}, {"entity_id": "EATON", "name_en": "Eaton Corporation", "name_ko": "이튼", "layer": "L8_POWER", "country": "US", "ticker": "ETN", "is_public": 1, "description": "데이터센터 배전, 변압기, 고전압 UPS 및 전력 관리 솔루션", "rev_2025": 27.448, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}, {"entity_id": "VERTIV", "name_en": "Vertiv Holdings", "name_ko": "버티브", "layer": "L8_POWER", "country": "US", "ticker": "VRT", "is_public": 1, "description": "AI 데이터센터 고밀도 액체냉각(Liquid Cooling) 및 전력 분배 인프라 1위", "rev_2025": 10.2299, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}, {"entity_id": "SCHNEIDER", "name_en": "Schneider Electric", "name_ko": "슈나이더", "layer": "L8_POWER", "country": "FR", "ticker": "SU", "is_public": 1, "description": "데이터센터 전력 분배 장비, 냉각 및 인프라 자동화 솔루션", "rev_2025": 0, "in_degree": 0, "out_degree": 0, "total_degree": 0, "contract_val_sum": 0, "has_contract": false, "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}];
+    const RAW_LINKS = [{"contract_id": "CON-2026-ANTH-AWS", "buyer_id": "ANTHROPIC", "seller_id": "AMAZON", "contract_type": "INFRA_COMPUTE", "value_b": 280.0, "currency": "USD", "announced_date": "2026-09-08", "start_date": "2026-10-01", "end_date": "2036-09-30", "description": "앤트로픽, AWS와 10년 장기 컴퓨트 약정 (총 $518B/14.8~15GW 규모 컴퓨팅 조달 패키지 중 최대 비중)", "product_type": "CLOUD_COMPUTE", "confidence": "C4", "source": "The Information / StockSavvyShay", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name_ko": "앤트로픽", "buyer_name_en": "Anthropic", "buyer_layer": "L1_AI_LAB", "seller_name_ko": "아마존", "seller_name_en": "Amazon/AWS", "seller_layer": "L2_HYPERSCALER"}, {"contract_id": "CON-GOOG-ANTH-200B", "buyer_id": "GOOGLE", "seller_id": "ANTHROPIC", "contract_type": "INVESTMENT", "value_b": 200.0, "currency": "USD", "announced_date": "2025-Q4", "start_date": null, "end_date": null, "description": "구글, 앤트로픽에 $200B 투자 (현금+GCP 크레딧)", "product_type": "AI_MODEL", "confidence": "C4", "source": "공식 발표", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "구글", "buyer_name_en": "Alphabet/Google", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "앤트로픽", "seller_name_en": "Anthropic", "seller_layer": "L1_AI_LAB"}, {"contract_id": "CON-2026-ANTH-GOOG", "buyer_id": "ANTHROPIC", "seller_id": "GOOGLE", "contract_type": "INFRA_COMPUTE", "value_b": 150.0, "currency": "USD", "announced_date": "2026-09-08", "start_date": "2026-10-01", "end_date": "2036-09-30", "description": "앤트로픽, 구글 클라우드 TPU 및 인프라 장기 약정 (15GW 조달 패키지 파트너십)", "product_type": "TPU_CLOUD", "confidence": "C4", "source": "The Information / StockSavvyShay", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name_ko": "앤트로픽", "buyer_name_en": "Anthropic", "buyer_layer": "L1_AI_LAB", "seller_name_ko": "구글", "seller_name_en": "Alphabet/Google", "seller_layer": "L2_HYPERSCALER"}, {"contract_id": "CON-2026-OPAI-BRCM", "buyer_id": "OPENAI", "seller_id": "BROADCOM", "contract_type": "PARTNERSHIP", "value_b": 65.0, "currency": "USD", "announced_date": "2026-09-10", "start_date": "2026-10-01", "end_date": "2030-12-31", "description": "오픈AI-브로드컴 10GW 커스텀 AI 칩 개발 및 공급 계약 체결 (누적 확보 용량 26GW로 확대)", "product_type": "CUSTOM_ASIC", "confidence": "C4", "source": "AI타임스 (2026-09)", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name_ko": "오픈AI", "buyer_name_en": "OpenAI", "buyer_layer": "L1_AI_LAB", "seller_name_ko": "브로드컴", "seller_name_en": "Broadcom", "seller_layer": "L3_COMPUTE"}, {"contract_id": "CON-NVDA-TSMC-FOUND", "buyer_id": "NVIDIA", "seller_id": "TSMC", "contract_type": "SUPPLY", "value_b": 35.0, "currency": "USD", "announced_date": "2026-FY", "start_date": null, "end_date": null, "description": "엔비디아, TSMC 파운드리 위탁 (Blackwell/Rubin)", "product_type": "FOUNDRY", "confidence": "C3", "source": "업계 추정", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "엔비디아", "buyer_name_en": "NVIDIA", "buyer_layer": "L3_COMPUTE", "seller_name_ko": "TSMC", "seller_name_en": "TSMC", "seller_layer": "L4_FOUNDRY"}, {"contract_id": "CON-GOOG-NVDA-GPU", "buyer_id": "GOOGLE", "seller_id": "NVIDIA", "contract_type": "SUPPLY", "value_b": 30.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "구글, 엔비디아 Blackwell GPU 대량 공급 계약", "product_type": "GPU", "confidence": "C3", "source": "업계 추정", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "구글", "buyer_name_en": "Alphabet/Google", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "엔비디아", "seller_name_en": "NVIDIA", "seller_layer": "L3_COMPUTE"}, {"contract_id": "CON-META-NVDA-GPU", "buyer_id": "META", "seller_id": "NVIDIA", "contract_type": "SUPPLY", "value_b": 25.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "메타, 엔비디아 GPU 대량 수주 (Llama 학습용)", "product_type": "GPU", "confidence": "C3", "source": "업계 추정", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "메타", "buyer_name_en": "Meta Platforms", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "엔비디아", "seller_name_en": "NVIDIA", "seller_layer": "L3_COMPUTE"}, {"contract_id": "CON-NVDA-SKH-HBM", "buyer_id": "NVIDIA", "seller_id": "SK_HYNIX", "contract_type": "SUPPLY", "value_b": 18.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "엔비디아, SK하이닉스 HBM3E/HBM4 공급 계약", "product_type": "HBM", "confidence": "C4", "source": "어닝콜", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "엔비디아", "buyer_name_en": "NVIDIA", "buyer_layer": "L3_COMPUTE", "seller_name_ko": "SK하이닉스", "seller_name_en": "SK hynix", "seller_layer": "L5_MEMORY"}, {"contract_id": "CON-2026-ANTH-SKH", "buyer_id": "ANTHROPIC", "seller_id": "SK_HYNIX", "contract_type": "SUPPLY", "value_b": 15.0, "currency": "USD", "announced_date": "2026-09-12", "start_date": "2027-01-01", "end_date": "2028-12-31", "description": "앤트로픽 메모리 직납(Direct Buy) 계약 — CY27 메모리 수요의 20% 직납 개시, CY28 엔비디아 규모 구매력 도달 전망", "product_type": "HBM_DRAM", "confidence": "C3", "source": "Edgewater Research / Sean", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name_ko": "앤트로픽", "buyer_name_en": "Anthropic", "buyer_layer": "L1_AI_LAB", "seller_name_ko": "SK하이닉스", "seller_name_en": "SK hynix", "seller_layer": "L5_MEMORY"}, {"contract_id": "CON-NVDA-SAM-HBM", "buyer_id": "NVIDIA", "seller_id": "SAMSUNG", "contract_type": "SUPPLY", "value_b": 14.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "엔비디아, 삼성전자 HBM4 공급 계약", "product_type": "HBM", "confidence": "C3", "source": "업계 추정", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "엔비디아", "buyer_name_en": "NVIDIA", "buyer_layer": "L3_COMPUTE", "seller_name_ko": "삼성전자", "seller_name_en": "Samsung Electronics", "seller_layer": "L5_MEMORY"}, {"contract_id": "CON-MSFT-OPAI-13B", "buyer_id": "MICROSOFT", "seller_id": "OPENAI", "contract_type": "INVESTMENT", "value_b": 13.0, "currency": "USD", "announced_date": "2023-Q1", "start_date": null, "end_date": null, "description": "MS, 오픈AI에 $13B 투자 (Azure 크레딧 포함)", "product_type": "AI_MODEL", "confidence": "C4", "source": "공식 발표", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "마이크로소프트", "buyer_name_en": "Microsoft", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "오픈AI", "seller_name_en": "OpenAI", "seller_layer": "L1_AI_LAB"}, {"contract_id": "CON-AMZN-ANTH-12B", "buyer_id": "AMAZON", "seller_id": "ANTHROPIC", "contract_type": "INVESTMENT", "value_b": 12.0, "currency": "USD", "announced_date": "2025-Q1", "start_date": null, "end_date": null, "description": "아마존, 앤트로픽에 $12B 투자", "product_type": "AI_MODEL", "confidence": "C4", "source": "공식 발표", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "아마존", "buyer_name_en": "Amazon/AWS", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "앤트로픽", "seller_name_en": "Anthropic", "seller_layer": "L1_AI_LAB"}, {"contract_id": "CON-META-BRCM-ASIC", "buyer_id": "META", "seller_id": "BROADCOM", "contract_type": "SUPPLY", "value_b": 10.0, "currency": "USD", "announced_date": "2025-Q3", "start_date": null, "end_date": null, "description": "메타, 브로드컴 MTIA ASIC 공동 개발", "product_type": "ASIC", "confidence": "C3", "source": "업계 보도", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "메타", "buyer_name_en": "Meta Platforms", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "브로드컴", "seller_name_en": "Broadcom", "seller_layer": "L3_COMPUTE"}, {"contract_id": "CON-2026-ANTH-MU", "buyer_id": "ANTHROPIC", "seller_id": "MICRON", "contract_type": "SUPPLY", "value_b": 10.0, "currency": "USD", "announced_date": "2026-09-12", "start_date": "2027-01-01", "end_date": "2028-12-31", "description": "앤트로픽-마이크론 메모리 직접 조달 및 공급 다변화 파트너십", "product_type": "HBM_DRAM", "confidence": "C3", "source": "Edgewater Research / P Equity Research", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name_ko": "앤트로픽", "buyer_name_en": "Anthropic", "buyer_layer": "L1_AI_LAB", "seller_name_ko": "마이크론", "seller_name_en": "Micron Technology", "seller_layer": "L5_MEMORY"}, {"contract_id": "CON-AMZN-OPAI", "buyer_id": "AMAZON", "seller_id": "OPENAI", "contract_type": "PARTNERSHIP", "value_b": null, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "오픈AI, AWS Bedrock 입점 계약", "product_type": "AI_MODEL", "confidence": "C4", "source": "공식 발표", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name_ko": "아마존", "buyer_name_en": "Amazon/AWS", "buyer_layer": "L2_HYPERSCALER", "seller_name_ko": "오픈AI", "seller_name_en": "OpenAI", "seller_layer": "L1_AI_LAB"}];
+
+    const LAYER_CONFIG = {"L1_AI_LAB": "#ec4899", "L2_HYPERSCALER": "#3b82f6", "L3_COMPUTE": "#10b981", "L4_FOUNDRY": "#8b5cf6", "L5_MEMORY": "#f59e0b", "L6_OPTICAL": "#06b6d4", "L7_INFRA": "#64748b", "L8_POWER": "#eab308"};
+    const LAYER_NAMES = {"L1_AI_LAB": "L1 프론티어 AI 랩", "L2_HYPERSCALER": "L2 하이퍼스케일러", "L3_COMPUTE": "L3 컴퓨팅/가속기", "L4_FOUNDRY": "L4 파운드리/장비", "L5_MEMORY": "L5 메모리/스토리지", "L6_OPTICAL": "L6 광통신/네트워킹", "L7_INFRA": "L7 인프라/특수", "L8_POWER": "L8 전력 & 에너지"};
+    const TYPE_CONFIG = {"SUPPLY": "#3b82f6", "INVESTMENT": "#ec4899", "INFRA_COMPUTE": "#10b981", "PARTNERSHIP": "#f59e0b"};
+    const TYPE_NAMES = {"SUPPLY": "하드웨어·부품 공급", "INVESTMENT": "지분·자본 투자", "INFRA_COMPUTE": "클라우드 컴퓨팅 약정", "PARTNERSHIP": "기술 협력·입점"};
+
+    // State
+    let currentScope = 'contracted'; // 'contracted' | 'all'
+    let currentLayout = 'force';      // 'force' | 'layer'
+    let currentTypeFilter = 'ALL';   // 'ALL' | 'SUPPLY' | 'INVESTMENT' | 'INFRA_COMPUTE' | 'PARTNERSHIP'
+    let activeLayers = new Set(Object.keys(LAYER_CONFIG));
+    let selectedNodeId = 'ANTHROPIC';
+    let hoveredNodeId = null;
+
+    // SVG & D3 Setup
+    const svg = d3.select("#graph-svg");
+    const container = svg.append("g").attr("class", "zoom-container");
+    const tooltip = d3.select("#tooltip");
+
+    let width = 0;
+    let height = 0;
+    let simulation = null;
+    let zoomBehavior = null;
+
+    // Defs for Arrow Markers
+    const defs = svg.append("defs");
+    Object.keys(TYPE_CONFIG).forEach(t => {
+      defs.append("marker")
+        .attr("id", "arrow-" + t)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 22)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-4L9,0L0,4")
+        .attr("fill", TYPE_CONFIG[t]);
+    });
+
+    // Initialize Layer Pills
+    const pillsContainer = document.getElementById("layer-pills-container");
+    Object.keys(LAYER_CONFIG).forEach(l => {
+      const pill = document.createElement("div");
+      pill.className = "layer-pill active";
+      pill.id = "pill-" + l;
+      pill.style.borderColor = LAYER_CONFIG[l] + "66";
+      pill.style.backgroundColor = LAYER_CONFIG[l] + "22";
+      pill.innerText = l.replace("L", "").replace("_", " ");
+      pill.onclick = () => toggleLayer(l);
+      pillsContainer.appendChild(pill);
+    });
+
+    // Layer X-Positions for Layered Flow Mode
+    const LAYER_X_ORDER = {
+      "L1_AI_LAB": 0.18,
+      "L2_HYPERSCALER": 0.38,
+      "L3_COMPUTE": 0.58,
+      "L4_FOUNDRY": 0.78,
+      "L5_MEMORY": 0.82,
+      "L6_OPTICAL": 0.65,
+      "L7_INFRA": 0.45,
+      "L8_POWER": 0.90
+    };
+
+    function initGraph() {
+      const rect = svg.node().getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+
+      zoomBehavior = d3.zoom()
+        .scaleExtent([0.2, 4])
+        .on("zoom", (event) => {
+          container.attr("transform", event.transform);
+        });
+      svg.call(zoomBehavior);
+
+      updateGraph();
+      selectNode(RAW_NODES.find(n => n.entity_id === 'ANTHROPIC'));
+    }
+
+    function updateGraph() {
+      // Filter nodes
+      let filteredNodes = RAW_NODES.filter(n => {
+        if (!activeLayers.has(n.layer)) return false;
+        if (currentScope === 'contracted' && !n.has_contract) return false;
+        return true;
+      }).map(d => Object.assign({}, d)); // clone
+
+      const nodeMap = new Map(filteredNodes.map(n => [n.entity_id, n]));
+
+      // Filter links
+      let filteredLinks = RAW_LINKS.filter(l => {
+        if (currentTypeFilter !== 'ALL' && l.contract_type !== currentTypeFilter) return false;
+        return nodeMap.has(l.buyer_id) && nodeMap.has(l.seller_id);
+      }).map(l => ({
+        ...l,
+        source: l.buyer_id,
+        target: l.seller_id
+      }));
+
+      container.selectAll("*").remove();
+
+      const linkG = container.append("g").attr("class", "links");
+      const nodeG = container.append("g").attr("class", "nodes");
+
+      // Draw Links
+      const links = linkG.selectAll("path")
+        .data(filteredLinks)
+        .enter()
+        .append("path")
+        .attr("class", "link")
+        .attr("stroke", d => TYPE_CONFIG[d.contract_type] || "#64748b")
+        .attr("stroke-width", d => Math.max(1.8, Math.min(8, Math.sqrt(d.value_b || 2) * 0.9)))
+        .attr("fill", "none")
+        .attr("marker-end", d => `url(#arrow-${d.contract_type})`)
+        .on("mouseover", (event, d) => {
+          tooltip.style("opacity", 1)
+            .html(`
+              <div class="tooltip-title" style="color:${TYPE_CONFIG[d.contract_type]}">
+                ${TYPE_NAMES[d.contract_type] || d.contract_type}
+              </div>
+              <div><b>${d.buyer_name_ko}</b> → <b>${d.seller_name_ko}</b></div>
+              <div>금액: <b style="color:#38bdf8;">${d.value_b ? '$' + d.value_b + 'B' : '비공개/전략계약'}</b></div>
+              <div>품목: ${d.product_type || '-'} (${d.announced_date || ''})</div>
+              <div style="font-size:0.7rem; color:#9ca3af; margin-top:4px;">${d.description || ''}</div>
+            `)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+        })
+        .on("mousemove", (event) => {
+          tooltip.style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+        })
+        .on("mouseout", () => tooltip.style("opacity", 0));
+
+      // Node radius function
+      const getRadius = (d) => {
+        if (d.rev_2025 > 0) {
+          return Math.max(14, Math.min(36, 12 + Math.sqrt(d.rev_2025) * 1.1));
+        }
+        return d.has_contract ? 20 : 12;
+      };
+
+      // Draw Nodes
+      const nodes = nodeG.selectAll(".node-group")
+        .data(filteredNodes)
+        .enter()
+        .append("g")
+        .attr("class", "node-group")
+        .classed("selected", d => d.entity_id === selectedNodeId)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended))
+        .on("click", (event, d) => {
+          selectNode(d);
+          highlightConnections(d, filteredLinks);
+        })
+        .on("mouseenter", (event, d) => {
+          hoveredNodeId = d.entity_id;
+          highlightConnections(d, filteredLinks);
+          tooltip.style("opacity", 1)
+            .html(`
+              <div class="tooltip-title" style="color:${d.layer_color}">${d.name_ko} (${d.ticker || d.entity_id})</div>
+              <div>레이어: ${d.layer_name_ko}</div>
+              <div>2025 매출: <b>${d.rev_2025 > 0 ? '$' + d.rev_2025.toFixed(1) + 'B' : '-'}</b></div>
+              <div>식별 계약: 구매 ${d.out_degree}건 / 공급 ${d.in_degree}건</div>
+              <div>계약 합계: <b style="color:#38bdf8;">${d.contract_val_sum > 0 ? '$' + d.contract_val_sum.toFixed(1) + 'B' : '-'}</b></div>
+            `)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+        })
+        .on("mousemove", (event) => {
+          tooltip.style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+        })
+        .on("mouseleave", () => {
+          hoveredNodeId = null;
+          tooltip.style("opacity", 0);
+          if (selectedNodeId) {
+            const selNode = RAW_NODES.find(n => n.entity_id === selectedNodeId);
+            if (selNode) highlightConnections(selNode, filteredLinks);
+          } else {
+            clearHighlight();
+          }
+        });
+
+      // Circle Base
+      nodes.append("circle")
+        .attr("class", "node-circle")
+        .attr("r", getRadius)
+        .attr("fill", d => d.layer_color + "28")
+        .attr("stroke", d => d.layer_color);
+
+      // Node Label (Korean name)
+      nodes.append("text")
+        .attr("class", "node-label")
+        .attr("text-anchor", "middle")
+        .attr("dy", d => getRadius(d) + 13)
+        .text(d => d.name_ko);
+
+      // Node Inner Ticker or Abbr
+      nodes.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .attr("fill", "#fff")
+        .attr("font-size", d => Math.max(9, Math.min(13, getRadius(d) * 0.55)))
+        .attr("font-weight", "700")
+        .attr("pointer-events", "none")
+        .text(d => d.ticker ? d.ticker.substring(0, 4) : d.entity_id.substring(0, 4));
+
+      // Degree Badge if has contract
+      nodes.filter(d => d.total_degree > 0).append("circle")
+        .attr("r", 7)
+        .attr("cx", d => getRadius(d) * 0.707)
+        .attr("cy", d => -getRadius(d) * 0.707)
+        .attr("fill", "#38bdf8")
+        .attr("stroke", "#0a0e17")
+        .attr("stroke-width", 1.5);
+
+      nodes.filter(d => d.total_degree > 0).append("text")
+        .attr("x", d => getRadius(d) * 0.707)
+        .attr("y", d => -getRadius(d) * 0.707)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#0a0e17")
+        .attr("font-size", "8px")
+        .attr("font-weight", "800")
+        .attr("pointer-events", "none")
+        .text(d => d.total_degree);
+
+      // Simulation Setup
+      if (simulation) simulation.stop();
+
+      simulation = d3.forceSimulation(filteredNodes)
+        .force("link", d3.forceLink(filteredLinks).id(d => d.entity_id).distance(d => {
+          return currentLayout === 'layer' ? 140 : 110;
+        }))
+        .force("charge", d3.forceManyBody().strength(d => {
+          return currentLayout === 'layer' ? -350 : -450;
+        }))
+        .force("collide", d3.forceCollide().radius(d => getRadius(d) + 20).iterations(3))
+        .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05));
+
+      if (currentLayout === 'layer') {
+        simulation.force("x", d3.forceX(d => {
+          const ratio = LAYER_X_ORDER[d.layer] || 0.5;
+          return width * ratio;
+        }).strength(0.85));
+        simulation.force("y", d3.forceY(height / 2).strength(0.18));
+      }
+
+      simulation.on("tick", () => {
+        // Curved link path calculation
+        links.attr("d", d => {
+          const dx = d.target.x - d.source.x;
+          const dy = d.target.y - d.source.y;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 1.3;
+          return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+        });
+
+        nodes.attr("transform", d => `translate(${d.x},${d.y})`);
+      });
+
+      // Auto highlight initial selected node
+      if (selectedNodeId) {
+        const sel = RAW_NODES.find(n => n.entity_id === selectedNodeId);
+        if (sel) highlightConnections(sel, filteredLinks);
+      }
+
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+    }
+
+    // Highlighting
+    function highlightConnections(centerNode, links) {
+      const connectedNodeIds = new Set([centerNode.entity_id]);
+      const connectedLinkIndices = new Set();
+
+      links.forEach((l, idx) => {
+        const sId = typeof l.source === 'object' ? l.source.entity_id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.entity_id : l.target;
+        if (sId === centerNode.entity_id || tId === centerNode.entity_id) {
+          connectedNodeIds.add(sId);
+          connectedNodeIds.add(tId);
+          connectedLinkIndices.add(idx);
+        }
+      });
+
+      d3.selectAll(".node-group").each(function(d) {
+        const isConn = connectedNodeIds.has(d.entity_id);
+        d3.select(this).classed("dimmed", !isConn);
+      });
+
+      d3.selectAll(".link").each(function(d, idx) {
+        const isConn = connectedLinkIndices.has(idx);
+        d3.select(this)
+          .classed("highlighted", isConn)
+          .classed("dimmed", !isConn);
+      });
+    }
+
+    function clearHighlight() {
+      d3.selectAll(".node-group").classed("dimmed", false);
+      d3.selectAll(".link").classed("highlighted", false).classed("dimmed", false);
+    }
+
+    // Select Node and populate Right Drawer
+    function selectNode(node) {
+      if (!node) return;
+      selectedNodeId = node.entity_id;
+
+      d3.selectAll(".node-group").classed("selected", d => d.entity_id === selectedNodeId);
+
+      document.getElementById("drawer-name").innerText = node.name_ko;
+      document.getElementById("drawer-ticker").innerText = `${node.name_en} (${node.ticker || node.entity_id}) · ${node.country}`;
+      const badge = document.getElementById("drawer-layer");
+      badge.innerText = node.layer_name_ko;
+      badge.style.backgroundColor = node.layer_color + "28";
+      badge.style.color = node.layer_color;
+      badge.style.border = "1px solid " + node.layer_color + "55";
+
+      document.getElementById("drawer-rev").innerText = node.rev_2025 > 0 ? `$${node.rev_2025.toFixed(1)}B` : '-';
+      document.getElementById("drawer-contract-sum").innerText = node.contract_val_sum > 0 ? `$${node.contract_val_sum.toFixed(1)}B` : '-';
+      document.getElementById("drawer-buy-cnt").innerText = `${node.out_degree}건`;
+      document.getElementById("drawer-sell-cnt").innerText = `${node.in_degree}건`;
+      document.getElementById("drawer-desc").innerText = node.description || '상세 정보가 등록되지 않았습니다.';
+
+      // Buyer Contracts
+      const buyContracts = RAW_LINKS.filter(c => c.buyer_id === node.entity_id);
+      document.getElementById("buy-cnt-badge").innerText = `(${buyContracts.length})`;
+      const buyContainer = document.getElementById("drawer-buyer-contracts");
+      buyContainer.innerHTML = '';
+      if (buyContracts.length === 0) {
+        buyContainer.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); padding:0.5rem 0;">구매 조달 계약이 없습니다.</div>';
+      } else {
+        buyContracts.forEach(c => {
+          const el = document.createElement("div");
+          el.className = "contract-card";
+          el.innerHTML = `
+            <div class="contract-card-header">
+              <span class="type-badge" style="background:${TYPE_CONFIG[c.contract_type]}22; color:${TYPE_CONFIG[c.contract_type]};">
+                ${TYPE_NAMES[c.contract_type] || c.contract_type}
+              </span>
+              <span class="contract-val">${c.value_b ? '$' + c.value_b + 'B' : '비공개/전략'}</span>
+            </div>
+            <div class="contract-target">공급처: ${c.seller_name_ko} (${c.seller_id})</div>
+            <div class="contract-desc">${c.description || ''}</div>
+            <div class="contract-meta">
+              <span>품목: ${c.product_type || '-'}</span>
+              <span>발표: ${c.announced_date || '-'}</span>
+            </div>
+          `;
+          buyContainer.appendChild(el);
+        });
+      }
+
+      // Seller Contracts
+      const sellContracts = RAW_LINKS.filter(c => c.seller_id === node.entity_id);
+      document.getElementById("sell-cnt-badge").innerText = `(${sellContracts.length})`;
+      const sellContainer = document.getElementById("drawer-seller-contracts");
+      sellContainer.innerHTML = '';
+      if (sellContracts.length === 0) {
+        sellContainer.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); padding:0.5rem 0;">공급/수주 계약이 없습니다.</div>';
+      } else {
+        sellContracts.forEach(c => {
+          const el = document.createElement("div");
+          el.className = "contract-card";
+          el.innerHTML = `
+            <div class="contract-card-header">
+              <span class="type-badge" style="background:${TYPE_CONFIG[c.contract_type]}22; color:${TYPE_CONFIG[c.contract_type]};">
+                ${TYPE_NAMES[c.contract_type] || c.contract_type}
+              </span>
+              <span class="contract-val">${c.value_b ? '$' + c.value_b + 'B' : '비공개/전략'}</span>
+            </div>
+            <div class="contract-target">고객사/투자자: ${c.buyer_name_ko} (${c.buyer_id})</div>
+            <div class="contract-desc">${c.description || ''}</div>
+            <div class="contract-meta">
+              <span>품목: ${c.product_type || '-'}</span>
+              <span>발표: ${c.announced_date || '-'}</span>
+            </div>
+          `;
+          sellContainer.appendChild(el);
+        });
+      }
+    }
+
+    // UI Controls Handlers
+    function setScope(scope) {
+      currentScope = scope;
+      document.getElementById("scope-contracted").classList.toggle("active", scope === 'contracted');
+      document.getElementById("scope-all").classList.toggle("active", scope === 'all');
+      updateGraph();
+    }
+
+    function setLayout(layout) {
+      currentLayout = layout;
+      document.getElementById("layout-force").classList.toggle("active", layout === 'force');
+      document.getElementById("layout-layer").classList.toggle("active", layout === 'layer');
+      updateGraph();
+    }
+
+    function setTypeFilter(t) {
+      currentTypeFilter = t;
+      ['ALL', 'SUPPLY', 'INVESTMENT', 'INFRA_COMPUTE'].forEach(k => {
+        const btn = document.getElementById("type-" + k);
+        if (btn) btn.classList.toggle("active", k === t);
+      });
+      updateGraph();
+    }
+
+    function toggleLayer(l) {
+      if (activeLayers.has(l)) {
+        if (activeLayers.size > 1) activeLayers.delete(l);
+      } else {
+        activeLayers.add(l);
+      }
+      const pill = document.getElementById("pill-" + l);
+      if (pill) pill.classList.toggle("active", activeLayers.has(l));
+      updateGraph();
+    }
+
+    function onSearchInput() {
+      const q = document.getElementById("company-search").value.trim().toLowerCase();
+      if (!q) {
+        if (selectedNodeId) {
+          const selNode = RAW_NODES.find(n => n.entity_id === selectedNodeId);
+          if (selNode) selectNode(selNode);
+        }
+        return;
+      }
+      const match = RAW_NODES.find(n =>
+        n.name_ko.toLowerCase().includes(q) ||
+        n.name_en.toLowerCase().includes(q) ||
+        (n.ticker && n.ticker.toLowerCase().includes(q)) ||
+        n.entity_id.toLowerCase().includes(q)
+      );
+      if (match) {
+        selectNode(match);
+        // Pan and zoom to node
+        d3.selectAll(".node-group").filter(d => d.entity_id === match.entity_id).each(d => {
+          svg.transition().duration(500).call(
+            zoomBehavior.transform,
+            d3.zoomIdentity.translate(width / 2 - d.x, height / 2 - d.y).scale(1.2)
+          );
+        });
+      }
+    }
+
+    function zoomIn() { svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.3); }
+    function zoomOut() { svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7); }
+    function resetZoom() { svg.transition().duration(400).call(zoomBehavior.transform, d3.zoomIdentity); }
+
+    window.addEventListener("resize", () => {
+      const rect = svg.node().getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      if (simulation) {
+        simulation.force("center", d3.forceCenter(width / 2, height / 2));
+        simulation.alpha(0.2).restart();
+      }
+    });
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", initGraph);
+  </script>
+</body>
+</html>

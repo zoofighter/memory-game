@@ -67,12 +67,13 @@ def generate_report():
     ''').fetchall()
     layer_map = {
         'L1_AI_LAB': 'AI 프론티어 랩',
-        'L2_HYPERSCALER': '하이퍼스케일러',
-        'L3_DESIGN': '칩셋 설계/가속기',
-        'L4_FOUNDRY': '파운드리',
-        'L5_EQUIPMENT': '반도체 장비',
-        'L6_MEMORY': '메모리 반도체',
-        'L7_SYSTEM': '서버/인프라'
+        'L2_HYPERSCALER': '하이퍼스케일러 & 네오클라우드',
+        'L3_COMPUTE': '컴퓨팅 & 가속기',
+        'L4_FOUNDRY': '파운드리, 장비 & 패키징',
+        'L5_MEMORY': '메모리 & 스토리지',
+        'L6_OPTICAL': '광통신 & 네트워킹',
+        'L7_INFRA': '인프라 & 특수 플랫폼',
+        'L8_POWER': '전력 & 에너지 인프라'
     }
     for r in rows:
         layer_name = layer_map.get(r['layer'], r['layer'])

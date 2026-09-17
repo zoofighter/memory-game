@@ -23,7 +23,8 @@ LAYER_CONFIG = {
     "L4_FOUNDRY":     {"y": 450,  "color": "3", "title": "Foundry & Equipment (선단공정 & 패키징)"},
     "L5_MEMORY":      {"y": 700,  "color": "2", "title": "Memory & Storage (HBM3E / HBM4)"},
     "L6_OPTICAL":     {"y": 950,  "color": "1", "title": "Optical & Network (광트랜시버/CPO)"},
-    "L7_INFRA":       {"y": 1200, "color": "0", "title": "Infra & Ecosystem (온디바이스/SMR)"},
+    "L7_INFRA":       {"y": 1200, "color": "0", "title": "Infra & Ecosystem (온디바이스/위성망)"},
+    "L8_POWER":       {"y": 1450, "color": "4", "title": "Power & Energy Infra (전력·그리드·냉각)"},
 }
 
 def generate_canvas():

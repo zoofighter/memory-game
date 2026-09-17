@@ -1,0 +1,80 @@
+{
+  "folder": "40_계약",
+  "category": "공급·컴퓨팅·투자 계약 (Contracts)",
+  "updated_at": "2026-09-16 17:32:41",
+  "count": 12,
+  "items": [
+    {
+      "name": "X에서 Damnang 님 : \"SemiAnalysis claimed that Google’s Ironwood TPU delivers up to 50% better performance per dollar than NVIDIA Blackwell. Yet when the best available configurations are compared using SemiAnalysis’s own InferenceX dashboard, the result is the opposite. At 100 tokens per second per\" / X",
+      "url": "https://x.com/damnang2/status/2098451916196020230",
+      "date_added": "2026-09-12",
+      "raw_date_added": "13433691957611771"
+    },
+    {
+      "name": "X에서 Jukan 님 : \"Korean media reported that Micron plans to add 60,000 wafers per month of HBM capacity by the end of this year, raising its total capacity to around 100,000 wafers per month. This marks an aggressive expansion that nearly doubles last year's capacity level of 40,000 to 50,000\" / X",
+      "url": "https://x.com/jukan05/status/2098658932839637463",
+      "date_added": "2026-09-12",
+      "raw_date_added": "13433729201332171"
+    },
+    {
+      "name": "X에서 Rohan Paul 님 : \"The Information just reported Anthropic has lined up at least 14.8 GW of new compute since October, potentially costing as much as $517 B over the next decade. Anthropic’s annualized revenue has reportedly passed $65 B, ahead of OpenAI’s $40+B, yet OpenAI says it has roughly 2X https://t.co/sHayCUvPP4\" / X",
+      "url": "https://x.com/rohanpaul_ai/status/2096644731371667965",
+      "date_added": "2026-09-14",
+      "raw_date_added": "13433840438888054"
+    },
+    {
+      "name": "X에서 Shay Boloor 님 : \"Anthropic has now lined up ~$518B of compute deals across $AMZN, $GOOGL, $MSFT, $NVDA, $CRWV and $SPCX. The commitments alone approach 15 GW of capacity showing just how aggressively Anthropic is securing the infrastructure needed to scale AI over next decade. https://t.co/at9wfMxc7C\" / X",
+      "url": "https://x.com/StockSavvyShay/status/2099129098643910985",
+      "date_added": "2026-09-14",
+      "raw_date_added": "13433840611760818"
+    },
+    {
+      "name": "X에서 Semiconductor Insider 님 : \"J.P. Morgan’s CSP hardware chart shows memory taking over the AI bill. Before the AI wave, memory’s share of cloud-provider hardware spending sat under 10%. It was 7% in 2022, 4% in 2023 and 8% in 2024–25. From 2026 that mix breaks. The bank now puts CSP-grade memory TAM at https://t.co/AZd96SnZXv\" / X",
+      "url": "https://x.com/SemiconductorsX/status/2098783500401074642",
+      "date_added": "2026-09-14",
+      "raw_date_added": "13433870514876451"
+    },
+    {
+      "name": "X에서 Jukan 님 : \"According to Meritz Securities’ analysis, planned HBM demand by company in 2028 is as follows: Broadcom: 35–40bn Gb NVIDIA: 30bn Gb Google: 20bn Gb AMD: 10bn Gb What stands out is Broadcom potentially surpassing NVIDIA in HBM demand, as well as Google massively ramping up its\" / X",
+      "url": "https://x.com/jukan05/status/2089620707970097628",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433929606961388"
+    },
+    {
+      "name": "X에서 Data Insight Lab 님 : \"앤트로픽이 약정한 컴퓨트 용량 11.5GW는 현재 최저 요금으로 계산해도 연 1,150억 달러대 비용입니다. 한 번 계약한 용량은 쓰든 안 쓰든 나가는 고정비라, 속도를 늦추면 비용은 그대로인데 매출만 줄어듭니다. 이 비용을 메우려면 목표 마진 50% 기준으로 연 2,300억 달러대 매출이 필요합니다.\" / X",
+      "url": "https://x.com/DataInsightLab/status/2099440116091740568",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433930296389274"
+    },
+    {
+      "name": "오픈AI, 브로드컴과 10GW 칩 계약...누적 26GW로 총용량 증가 < 산업일반 < AI산업 < 기사본문 - AI타임스",
+      "url": "https://www.aitimes.com/news/articleView.html?idxno=203130",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433930507088745"
+    },
+    {
+      "name": "X에서 Zephyr 님 : \"Not too sure if Hynix will retain the number 1 position in HBM Samsung has a better base die and is also expanding HBM capacity much more rapidly\" / X",
+      "url": "https://x.com/zephyr_z9/status/2098018599466111294",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433932096645348"
+    },
+    {
+      "name": "X에서 fin 님 : \"AI半导体终局推演2026(III) AI半导体基建期为什么比互联网基建期更长？ Coding场景之后的下一个模型ARR营收增长点在哪里？ AI基建会不会过度建设？Capex是不是泡沫？经济账能算的过来吗？ 开源模型和闭源的格局如何？对闭源模型的冲击会如何演进？ 本文尝试推演这几个问题背后的逻辑 https://t.co/HIZLnRiSxn\" / X",
+      "url": "https://x.com/fi56622380/status/2093522018947977649",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433956870672453"
+    },
+    {
+      "name": "X에서 Sean 님 : \"Edgewater on $MU / $SKHY: \"Anthropic expected to direct purchase ~20% of memory in CY27 &amp; grow % in CY28, in DRAM roughly same size as NVDA.\" \"Anthropic and OpenAI are expected to start buying direct in CY27 – Anthropic is claiming 40-50B 1Gb demand next year with ~20% bought https://t.co/gdbq43v9Tv\" / X",
+      "url": "https://x.com/sean_________/status/2099832853500432469",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433986510446619"
+    },
+    {
+      "name": "X에서 P Equity Research 📰 님 : \"Edgewater: \"Anthropic expected to direct purchase ~20% of memory in CY27 &amp; grow % in CY28, in DRAM roughly same size as NVDA.\" 👀 $MU $DRAM $DISK $EWY\" / X",
+      "url": "https://x.com/pequityresearch/status/2099955915751350584",
+      "date_added": "2026-09-16",
+      "raw_date_added": "13433995061209552"
+    }
+  ]
+}

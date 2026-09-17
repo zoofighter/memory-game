@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — 데이터 품질 대시보드</title>
+  <meta name="description" content="36개사 × 7대 필드 데이터 완결성 스코어보드. AI·반도체 밸류체인 인텔리전스 시스템.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.7);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+      --danger-dim: rgba(239, 68, 68, 0.15);
+      --warning-dim: rgba(245, 158, 11, 0.15);
+      --success-dim: rgba(16, 185, 129, 0.15);
+      --info-dim: rgba(59, 130, 246, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-card);
+      position: sticky; top: 0; z-index: 100;
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo-group { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white; font-weight: 800; font-size: 0.9rem;
+      padding: 0.35rem 0.65rem; border-radius: 8px; letter-spacing: 0.5px;
+    }
+    .title-group h1 {
+      font-size: 1.25rem; font-weight: 700; color: #ffffff;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .title-group .subtitle { font-size: 0.8rem; color: var(--text-muted); }
+    .nav-links { display: flex; gap: 0.5rem; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.82rem;
+      padding: 0.4rem 0.8rem; border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: var(--primary-glow); color: var(--primary);
+    }
+
+    /* ── Main container ─────────────────────────────── */
+    .container { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+    /* ── Summary Cards ──────────────────────────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .summary-card {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 12px; padding: 1.2rem 1.4rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .summary-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .summary-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem; }
+    .summary-card .value { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .summary-card .sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .value-green { color: var(--accent); }
+    .value-amber { color: var(--accent-amber); }
+    .value-red { color: var(--danger); }
+    .value-blue { color: var(--primary); }
+    .value-purple { color: var(--accent-purple); }
+
+    /* ── Progress ring ──────────────────────────────── */
+    .progress-ring-container {
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .progress-ring { width: 64px; height: 64px; }
+    .progress-ring circle {
+      fill: none; stroke-width: 5; stroke-linecap: round;
+    }
+    .progress-ring .bg { stroke: rgba(255,255,255,0.06); }
+    .progress-ring .fg { transition: stroke-dashoffset 1s ease-out; }
+
+    /* ── Alerts ──────────────────────────────────────── */
+    .alerts-bar { margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .alert-chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.78rem; padding: 0.4rem 0.9rem; border-radius: 20px;
+      font-weight: 500; animation: fadeInUp 0.4s ease-out both;
+    }
+    .alert-chip.critical { background: var(--danger-dim); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+    .alert-chip.warning { background: var(--warning-dim); color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
+    .alert-chip.info { background: var(--info-dim); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Filter bar ─────────────────────────────────── */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+      margin-bottom: 1rem; padding: 0.8rem 1rem;
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 10px;
+    }
+    .filter-bar label {
+      font-size: 0.78rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 0.3rem; cursor: pointer;
+      padding: 0.25rem 0.6rem; border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .filter-bar label:hover { background: rgba(255,255,255,0.05); }
+    .filter-bar label.active { background: var(--primary-glow); color: var(--primary); }
+    .filter-bar input[type="checkbox"] { accent-color: var(--primary); width: 14px; height: 14px; }
+    .filter-title { font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-right: 0.5rem; }
+
+    /* ── Heatmap Table ──────────────────────────────── */
+    .heatmap-wrapper {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; overflow: hidden;
+    }
+    .heatmap-table {
+      width: 100%; border-collapse: collapse; font-size: 0.82rem;
+    }
+    .heatmap-table thead th {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(8px);
+      padding: 0.8rem 0.6rem; text-align: center;
+      font-weight: 600; font-size: 0.75rem;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.4px; border-bottom: 1px solid var(--border-card);
+      cursor: pointer; user-select: none;
+      transition: color 0.15s;
+    }
+    .heatmap-table thead th:hover { color: var(--primary); }
+    .heatmap-table thead th.sorted-asc::after { content: ' ▲'; font-size: 0.6rem; }
+    .heatmap-table thead th.sorted-desc::after { content: ' ▼'; font-size: 0.6rem; }
+    .heatmap-table thead th:first-child { text-align: left; padding-left: 1.2rem; }
+
+    .heatmap-table tbody tr {
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .heatmap-table tbody tr:hover { background: rgba(59, 130, 246, 0.06); }
+    .heatmap-table tbody tr.no-data { opacity: 0.45; }
+
+    .heatmap-table td {
+      padding: 0.6rem; text-align: center; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; position: relative;
+    }
+    .heatmap-table td:first-child {
+      text-align: left; padding-left: 1.2rem;
+      font-family: 'Inter', sans-serif; font-weight: 500;
+      position: sticky; left: 0; z-index: 5;
+      background: var(--bg-card);
+    }
+    .heatmap-table tbody tr:hover td:first-child { background: rgba(17, 24, 39, 0.95); }
+
+    .entity-cell { display: flex; flex-direction: column; gap: 0.1rem; }
+    .entity-name { font-weight: 600; font-size: 0.82rem; }
+    .entity-layer {
+      font-size: 0.65rem; color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Heatmap cell colors */
+    .cell-heat {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; padding: 0.35rem 0.3rem; border-radius: 6px;
+      font-weight: 500; cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .cell-heat:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 12px rgba(255,255,255,0.1);
+    }
+    .heat-100 { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .heat-80  { background: rgba(16, 185, 129, 0.14); color: #86efac; }
+    .heat-60  { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+    .heat-40  { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+    .heat-20  { background: rgba(249, 115, 22, 0.12); color: #fdba74; }
+    .heat-10  { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+    .heat-0   { background: rgba(239, 68, 68, 0.06); color: #666; }
+
+    /* Total column */
+    .total-cell {
+      font-weight: 700; font-size: 0.85rem;
+    }
+    .total-bar-bg {
+      width: 100%; height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,0.06); margin-top: 0.25rem;
+    }
+    .total-bar-fg {
+      height: 100%; border-radius: 2px;
+      transition: width 0.8s ease-out;
+    }
+
+    /* ── Field coverage bar chart ───────────────────── */
+    .field-chart-section {
+      margin-top: 1.5rem; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    }
+    .chart-card {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; padding: 1.5rem;
+    }
+    .chart-card h3 {
+      font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .field-bar-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .field-bar-item { display: flex; align-items: center; gap: 0.8rem; }
+    .field-bar-label {
+      width: 90px; font-size: 0.78rem; font-weight: 500;
+      text-align: right; color: var(--text-muted); flex-shrink: 0;
+    }
+    .field-bar-track {
+      flex: 1; height: 22px; border-radius: 6px;
+      background: rgba(255,255,255,0.04); overflow: hidden;
+      position: relative;
+    }
+    .field-bar-fill {
+      height: 100%; border-radius: 6px;
+      transition: width 1s ease-out;
+      display: flex; align-items: center; padding-left: 0.5rem;
+      font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.9);
+      min-width: fit-content;
+    }
+    .field-bar-value {
+      font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted); width: 50px; text-align: right; flex-shrink: 0;
+    }
+
+    /* ── Layer distribution ──────────────────────────── */
+    .layer-dist-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .layer-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; }
+    .layer-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .layer-name { flex: 1; font-weight: 500; }
+    .layer-stat { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Detail Modal ───────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-content {
+      background: var(--bg-surface); border: 1px solid var(--border-card);
+      border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%;
+      max-height: 80vh; overflow-y: auto;
+      animation: modalIn 0.25s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 1.5rem; cursor: pointer; padding: 0.2rem 0.5rem;
+      border-radius: 6px; transition: background 0.15s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); }
+    .modal-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+      gap: 4px;
+    }
+    .modal-q {
+      text-align: center; padding: 0.4rem 0.2rem; border-radius: 5px;
+      font-size: 0.65rem; font-family: 'JetBrains Mono', monospace;
+    }
+    .modal-q.filled { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .modal-q.empty { background: rgba(239,68,68,0.08); color: #666; }
+    .modal-q.header { background: transparent; color: var(--text-muted); font-weight: 600; }
+
+    /* ── Export button ───────────────────────────────── */
+    .export-btn {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      color: var(--text-muted); padding: 0.5rem 1rem; border-radius: 8px;
+      font-size: 0.78rem; cursor: pointer; transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .export-btn:hover { background: var(--primary-glow); color: var(--primary); border-color: rgba(59,130,246,0.3); }
+
+    /* ── Footer ─────────────────────────────────────── */
+    footer {
+      text-align: center; padding: 2rem; font-size: 0.72rem;
+      color: var(--text-muted); border-top: 1px solid var(--border-card);
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 1100px) {
+      .field-chart-section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge">MC</span>
+      <div class="title-group">
+        <h1>📊 데이터 품질 대시보드</h1>
+        <div class="subtitle">Data Quality & Coverage Scorecard</div>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">📈 메인</a>
+      <a href="data_quality.html" class="active">📊 데이터 품질</a>
+      <a href="capex_waterfall.html">🏗️ Capex 워터폴</a>
+      <a href="multi_company_overlay.html">🔬 기업 비교</a>
+      <a href="network_graph.html">🕸️ 네트워크</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Summary Cards -->
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <!-- Alerts -->
+    <div class="alerts-bar" id="alertsBar"></div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar" id="filterBar">
+      <span class="filter-title">레이어 필터:</span>
+    </div>
+
+    <!-- Heatmap Table -->
+    <div class="heatmap-wrapper">
+      <table class="heatmap-table" id="heatmapTable">
+        <thead><tr id="heatmapHead"></tr></thead>
+        <tbody id="heatmapBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Field Coverage Charts -->
+    <div class="field-chart-section">
+      <div class="chart-card">
+        <h3>📉 필드별 커버리지</h3>
+        <div class="field-bar-list" id="fieldBarList"></div>
+      </div>
+      <div class="chart-card">
+        <h3>🏷️ 레이어별 평균 완결도</h3>
+        <div class="layer-dist-list" id="layerDistList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer>
+    Memory Claude — Data Quality Dashboard · 기준 시점: 2026-09-10 · 기대 범위: 2020-Q1 ~ 2026-Q2 (26분기)
+  </footer>
+
+  <script>
+    // ── Globals ────────────────────────────────────────
+    let DATA = null;
+    let activeFilters = new Set();
+    let sortCol = 'total_pct';
+    let sortDir = 'desc';
+
+    const LAYER_COLORS = {
+      'L1_AI_LAB':      '#a78bfa',
+      'L2_HYPERSCALER': '#3b82f6',
+      'L3_COMPUTE':     '#10b981',
+      'L4_FOUNDRY':     '#f59e0b',
+      'L5_MEMORY':      '#ef4444',
+      'L6_OPTICAL':     '#06b6d4',
+      'L7_INFRA':       '#8b5cf6',
+      'L8_POWER':       '#f97316',
+    };
+    const LAYER_LABELS = {
+      'L1_AI_LAB':      'L1 AI 랩',
+      'L2_HYPERSCALER': 'L2 하이퍼스케일러',
+      'L3_COMPUTE':     'L3 컴퓨팅',
+      'L4_FOUNDRY':     'L4 파운드리/장비',
+      'L5_MEMORY':      'L5 메모리',
+      'L6_OPTICAL':     'L6 광통신',
+      'L7_INFRA':       'L7 인프라',
+      'L8_POWER':       'L8 전력',
+    };
+
+    const QUARTERS = [];
+    for (let y = 2020; y <= 2026; y++) {
+      const maxQ = y === 2026 ? 2 : 4;
+      for (let q = 1; q <= maxQ; q++) QUARTERS.push(`${y}-Q${q}`);
+    }
+
+    // ── Load data ─────────────────────────────────────
+    fetch('../data/quality_scorecard.json')
+      .then(r => r.json())
+      .then(data => { DATA = data; init(); })
+      .catch(err => {
+        document.querySelector('.container').innerHTML =
+          `<div style="padding:3rem;text-align:center;color:var(--danger)">
+            <h2>⚠️ 데이터 로드 실패</h2>
+            <p style="margin-top:1rem;color:var(--text-muted)">
+              <code>python3 scripts/export_quality_scorecard.py</code> 를 먼저 실행해 주세요.
+            </p>
+            <p style="margin-top:0.5rem;color:var(--text-muted);font-size:0.8rem">${err}</p>
+          </div>`;
+      });
+
+    function init() {
+      renderSummaryCards();
+      renderAlerts();
+      renderFilters();
+      renderTable();
+      renderFieldBars();
+      renderLayerDist();
+    }
+
+    // ── Summary Cards ─────────────────────────────────
+    function renderSummaryCards() {
+      const s = DATA.system_summary;
+      const grid = document.getElementById('summaryGrid');
+      const circumference = 2 * Math.PI * 27;
+      const offset = circumference - (s.overall_pct / 100) * circumference;
+      const pctColor = s.overall_pct >= 60 ? '#10b981' : s.overall_pct >= 30 ? '#f59e0b' : '#ef4444';
+
+      grid.innerHTML = `
+        <div class="summary-card">
+          <div class="label">전체 데이터 완결도</div>
+          <div class="progress-ring-container">
+            <svg class="progress-ring" viewBox="0 0 64 64">
+              <circle class="bg" cx="32" cy="32" r="27"/>
+              <circle class="fg" cx="32" cy="32" r="27"
+                stroke="${pctColor}" stroke-dasharray="${circumference}"
+                stroke-dashoffset="${offset}"
+                transform="rotate(-90 32 32)"/>
+            </svg>
+            <div>
+              <div class="value" style="color:${pctColor}">${s.overall_pct}%</div>
+              <div class="sub">${s.grand_total_filled.toLocaleString()} / ${s.grand_total_possible.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="label">마스터 기업</div>
+          <div class="value value-blue">${s.total_entities}</div>
+          <div class="sub">실적 보유 ${s.entities_with_earnings}사</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">실적 레코드</div>
+          <div class="value value-green">${s.grand_total_filled > 0 ? DATA.entities.reduce((a,e) => a + e.fields.revenue.filled, 0) : 0}</div>
+          <div class="sub">26분기 × ${s.entities_with_earnings}사</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">계약 / 마일스톤 / Fab</div>
+          <div class="value value-purple">${s.contracts_count + s.milestones_count + s.fab_count}</div>
+          <div class="sub">${s.contracts_count}건 · ${s.milestones_count}건 · ${s.fab_count}건</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">가장 시급한 갭</div>
+          <div class="value value-red" style="font-size:1.1rem">Capex</div>
+          <div class="sub">${DATA.field_summary.capex.entities_with_data}/${s.total_entities}사 (${DATA.field_summary.capex.coverage_pct}%)</div>
+        </div>
+      `;
+    }
+
+    // ── Alerts ─────────────────────────────────────────
+    function renderAlerts() {
+      const bar = document.getElementById('alertsBar');
+      const icons = { critical: '🔴', warning: '🟡', info: 'ℹ️' };
+      bar.innerHTML = DATA.alerts.map((a, i) =>
+        `<span class="alert-chip ${a.level}" style="animation-delay:${i*0.08}s">
+          ${icons[a.level] || '⚠️'} ${a.message}
+        </span>`
+      ).join('');
+    }
+
+    // ── Filters ───────────────────────────────────────
+    function renderFilters() {
+      const bar = document.getElementById('filterBar');
+      const layers = [...new Set(DATA.entities.map(e => e.layer))].sort();
+
+      layers.forEach(layer => {
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = true; cb.value = layer;
+        cb.addEventListener('change', () => {
+          if (cb.checked) activeFilters.delete(layer);
+          else activeFilters.add(layer);
+          label.classList.toggle('active', cb.checked);
+          renderTable();
+        });
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(' ' + (LAYER_LABELS[layer] || layer)));
+        label.classList.add('active');
+        bar.appendChild(label);
+      });
+
+      // Export button
+      const exportBtn = document.createElement('button');
+      exportBtn.className = 'export-btn';
+      exportBtn.textContent = '📥 CSV 내보내기';
+      exportBtn.style.marginLeft = 'auto';
+      exportBtn.onclick = exportCSV;
+      bar.appendChild(exportBtn);
+    }
+
+    // ── Heatmap Table ─────────────────────────────────
+    function renderTable() {
+      const fields = DATA.fields;
+      const thead = document.getElementById('heatmapHead');
+      const tbody = document.getElementById('heatmapBody');
+
+      // Header
+      thead.innerHTML = '';
+      const cols = [
+        { key: 'entity', label: '기업', sortKey: 'name_en' },
+        ...fields.map(f => ({ key: f.key, label: f.label, sortKey: f.key })),
+        { key: 'total', label: '총점', sortKey: 'total_pct' },
+      ];
+      cols.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col.label;
+        th.dataset.sortKey = col.sortKey;
+        if (sortCol === col.sortKey) th.className = sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc';
+        th.addEventListener('click', () => {
+          if (sortCol === col.sortKey) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          else { sortCol = col.sortKey; sortDir = 'desc'; }
+          renderTable();
+        });
+        thead.appendChild(th);
+      });
+
+      // Sort & filter
+      let entities = DATA.entities.filter(e => !activeFilters.has(e.layer));
+      entities.sort((a, b) => {
+        let va, vb;
+        if (sortCol === 'name_en') { va = a.name_en; vb = b.name_en; }
+        else if (sortCol === 'total_pct') { va = a.total_pct; vb = b.total_pct; }
+        else { va = a.fields[sortCol]?.pct || 0; vb = b.fields[sortCol]?.pct || 0; }
+        if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        return sortDir === 'asc' ? va - vb : vb - va;
+      });
+
+      // Body
+      tbody.innerHTML = '';
+      entities.forEach(ent => {
+        const tr = document.createElement('tr');
+        if (ent.total_filled === 0) tr.classList.add('no-data');
+
+        // Entity name cell
+        const tdName = document.createElement('td');
+        tdName.innerHTML = `<div class="entity-cell">
+          <span class="entity-name">${ent.name_en}</span>
+          <span class="entity-layer" style="color:${LAYER_COLORS[ent.layer] || '#666'}">${ent.layer}${ent.ticker ? ' · ' + ent.ticker : ''}</span>
+        </div>`;
+        tr.appendChild(tdName);
+
+        // Field cells
+        fields.forEach(f => {
+          const td = document.createElement('td');
+          const info = ent.fields[f.key];
+          const heatClass = getHeatClass(info.pct);
+          td.innerHTML = `<span class="cell-heat ${heatClass}" onclick="showDetail('${ent.entity_id}','${f.key}','${ent.name_en}','${f.label}')">${info.filled}/${info.total}</span>`;
+          tr.appendChild(td);
+        });
+
+        // Total cell
+        const tdTotal = document.createElement('td');
+        const barColor = ent.total_pct >= 50 ? '#10b981' : ent.total_pct >= 25 ? '#f59e0b' : '#ef4444';
+        tdTotal.innerHTML = `<div class="total-cell" style="color:${barColor}">${ent.total_pct}%</div>
+          <div class="total-bar-bg"><div class="total-bar-fg" style="width:${ent.total_pct}%;background:${barColor}"></div></div>`;
+        tr.appendChild(tdTotal);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getHeatClass(pct) {
+      if (pct >= 95) return 'heat-100';
+      if (pct >= 80) return 'heat-80';
+      if (pct >= 60) return 'heat-60';
+      if (pct >= 40) return 'heat-40';
+      if (pct >= 10) return 'heat-20';
+      if (pct > 0)   return 'heat-10';
+      return 'heat-0';
+    }
+
+    // ── Field Bar Chart ───────────────────────────────
+    function renderFieldBars() {
+      const list = document.getElementById('fieldBarList');
+      const fs = DATA.field_summary;
+
+      DATA.fields.forEach(f => {
+        const info = fs[f.key];
+        const color = info.coverage_pct >= 50 ? '#10b981' : info.coverage_pct >= 20 ? '#f59e0b' : '#ef4444';
+        const item = document.createElement('div');
+        item.className = 'field-bar-item';
+        item.innerHTML = `
+          <span class="field-bar-label">${info.label}</span>
+          <div class="field-bar-track">
+            <div class="field-bar-fill" style="width:${Math.max(info.coverage_pct, 2)}%;background:${color}">
+              ${info.coverage_pct >= 8 ? info.coverage_pct + '%' : ''}
+            </div>
+          </div>
+          <span class="field-bar-value">${info.entities_with_data}/${info.total_entities}사</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // ── Layer Distribution ────────────────────────────
+    function renderLayerDist() {
+      const list = document.getElementById('layerDistList');
+      const layers = {};
+      DATA.entities.forEach(e => {
+        if (!layers[e.layer]) layers[e.layer] = { total: 0, count: 0, withData: 0 };
+        layers[e.layer].total += e.total_pct;
+        layers[e.layer].count++;
+        if (e.total_filled > 0) layers[e.layer].withData++;
+      });
+
+      Object.entries(layers).sort((a,b) => (b[1].total/b[1].count) - (a[1].total/a[1].count)).forEach(([layer, info]) => {
+        const avg = (info.total / info.count).toFixed(1);
+        const item = document.createElement('div');
+        item.className = 'layer-item';
+        item.innerHTML = `
+          <span class="layer-dot" style="background:${LAYER_COLORS[layer] || '#666'}"></span>
+          <span class="layer-name">${LAYER_LABELS[layer] || layer}</span>
+          <span class="layer-stat">${info.withData}/${info.count}사</span>
+          <div style="flex:1;max-width:120px">
+            <div class="total-bar-bg"><div class="total-bar-fg" style="width:${avg}%;background:${LAYER_COLORS[layer]}"></div></div>
+          </div>
+          <span class="layer-stat" style="width:45px;text-align:right">${avg}%</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // ── Detail Modal ──────────────────────────────────
+    function showDetail(entityId, fieldKey, entityName, fieldLabel) {
+      const modal = document.getElementById('detailModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+
+      title.textContent = `${entityName} — ${fieldLabel} 분기별 현황`;
+
+      // We need to check which quarters have data
+      // Since we don't have per-quarter detail in JSON, show a summary
+      const ent = DATA.entities.find(e => e.entity_id === entityId);
+      const info = ent.fields[fieldKey];
+
+      body.innerHTML = `
+        <p style="margin-bottom:1rem;color:var(--text-muted);font-size:0.85rem">
+          입력 완료: <strong style="color:var(--text-main)">${info.filled}</strong> / ${info.total}분기
+          (${info.pct}%)
+        </p>
+        <div class="modal-grid">
+          ${QUARTERS.map((q, i) => {
+            // We don't have per-quarter granularity in the JSON, so show overall fill
+            const isFilled = i < info.filled; // approximation
+            return `<div class="modal-q header">${q.replace('20','').replace('-','')}</div>`;
+          }).join('')}
+        </div>
+        <div style="margin-top:1.5rem;padding:1rem;background:rgba(59,130,246,0.08);border-radius:8px;font-size:0.8rem;color:var(--text-muted)">
+          💡 상세 분기별 입력 현황은 DB에서 직접 조회하세요:<br>
+          <code style="font-family:'JetBrains Mono',monospace;color:var(--primary);font-size:0.75rem;margin-top:0.5rem;display:block">
+            SELECT period, ${fieldKey} FROM earnings_reports<br>
+            WHERE entity_id = '${entityId}' AND is_forecast = 0<br>
+            ORDER BY period;
+          </code>
+        </div>
+      `;
+
+      modal.classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('open');
+    }
+    document.getElementById('detailModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // ── CSV Export ─────────────────────────────────────
+    function exportCSV() {
+      const fields = DATA.fields;
+      let csv = 'entity_id,name_en,layer,ticker,' +
+        fields.map(f => f.label_en + '_filled').join(',') + ',' +
+        fields.map(f => f.label_en + '_pct').join(',') +
+        ',total_filled,total_pct\n';
+
+      DATA.entities.forEach(e => {
+        csv += [
+          e.entity_id, `"${e.name_en}"`, e.layer, e.ticker || '',
+          ...fields.map(f => e.fields[f.key].filled),
+          ...fields.map(f => e.fields[f.key].pct),
+          e.total_filled, e.total_pct,
+        ].join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'quality_scorecard.csv';
+      link.click();
+    }
+  </script>
+</body>
+</html>

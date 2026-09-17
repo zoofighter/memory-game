@@ -1,0 +1,44 @@
+{
+  "folder": "20_마일스톤",
+  "category": "기술 로드맵 및 사건 (Milestones)",
+  "updated_at": "2026-09-16 17:32:41",
+  "count": 6,
+  "items": [
+    {
+      "name": "X에서 ByungJun Ahn 님 : \"요즘 AI 뉴스들을 이어서 보면 9월 들어 분위기가 확실히 달라졌다. 특히 구글에서 나오는 신호가 심상치 않다. 1. 구글 딥마인드는 이미 AGI 이후 ASI로 가는 경로 중 하나로 Recursive Self-Improvement, 즉 RSI를 공식적으로 연구하고 있다. 핵심은 AI 성능이 단순히 좋아지는 것이 아니다.\" / X",
+      "url": "https://x.com/dubidubabap/status/2098694660210479184",
+      "date_added": "2026-09-13",
+      "raw_date_added": "13433737220900686"
+    },
+    {
+      "name": "코인과 은행간 한판승부 결과는? (feat 9.. : 네이버블로그",
+      "url": "https://blog.naver.com/ranto28/224408966593?trackingCode=rss",
+      "date_added": "2026-09-13",
+      "raw_date_added": "13433737623559517"
+    },
+    {
+      "name": "일상은 명료하게, 행복은 단순하게 : 네이버 블로그",
+      "url": "https://blog.naver.com/travelingcompanion",
+      "date_added": "2026-08-13",
+      "raw_date_added": "13431073442581465"
+    },
+    {
+      "name": "260911 Meta, AI agent mus.. : 네이버블로그",
+      "url": "https://blog.naver.com/deskhunter/224407641663?trackingCode=rss",
+      "date_added": "2026-09-13",
+      "raw_date_added": "13433770952235263"
+    },
+    {
+      "name": "Is the 2028 Memory Downcycle Real? - Damnang Research",
+      "url": "https://www.damnang.com/p/is-the-2028-memory-downcycle-real?r=5ggurd&utm_campaign=post-expanded-share&utm_medium=web&triedRedirect=true",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433988314507171"
+    },
+    {
+      "name": "HBM Density Peak: Why AI Value Is Moving From Memory to Connectivity",
+      "url": "https://www.damnang.com/p/hbm-density-peak-why-ai-value-is",
+      "date_added": "2026-09-15",
+      "raw_date_added": "13433988329203520"
+    }
+  ]
+}

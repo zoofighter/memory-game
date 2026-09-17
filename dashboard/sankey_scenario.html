@@ -159,11 +159,12 @@
 </head>
 <body>
 
-<header>
+<header style="display:flex; justify-content:space-between; align-items:center;">
   <div>
     <h1>⚡ Memory Claude — 고급 분석 모듈</h1>
     <span>자본 흐름 Sankey · 전략적 시나리오 시뮬레이터</span>
   </div>
+  <a href="index.html" style="color:#60a5fa; text-decoration:none; font-size:0.85rem; border:1px solid rgba(96,165,250,0.3); padding:0.4rem 0.9rem; border-radius:6px; background:rgba(96,165,250,0.1); transition:all 0.2s;">← 메인 대시보드로 이동</a>
 </header>
 
 <div class="tabs">
@@ -180,11 +181,13 @@
     <p>DB contracts 테이블 기준 · 화살표 두께 = 계약 금액 비례 · 클릭으로 필터</p>
   </div>
   <div class="sankey-controls">
-    <button class="filter-btn active" onclick="filterSankey('all', this)">전체</button>
-    <button class="filter-btn" onclick="filterSankey('INVESTMENT', this)">투자/지분</button>
+    <button class="filter-btn active" onclick="filterSankey('all', this)">전체 ($517B+)</button>
+    <button class="filter-btn" onclick="filterSankey('INVESTMENT', this)">투자/크레딧</button>
     <button class="filter-btn" onclick="filterSankey('SUPPLY', this)">공급 계약</button>
-    <button class="filter-btn" onclick="filterSankey('GPU', this)">GPU</button>
-    <button class="filter-btn" onclick="filterSankey('HBM', this)">HBM</button>
+    <button class="filter-btn" onclick="filterSankey('ASIC', this)">ASIC (브로드컴 10GW)</button>
+    <button class="filter-btn" onclick="filterSankey('GPU', this)">GPU (엔비디아)</button>
+    <button class="filter-btn" onclick="filterSankey('HBM', this)">HBM (직납포함)</button>
+    <button class="filter-btn" onclick="filterSankey('POWER', this)">전력/냉각 (L8 버티브)</button>
   </div>
   <div id="sankey_chart"></div>
   <div class="sankey-legend" id="sankey-legend"></div>
@@ -276,19 +279,43 @@
 
 <script>
 // ══════════════════════════════════════
-// DATA — DB contracts 테이블 기반
+// DATA — DB contracts 테이블 & 북마크 인텔리전스 기반
 // ══════════════════════════════════════
 const ALL_FLOWS = [
   // [source, target, value, type, product]
-  ['구글', '앤트로픽', 200, 'INVESTMENT', 'AI_MODEL'],
-  ['구글', '엔비디아', 30,  'SUPPLY',     'GPU'],
-  ['메타', '엔비디아', 25,  'SUPPLY',     'GPU'],
-  ['MS',   '오픈AI',   13,  'INVESTMENT', 'AI_MODEL'],
-  ['아마존','앤트로픽', 12,  'INVESTMENT', 'AI_MODEL'],
-  ['메타', '브로드컴',  10,  'SUPPLY',     'ASIC'],
-  ['엔비디아','TSMC',  35,  'SUPPLY',     'FOUNDRY'],
-  ['엔비디아','SK하이닉스', 18, 'SUPPLY', 'HBM'],
-  ['엔비디아','삼성전자', 14, 'SUPPLY',   'HBM'],
+  // 1. 하이퍼스케일러 -> AI 랩 (투자 및 컴퓨팅 파트너십)
+  ['구글',   '앤트로픽', 200, 'INVESTMENT', 'AI_MODEL'],
+  ['MS',     '오픈AI',   13,  'INVESTMENT', 'AI_MODEL'],
+  ['아마존', '앤트로픽', 12,  'INVESTMENT', 'AI_MODEL'],
+
+  // 2. AI 랩 -> 가속기 (오픈AI-브로드컴 10GW 칩 계약 등)
+  ['오픈AI', '브로드컴', 65,  'ASIC',       'CUSTOM_ASIC'],
+  ['메타',   '브로드컴', 10,  'ASIC',       'CUSTOM_ASIC'],
+
+  // 3. AI 랩 -> 메모리 직납 (Direct Buy)
+  ['앤트로픽','SK하이닉스',15,'SUPPLY',      'HBM'],
+  ['앤트로픽','마이크론',  10, 'SUPPLY',      'HBM'],
+
+  // 4. 하이퍼스케일러 -> GPU 가속기
+  ['구글',   '엔비디아', 30,  'SUPPLY',     'GPU'],
+  ['메타',   '엔비디아', 25,  'SUPPLY',     'GPU'],
+
+  // 5. 가속기 -> 파운드리
+  ['엔비디아','TSMC',    35,  'SUPPLY',     'FOUNDRY'],
+  ['브로드컴','TSMC',    20,  'SUPPLY',     'FOUNDRY'],
+
+  // 6. 가속기 -> HBM 메모리 공급
+  ['엔비디아','SK하이닉스',18,'SUPPLY',      'HBM'],
+  ['엔비디아','삼성전자', 14, 'SUPPLY',      'HBM'],
+  ['엔비디아','마이크론',  8,  'SUPPLY',      'HBM'],
+  ['브로드컴','SK하이닉스',12,'SUPPLY',      'HBM'],
+
+  // 7. 하이퍼스케일러 -> 전력 & 냉각 인프라 (L8_POWER)
+  ['구글',   '버티브',  15,  'POWER',      'POWER_COOLING'],
+  ['MS',     '버티브',  12,  'POWER',      'POWER_COOLING'],
+
+  // 8. 엔비디아 -> 네오클라우드 (GPU 배정)
+  ['엔비디아','코어위브', 14,  'SUPPLY',     'GPU'],
 ];
 
 // 레이어별 색상
@@ -299,6 +326,8 @@ const NODE_COLORS = {
   'TSMC':   '#e05e2b', 'ASML':    '#ff6600',
   'SK하이닉스':'#00bcd4','삼성전자':'#1428a0', '마이크론':'#009bdf',
   '앤트로픽':'#c97839', '오픈AI':  '#10a37f',
+  '버티브':  '#f59e0b', '코어위브':'#10b981', '스페이스X / xAI': '#38bdf8',
+  '아리스타':'#8b5cf6', '이튼':    '#d97706',
 };
 
 let currentFilter = 'all';
@@ -331,7 +360,7 @@ function filterSankey(type, btn) {
 function drawSankey(filter) {
   const filtered = filter === 'all'
     ? ALL_FLOWS
-    : ALL_FLOWS.filter(f => f[2] === filter || f[3] === filter || f[4] === filter);
+    : ALL_FLOWS.filter(f => f[2] === filter || f[3] === filter || f[4] === filter || (filter === 'ASIC' && (f[3] === 'ASIC' || f[4] === 'CUSTOM_ASIC')));
 
   const data = new google.visualization.DataTable();
   data.addColumn('string', 'From');

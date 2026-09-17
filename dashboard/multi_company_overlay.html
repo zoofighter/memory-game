@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — 밸류체인 레이어별 실적 다중 비교 (Multi-Company Overlay)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.75);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --accent: #10b981;
+      --amber: #f59e0b;
+      --purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1.5rem 2rem;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .page-header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #10b981, #38bdf8, #8b5cf6, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .page-header .sub {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.35rem;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .nav-btn {
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.08);
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    /* Presets Ribbon */
+    .presets-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .preset-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .presets-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .btn-preset {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-preset:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .btn-preset.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Chart Card */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+    }
+    .chart-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .controls-cluster {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .metric-group, .mode-group {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 3px;
+      gap: 3px;
+    }
+    .btn-control {
+      padding: 0.38rem 0.75rem;
+      font-size: 0.78rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .btn-control.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+    }
+    .btn-control.active-accent {
+      background: #10b981 !important;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4) !important;
+    }
+    .btn-control.active-purple {
+      background: #8b5cf6 !important;
+      box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4) !important;
+    }
+
+    .base-select {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.6rem;
+      outline: none;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 480px;
+      width: 100%;
+    }
+
+    /* Right Entity Selector Card */
+    .selector-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      max-height: 610px;
+    }
+    .selector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .selector-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .selector-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .btn-small {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-card);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .btn-small:hover {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+    .entity-scroll-list {
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 0.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .layer-section-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .layer-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .entity-chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .entity-chip {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .entity-chip:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .entity-chip.selected {
+      background: rgba(255,255,255,0.12);
+      font-weight: 600;
+      color: #fff;
+    }
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      opacity: 0.4;
+    }
+    .entity-chip.selected .chip-dot {
+      opacity: 1;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    /* Insights Grid */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .insight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      backdrop-filter: blur(10px);
+    }
+    .insight-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .insight-body {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Bottom Data Table */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+    }
+    .table-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .table-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 400px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: right;
+    }
+    th, td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #131b2e;
+      color: var(--text-muted);
+      font-weight: 600;
+      z-index: 10;
+    }
+    th.fixed-col, td.fixed-col {
+      position: sticky;
+      left: 0;
+      background: #111827;
+      text-align: left;
+      z-index: 11;
+      font-weight: 600;
+      color: #fff;
+    }
+    th.fixed-col {
+      z-index: 20;
+    }
+    tr:hover td {
+      background: rgba(255,255,255,0.03);
+    }
+    .forecast-col {
+      background: rgba(245, 158, 11, 0.04);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h1>🏆 밸류체인 레이어별 실적 다중 비교 (Multi-Company Overlay)</h1>
+      <div class="sub">
+        빅테크 Capex(수요) → AI가속기/파운드리(병목) → 메모리/전력(확산)으로 이어지는 <strong>매출·영업이익·OPM(마진)</strong> 추이와 성장 속도를 다각도로 비교합니다.
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-btn">← 메인 대시보드</a>
+      <a href="hbm_market_balance.html" class="nav-btn" style="color:#f59e0b; border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.08);">💾 HBM 수급 분석 ↗</a>
+      <a href="layer_capital_absorption.html" class="nav-btn">⚡ 레이어별 자본 흡수 ↗</a>
+      <a href="network_graph.html" class="nav-btn" style="color:#ec4899; border-color:rgba(236,72,153,0.3); background:rgba(236,72,153,0.08);">🕸 의존도 네트워크 ↗</a>
+    </div>
+  </header>
+
+  <!-- Presets Ribbon -->
+  <div class="presets-card">
+    <div class="preset-header">
+      <span>⚡ 1-클릭 분석 프리셋 (Value Chain Presets)</span>
+      <span style="font-size:0.75rem; color:var(--text-dim);">클릭 시 추천 분석 기업 그룹이 자동 세팅됩니다</span>
+    </div>
+    <div class="presets-group">
+      <button class="btn-preset active" id="preset-core" onclick="applyPreset('core')">
+        🏆 AI 밸류체인 핵심 5대 축 (엔비디아·TSMC·SK하이닉스·구글·버티브)
+      </button>
+      <button class="btn-preset" id="preset-hyperscalers" onclick="applyPreset('hyperscalers')">
+        🌐 하이퍼스케일러 빅5 (구글·아마존·MS·메타·오라클)
+      </button>
+      <button class="btn-preset" id="preset-memory" onclick="applyPreset('memory')">
+        💾 메모리 3사 (SK하이닉스·삼성전자·마이크론)
+      </button>
+      <button class="btn-preset" id="preset-compute" onclick="applyPreset('compute')">
+        ⚙️ 컴퓨팅/가속기 4사 (엔비디아·브로드컴·AMD·인텔)
+      </button>
+      <button class="btn-preset" id="preset-foundry" onclick="applyPreset('foundry')">
+        🏭 파운드리 & 장비 (TSMC·어플라이드·램리서치·KLA)
+      </button>
+      <button class="btn-preset" id="preset-power" onclick="applyPreset('power')">
+        🔌 전력 & 냉각 인프라 (버티브·이튼·GE 버노바)
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+    <!-- Chart Card -->
+    <div class="chart-card">
+      <div class="chart-toolbar">
+        <div class="controls-cluster">
+          <!-- 1. Metric Selector -->
+          <div class="metric-group">
+            <button class="btn-control active" id="metric-revenue" onclick="setMetric('revenue')">💵 매출액 (Revenue)</button>
+            <button class="btn-control" id="metric-op_income" onclick="setMetric('op_income')">💰 영업이익 (Op Income)</button>
+            <button class="btn-control" id="metric-op_margin_pct" onclick="setMetric('op_margin_pct')">📊 영업이익률 (OPM %)</button>
+          </div>
+
+          <!-- 2. Mode Selector -->
+          <div class="mode-group" id="mode-group-container">
+            <button class="btn-control active" id="mode-absolute" onclick="setMode('absolute')">절대 수치</button>
+            <button class="btn-control" id="mode-index" onclick="setMode('index')">성장 지수 (Base 100)</button>
+            <button class="btn-control" id="mode-yoy" onclick="setMode('yoy')">YoY 성장률 (%)</button>
+          </div>
+
+          <!-- Base Period for Index Mode -->
+          <div id="index-base-control" style="display:none; align-items:center; gap:0.4rem; font-size:0.78rem;">
+            <span style="color:var(--text-muted);">기준:</span>
+            <select class="base-select" id="base-period-select" onchange="onBasePeriodChange()">
+              <option value="2023-Q1" selected>2023-Q1 (생성형 AI 원년)</option>
+              <option value="2020-Q1">2020-Q1 (전체 5개년)</option>
+              <option value="2024-Q1">2024-Q1 (가속기 양산 본격화)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size:0.75rem; color:var(--text-dim); display:flex; align-items:center; gap:0.4rem;">
+          <span style="display:inline-block; width:14px; height:2px; background:#fff;"></span> 실선: 확정실적
+          <span style="display:inline-block; width:14px; height:2px; border-top:2px dashed #f59e0b; margin-left:6px;"></span> 점선: 전망치(2026-Q3~)
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="overlay-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Entity Selector Card -->
+    <aside class="selector-card">
+      <div class="selector-header">
+        <div class="selector-title">비교 기업 선택 (<span id="selected-count">5</span>/28)</div>
+        <div class="selector-actions">
+          <button class="btn-small" onclick="clearAllSelection()">초기화</button>
+        </div>
+      </div>
+      <div class="entity-scroll-list" id="entity-selector-list">
+        <!-- Dynamically injected by layer -->
+      </div>
+    </aside>
+  </div>
+
+  <!-- Insights Grid -->
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-title" style="color:#10b981;">💰 영업이익의 지각변동 (NVIDIA의 이익 폭증)</div>
+      <div class="insight-body">
+        <strong>영업이익 $40B 클럽:</strong><br>
+        2022년 분기 영업이익 $1B 미만이었던 NVIDIA는 2026-Q2 기준 <strong>$41.0B</strong>를 기록하며 마이크로소프트($40.6B)와 구글($40.5B)의 영업이익 총량을 추월하는 초유의 수익 독점을 보여줍니다.
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title" style="color:#8b5cf6;">📊 OPM(영업이익률) 양극화 현상</div>
+      <div class="insight-body">
+        <strong>독점 칩/파운드리(50~70%) vs 인프라/커머스(10~30%):</strong><br>
+        NVIDIA(65~74%)와 TSMC(50~59%), SK하이닉스(40~46%) 등 핵심 공급 병목 기업들의 마진이 하이퍼스케일러(구글 34%, 아마존 12~13%) 대비 현저히 높게 형성됩니다.
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title" style="color:#f59e0b;">⏱️ 메모리(HBM)의 마진 회복 레버리지</div>
+      <div class="insight-body">
+        <strong>SK하이닉스 OPM 드라마틱 반등:</strong><br>
+        2023-Q1 극심한 적자(-30% 이하)에서 HBM3E/HBM4 독점 공급을 발판으로 2024~2026년 <strong>OPM 40% 이상</strong>으로 수직 상승하는 사이클 레버리지가 영업이익 차트에서 입증됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Data Table -->
+  <div class="table-card">
+    <div class="table-header-flex">
+      <div class="table-title" id="table-dynamic-title">📋 선택 기업 분기별 실적 데이터 테이블</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">단위: 매출/영업익($B), 마진율(%)</div>
+    </div>
+    <div class="table-wrapper">
+      <table id="data-table">
+        <thead>
+          <tr id="table-head-row">
+            <th class="fixed-col">기업명</th>
+            <!-- Dynamically populated periods -->
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Dynamically populated rows -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    const PERIODS = [{"period": "2020-Q1", "is_forecast": 0}, {"period": "2020-Q2", "is_forecast": 0}, {"period": "2020-Q3", "is_forecast": 0}, {"period": "2020-Q4", "is_forecast": 0}, {"period": "2021-Q1", "is_forecast": 0}, {"period": "2021-Q2", "is_forecast": 0}, {"period": "2021-Q3", "is_forecast": 0}, {"period": "2021-Q4", "is_forecast": 0}, {"period": "2022-Q1", "is_forecast": 0}, {"period": "2022-Q2", "is_forecast": 0}, {"period": "2022-Q3", "is_forecast": 0}, {"period": "2022-Q4", "is_forecast": 0}, {"period": "2023-Q1", "is_forecast": 0}, {"period": "2023-Q2", "is_forecast": 0}, {"period": "2023-Q3", "is_forecast": 0}, {"period": "2023-Q4", "is_forecast": 0}, {"period": "2024-Q1", "is_forecast": 0}, {"period": "2024-Q2", "is_forecast": 0}, {"period": "2024-Q3", "is_forecast": 0}, {"period": "2024-Q4", "is_forecast": 0}, {"period": "2025-Q1", "is_forecast": 0}, {"period": "2025-Q2", "is_forecast": 0}, {"period": "2025-Q3", "is_forecast": 0}, {"period": "2025-Q4", "is_forecast": 0}, {"period": "2026-Q1", "is_forecast": 0}, {"period": "2026-Q2", "is_forecast": 0}, {"period": "2026-Q3", "is_forecast": 1}, {"period": "2026-Q4", "is_forecast": 1}];
+    const ENTITIES = [{"entity_id": "AMAZON", "name_ko": "아마존", "name_en": "Amazon/AWS", "layer": "L2_HYPERSCALER", "ticker": "AMZN", "country": "US", "q_cnt": 28, "rev_2025": 717.225, "op_2025": 81.309, "color": "#f97316", "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "GOOGLE", "name_ko": "구글", "name_en": "Alphabet/Google", "layer": "L2_HYPERSCALER", "ticker": "GOOGL", "country": "US", "q_cnt": 28, "rev_2025": 402.832, "op_2025": 127.253, "color": "#3b82f6", "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "MICROSOFT", "name_ko": "마이크로소프트", "name_en": "Microsoft", "layer": "L2_HYPERSCALER", "ticker": "MSFT", "country": "US", "q_cnt": 28, "rev_2025": 305.457, "op_2025": 142.60899999999998, "color": "#06b6d4", "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "META", "name_ko": "메타", "name_en": "Meta Platforms", "layer": "L2_HYPERSCALER", "ticker": "META", "country": "US", "q_cnt": 28, "rev_2025": 200.961, "op_2025": 83.281, "color": "#ec4899", "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "ORACLE", "name_ko": "오라클", "name_en": "Oracle", "layer": "L2_HYPERSCALER", "ticker": "ORCL", "country": "US", "q_cnt": 25, "rev_2025": 61.017, "op_2025": 18.475, "color": "#ef4444", "layer_name_ko": "L2 하이퍼스케일러", "layer_color": "#3b82f6"}, {"entity_id": "NVIDIA", "name_ko": "엔비디아", "name_en": "NVIDIA", "layer": "L3_COMPUTE", "ticker": "NVDA", "country": "US", "q_cnt": 28, "rev_2025": 215.936, "op_2025": 138.039, "color": "#10b981", "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "BROADCOM", "name_ko": "브로드컴", "name_en": "Broadcom", "layer": "L3_COMPUTE", "ticker": "AVGO", "country": "US", "q_cnt": 26, "rev_2025": 63.887, "op_2025": 25.483999999999998, "color": "#14b8a6", "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "INTEL", "name_ko": "인텔", "name_en": "Intel", "layer": "L3_COMPUTE", "ticker": "INTC", "country": "US", "q_cnt": 26, "rev_2025": 52.853, "op_2025": -2.214, "color": "#6366f1", "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "AMD", "name_ko": "AMD", "name_en": "AMD", "layer": "L3_COMPUTE", "ticker": "AMD", "country": "US", "q_cnt": 26, "rev_2025": 34.638999999999996, "op_2025": 3.694, "color": "#f43f5e", "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "ARM", "name_ko": "Arm", "name_en": "Arm Holdings", "layer": "L3_COMPUTE", "ticker": "ARM", "country": "UK", "q_cnt": 14, "rev_2025": 4.671, "op_2025": 0.872, "color": "#84cc16", "layer_name_ko": "L3 컴퓨팅/가속기", "layer_color": "#10b981"}, {"entity_id": "TSMC", "name_ko": "TSMC", "name_en": "TSMC", "layer": "L4_FOUNDRY", "ticker": "TSM", "country": "TW", "q_cnt": 28, "rev_2025": 118.10090542861624, "op_2025": 59.449252677676334, "color": "#8b5cf6", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "APPLIED_MATERIALS", "name_ko": "어플라이드", "name_en": "Applied Materials", "layer": "L4_FOUNDRY", "ticker": "AMAT", "country": "US", "q_cnt": 24, "rev_2025": 28.368, "op_2025": 8.289, "color": "#0284c7", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "LAM_RESEARCH", "name_ko": "램리서치", "name_en": "Lam Research", "layer": "L4_FOUNDRY", "ticker": "LRCX", "country": "US", "q_cnt": 24, "rev_2025": 20.560532000000002, "op_2025": 6.942178, "color": "#c084fc", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "KLA", "name_ko": "KLA", "name_en": "KLA Corporation", "layer": "L4_FOUNDRY", "ticker": "KLAC", "country": "US", "q_cnt": 24, "rev_2025": 12.744612, "op_2025": 0, "color": "#fbbf24", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "AMKOR", "name_ko": "앰코", "name_en": "Amkor Technology", "layer": "L4_FOUNDRY", "ticker": "AMKR", "country": "US", "q_cnt": 25, "rev_2025": 6.707981, "op_2025": 0.467385, "color": "#fb7185", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "ASE", "name_ko": "ASE", "name_en": "ASE Technology", "layer": "L4_FOUNDRY", "ticker": "ASX", "country": "TW", "q_cnt": 3, "rev_2025": 4.834830019243104, "op_2025": 0.3269082745349583, "color": "#4ade80", "layer_name_ko": "L4 파운드리/장비", "layer_color": "#8b5cf6"}, {"entity_id": "SAMSUNG", "name_ko": "삼성전자", "name_en": "Samsung Electronics", "layer": "L5_MEMORY", "ticker": "005930", "country": "KR", "q_cnt": 28, "rev_2025": 240.16722798816755, "op_2025": 36.37717566068182, "color": "#38bdf8", "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "SK_HYNIX", "name_ko": "SK하이닉스", "name_en": "SK hynix", "layer": "L5_MEMORY", "ticker": "000660", "country": "KR", "q_cnt": 26, "rev_2025": 68.3163910245475, "op_2025": 33.14499023168889, "color": "#f59e0b", "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "MICRON", "name_ko": "마이크론", "name_en": "Micron Technology", "layer": "L5_MEMORY", "ticker": "MU", "country": "US", "q_cnt": 26, "rev_2025": 42.312, "op_2025": 13.732, "color": "#a855f7", "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "WDC", "name_ko": "샌디스크/WDC", "name_en": "Western Digital", "layer": "L5_MEMORY", "ticker": "WDC", "country": "US", "q_cnt": 22, "rev_2025": 7.7170000000000005, "op_2025": 2.232, "color": "#fb923c", "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "KIOXIA", "name_ko": "키옥시아", "name_en": "Kioxia Holdings", "layer": "L5_MEMORY", "ticker": "285A", "country": "JP", "q_cnt": 4, "rev_2025": 2.3641310344827584, "op_2025": 0.30964827586206894, "color": "#f472b6", "layer_name_ko": "L5 메모리/스토리지", "layer_color": "#f59e0b"}, {"entity_id": "ARISTA", "name_ko": "아리스타", "name_en": "Arista Networks", "layer": "L6_OPTICAL", "ticker": "ANET", "country": "US", "q_cnt": 26, "rev_2025": 9.005700000000001, "op_2025": 3.8560999999999996, "color": "#2dd4bf", "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "MARVELL", "name_ko": "마벨", "name_en": "Marvell Technology", "layer": "L6_OPTICAL", "ticker": "MRVL", "country": "US", "q_cnt": 25, "rev_2025": 7.7933, "op_2025": 1.1537, "color": "#818cf8", "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "COHERENT", "name_ko": "노발리", "name_en": "Coherent/Novalit", "layer": "L6_OPTICAL", "ticker": "COHR", "country": "US", "q_cnt": 24, "rev_2025": 6.294322, "op_2025": 0.331348, "color": "#a3e635", "layer_name_ko": "L6 광통신/네트워킹", "layer_color": "#06b6d4"}, {"entity_id": "APPLE", "name_ko": "애플", "name_en": "Apple", "layer": "L7_INFRA", "ticker": "AAPL", "country": "US", "q_cnt": 25, "rev_2025": 435.61699999999996, "op_2025": 141.07, "color": "#94a3b8", "layer_name_ko": "L7 인프라/특수", "layer_color": "#64748b"}, {"entity_id": "GE_VERNOVA", "name_ko": "GE 버노바", "name_en": "GE Vernova", "layer": "L8_POWER", "ticker": "GEV", "country": "US", "q_cnt": 14, "rev_2025": 38.068, "op_2025": 1.388, "color": "#d946ef", "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}, {"entity_id": "EATON", "name_ko": "이튼", "name_en": "Eaton Corporation", "layer": "L8_POWER", "ticker": "ETN", "country": "US", "q_cnt": 26, "rev_2025": 27.448, "op_2025": 4.932, "color": "#22c55e", "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}, {"entity_id": "VERTIV", "name_ko": "버티브", "name_en": "Vertiv Holdings", "layer": "L8_POWER", "ticker": "VRT", "country": "US", "q_cnt": 26, "rev_2025": 10.2299, "op_2025": 1.8297, "color": "#eab308", "layer_name_ko": "L8 전력 & 에너지", "layer_color": "#eab308"}];
+    const EARNINGS = {"AMAZON": {"2020-Q1": {"revenue": 75.45, "op_income": 3.99, "op_margin_pct": 5.29, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 88.91, "op_income": 5.84, "op_margin_pct": 6.57, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 96.15, "op_income": 6.19, "op_margin_pct": 6.44, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 125.56, "op_income": 6.87, "op_margin_pct": 5.47, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 108.52, "op_income": 8.87, "op_margin_pct": 8.17, "is_forecast": 0, "rev_yoy": 43.8, "op_yoy": 122.3, "opm_diff": 2.9}, "2021-Q2": {"revenue": 113.08, "op_income": 7.68, "op_margin_pct": 6.79, "is_forecast": 0, "rev_yoy": 27.2, "op_yoy": 31.5, "opm_diff": 0.2}, "2021-Q3": {"revenue": 110.81, "op_income": 4.85, "op_margin_pct": 4.38, "is_forecast": 0, "rev_yoy": 15.2, "op_yoy": -21.6, "opm_diff": -2.1}, "2021-Q4": {"revenue": 137.41, "op_income": 3.46, "op_margin_pct": 2.52, "is_forecast": 0, "rev_yoy": 9.4, "op_yoy": -49.6, "opm_diff": -2.9}, "2022-Q1": {"revenue": 116.44, "op_income": 3.67, "op_margin_pct": 3.15, "is_forecast": 0, "rev_yoy": 7.3, "op_yoy": -58.6, "opm_diff": -5.0}, "2022-Q2": {"revenue": 121.23, "op_income": 3.32, "op_margin_pct": 2.74, "is_forecast": 0, "rev_yoy": 7.2, "op_yoy": -56.8, "opm_diff": -4.0}, "2022-Q3": {"revenue": 127.1, "op_income": 2.53, "op_margin_pct": 1.99, "is_forecast": 0, "rev_yoy": 14.7, "op_yoy": -47.8, "opm_diff": -2.4}, "2022-Q4": {"revenue": 149.2, "op_income": 2.74, "op_margin_pct": 1.84, "is_forecast": 0, "rev_yoy": 8.6, "op_yoy": -20.8, "opm_diff": -0.7}, "2023-Q1": {"revenue": 127.36, "op_income": 4.77, "op_margin_pct": 3.75, "is_forecast": 0, "rev_yoy": 9.4, "op_yoy": 30.0, "opm_diff": 0.6}, "2023-Q2": {"revenue": 134.38, "op_income": 7.68, "op_margin_pct": 5.72, "is_forecast": 0, "rev_yoy": 10.8, "op_yoy": 131.3, "opm_diff": 3.0}, "2023-Q3": {"revenue": 143.08, "op_income": 11.19, "op_margin_pct": 7.82, "is_forecast": 0, "rev_yoy": 12.6, "op_yoy": 342.3, "opm_diff": 5.8}, "2023-Q4": {"revenue": 169.96, "op_income": 13.21, "op_margin_pct": 7.77, "is_forecast": 0, "rev_yoy": 13.9, "op_yoy": 382.1, "opm_diff": 5.9}, "2024-Q1": {"revenue": 143.31, "op_income": 15.31, "op_margin_pct": 10.68, "is_forecast": 0, "rev_yoy": 12.5, "op_yoy": 221.0, "opm_diff": 6.9}, "2024-Q2": {"revenue": 147.98, "op_income": 14.67, "op_margin_pct": 9.91, "is_forecast": 0, "rev_yoy": 10.1, "op_yoy": 91.0, "opm_diff": 4.2}, "2024-Q3": {"revenue": 158.88, "op_income": 17.41, "op_margin_pct": 10.96, "is_forecast": 0, "rev_yoy": 11.0, "op_yoy": 55.6, "opm_diff": 3.1}, "2024-Q4": {"revenue": 187.79, "op_income": 21.16, "op_margin_pct": 11.27, "is_forecast": 0, "rev_yoy": 10.5, "op_yoy": 60.2, "opm_diff": 3.5}, "2025-Q1": {"revenue": 155.67, "op_income": 18.41, "op_margin_pct": 11.83, "is_forecast": 0, "rev_yoy": 8.6, "op_yoy": 20.2, "opm_diff": 1.2}, "2025-Q2": {"revenue": 168.0, "op_income": 20.5, "op_margin_pct": 12.2, "is_forecast": 0, "rev_yoy": 13.5, "op_yoy": 39.7, "opm_diff": 2.3}, "2025-Q3": {"revenue": 180.169, "op_income": 17.422, "op_margin_pct": 9.67, "is_forecast": 0, "rev_yoy": 13.4, "op_yoy": 0.1, "opm_diff": -1.3}, "2025-Q4": {"revenue": 213.386, "op_income": 24.977, "op_margin_pct": 11.71, "is_forecast": 0, "rev_yoy": 13.6, "op_yoy": 18.0, "opm_diff": 0.4}, "2026-Q1": {"revenue": 185.0, "op_income": 23.5, "op_margin_pct": 12.7, "is_forecast": 0, "rev_yoy": 18.8, "op_yoy": 27.6, "opm_diff": 0.9}, "2026-Q2": {"revenue": 195.0, "op_income": 25.5, "op_margin_pct": 13.08, "is_forecast": 0, "rev_yoy": 16.1, "op_yoy": 24.4, "opm_diff": 0.9}, "2026-Q3": {"revenue": 210.0, "op_income": 28.0, "op_margin_pct": 13.33, "is_forecast": 1, "rev_yoy": 16.6, "op_yoy": 60.7, "opm_diff": 3.7}, "2026-Q4": {"revenue": 245.0, "op_income": 33.0, "op_margin_pct": 13.47, "is_forecast": 1, "rev_yoy": 14.8, "op_yoy": 32.1, "opm_diff": 1.8}}, "AMD": {"2020-Q1": {"revenue": 1.786, "op_income": 0.177, "op_margin_pct": 9.91, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 1.932, "op_income": 0.173, "op_margin_pct": 8.95, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 2.801, "op_income": 0.449, "op_margin_pct": 16.03, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 3.244, "op_income": 0.57, "op_margin_pct": 17.57, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 3.445, "op_income": 0.662, "op_margin_pct": 19.22, "is_forecast": 0, "rev_yoy": 92.9, "op_yoy": 274.0, "opm_diff": 9.3}, "2021-Q2": {"revenue": 3.85, "op_income": 0.831, "op_margin_pct": 21.58, "is_forecast": 0, "rev_yoy": 99.3, "op_yoy": 380.3, "opm_diff": 12.6}, "2021-Q3": {"revenue": 4.313, "op_income": 0.948, "op_margin_pct": 21.98, "is_forecast": 0, "rev_yoy": 54.0, "op_yoy": 111.1, "opm_diff": 5.9}, "2021-Q4": {"revenue": 4.826, "op_income": 1.207, "op_margin_pct": 25.01, "is_forecast": 0, "rev_yoy": 48.8, "op_yoy": 111.8, "opm_diff": 7.4}, "2022-Q1": {"revenue": 5.887, "op_income": 0.951, "op_margin_pct": 16.15, "is_forecast": 0, "rev_yoy": 70.9, "op_yoy": 43.7, "opm_diff": -3.1}, "2022-Q2": {"revenue": 6.55, "op_income": 0.526, "op_margin_pct": 8.03, "is_forecast": 0, "rev_yoy": 70.1, "op_yoy": -36.7, "opm_diff": -13.5}, "2022-Q3": {"revenue": 5.565, "op_income": -0.064, "op_margin_pct": -1.15, "is_forecast": 0, "rev_yoy": 29.0, "op_yoy": -106.8, "opm_diff": -23.1}, "2022-Q4": {"revenue": 5.599, "op_income": -0.149, "op_margin_pct": -2.66, "is_forecast": 0, "rev_yoy": 16.0, "op_yoy": -112.3, "opm_diff": -27.7}, "2023-Q1": {"revenue": 5.353, "op_income": -0.145, "op_margin_pct": -2.71, "is_forecast": 0, "rev_yoy": -9.1, "op_yoy": -115.2, "opm_diff": -18.9}, "2023-Q2": {"revenue": 5.359, "op_income": -0.02, "op_margin_pct": -0.37, "is_forecast": 0, "rev_yoy": -18.2, "op_yoy": -103.8, "opm_diff": -8.4}, "2023-Q3": {"revenue": 5.8, "op_income": 0.224, "op_margin_pct": 3.86, "is_forecast": 0, "rev_yoy": 4.2, "op_yoy": 450.0, "opm_diff": 5.0}, "2023-Q4": {"revenue": 6.168, "op_income": 0.342, "op_margin_pct": 5.54, "is_forecast": 0, "rev_yoy": 10.2, "op_yoy": 329.5, "opm_diff": 8.2}, "2024-Q1": {"revenue": 5.473, "op_income": 0.036, "op_margin_pct": 0.66, "is_forecast": 0, "rev_yoy": 2.2, "op_yoy": 124.8, "opm_diff": 3.4}, "2024-Q2": {"revenue": 5.835, "op_income": 0.269, "op_margin_pct": 4.61, "is_forecast": 0, "rev_yoy": 8.9, "op_yoy": 1445.0, "opm_diff": 5.0}, "2024-Q3": {"revenue": 6.819, "op_income": 0.724, "op_margin_pct": 10.62, "is_forecast": 0, "rev_yoy": 17.6, "op_yoy": 223.2, "opm_diff": 6.8}, "2024-Q4": {"revenue": 7.658, "op_income": 0.871, "op_margin_pct": 11.37, "is_forecast": 0, "rev_yoy": 24.2, "op_yoy": 154.7, "opm_diff": 5.8}, "2025-Q1": {"revenue": 7.438, "op_income": 0.806, "op_margin_pct": 10.84, "is_forecast": 0, "rev_yoy": 35.9, "op_yoy": 2138.9, "opm_diff": 10.2}, "2025-Q2": {"revenue": 7.685, "op_income": -0.134, "op_margin_pct": -1.74, "is_forecast": 0, "rev_yoy": 31.7, "op_yoy": -149.8, "opm_diff": -6.4}, "2025-Q3": {"revenue": 9.246, "op_income": 1.27, "op_margin_pct": 13.74, "is_forecast": 0, "rev_yoy": 35.6, "op_yoy": 75.4, "opm_diff": 3.1}, "2025-Q4": {"revenue": 10.27, "op_income": 1.752, "op_margin_pct": 17.06, "is_forecast": 0, "rev_yoy": 34.1, "op_yoy": 101.1, "opm_diff": 5.7}, "2026-Q1": {"revenue": 10.253, "op_income": 1.476, "op_margin_pct": 14.4, "is_forecast": 0, "rev_yoy": 37.8, "op_yoy": 83.1, "opm_diff": 3.6}, "2026-Q2": {"revenue": 11.536, "op_income": 1.99, "op_margin_pct": 17.25, "is_forecast": 0, "rev_yoy": 50.1, "op_yoy": 1585.1, "opm_diff": 19.0}}, "AMKOR": {"2020-Q1": {"revenue": 1.152616, "op_income": 0.084073, "op_margin_pct": 7.29, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 1.172909, "op_income": 0.086524, "op_margin_pct": 7.38, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 1.354023, "op_income": 0.127469, "op_margin_pct": 9.41, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 1.371041, "op_income": 0.159179, "op_margin_pct": 11.61, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 1.32615, "op_income": 0.144448, "op_margin_pct": 10.89, "is_forecast": 0, "rev_yoy": 15.1, "op_yoy": 71.8, "opm_diff": 3.6}, "2021-Q2": {"revenue": 1.406535, "op_income": 0.155115, "op_margin_pct": 11.03, "is_forecast": 0, "rev_yoy": 19.9, "op_yoy": 79.3, "opm_diff": 3.6}, "2021-Q3": {"revenue": 1.681, "op_income": 0.211461, "op_margin_pct": 12.58, "is_forecast": 0, "rev_yoy": 24.1, "op_yoy": 65.9, "opm_diff": 3.2}, "2021-Q4": {"revenue": 1.724644, "op_income": 0.252409, "op_margin_pct": 14.64, "is_forecast": 0, "rev_yoy": 25.8, "op_yoy": 58.6, "opm_diff": 3.0}, "2022-Q1": {"revenue": 1.596816, "op_income": 0.210008, "op_margin_pct": 13.15, "is_forecast": 0, "rev_yoy": 20.4, "op_yoy": 45.4, "opm_diff": 2.3}, "2022-Q2": {"revenue": 1.504868, "op_income": 0.142809, "op_margin_pct": 9.49, "is_forecast": 0, "rev_yoy": 7.0, "op_yoy": -7.9, "opm_diff": -1.5}, "2022-Q3": {"revenue": 2.083691, "op_income": 0.319287, "op_margin_pct": 15.32, "is_forecast": 0, "rev_yoy": 24.0, "op_yoy": 51.0, "opm_diff": 2.7}, "2022-Q4": {"revenue": 1.90621, "op_income": 0.225082, "op_margin_pct": 11.81, "is_forecast": 0, "rev_yoy": 10.5, "op_yoy": -10.8, "opm_diff": -2.8}, "2023-Q1": {"revenue": 1.471539, "op_income": 0.068703, "op_margin_pct": 4.67, "is_forecast": 0, "rev_yoy": -7.8, "op_yoy": -67.3, "opm_diff": -8.5}, "2023-Q2": {"revenue": 1.457922, "op_income": 0.076322, "op_margin_pct": 5.23, "is_forecast": 0, "rev_yoy": -3.1, "op_yoy": -46.6, "opm_diff": -4.3}, "2023-Q3": {"revenue": 1.821793, "op_income": 0.166598, "op_margin_pct": 9.14, "is_forecast": 0, "rev_yoy": -12.6, "op_yoy": -47.8, "opm_diff": -6.2}, "2023-Q4": {"revenue": 1.751811, "op_income": 0.158664, "op_margin_pct": 9.06, "is_forecast": 0, "rev_yoy": -8.1, "op_yoy": -29.5, "opm_diff": -2.8}, "2024-Q1": {"revenue": 1.365511, "op_income": 0.073126, "op_margin_pct": 5.36, "is_forecast": 0, "rev_yoy": -7.2, "op_yoy": 6.4, "opm_diff": 0.7}, "2024-Q2": {"revenue": 1.461474, "op_income": 0.081527, "op_margin_pct": 5.58, "is_forecast": 0, "rev_yoy": 0.2, "op_yoy": 6.8, "opm_diff": 0.3}, "2024-Q3": {"revenue": 1.861589, "op_income": 0.149367, "op_margin_pct": 8.02, "is_forecast": 0, "rev_yoy": 2.2, "op_yoy": -10.3, "opm_diff": -1.1}, "2024-Q4": {"revenue": 1.629118, "op_income": 0.134435, "op_margin_pct": 8.25, "is_forecast": 0, "rev_yoy": -7.0, "op_yoy": -15.3, "opm_diff": -0.8}, "2025-Q1": {"revenue": 1.321575, "op_income": 0.031523, "op_margin_pct": 2.39, "is_forecast": 0, "rev_yoy": -3.2, "op_yoy": -56.9, "opm_diff": -3.0}, "2025-Q2": {"revenue": 1.511392, "op_income": 0.091967, "op_margin_pct": 6.08, "is_forecast": 0, "rev_yoy": 3.4, "op_yoy": 12.8, "opm_diff": 0.5}, "2025-Q3": {"revenue": 1.986968, "op_income": 0.158927, "op_margin_pct": 8.0, "is_forecast": 0, "rev_yoy": 6.7, "op_yoy": 6.4, "opm_diff": -0.0}, "2025-Q4": {"revenue": 1.888046, "op_income": 0.184968, "op_margin_pct": 9.8, "is_forecast": 0, "rev_yoy": 15.9, "op_yoy": 37.6, "opm_diff": 1.6}, "2026-Q1": {"revenue": 1.684701, "op_income": 0.100287, "op_margin_pct": 5.95, "is_forecast": 0, "rev_yoy": 27.5, "op_yoy": 218.1, "opm_diff": 3.6}}, "APPLE": {"2020-Q1": {"revenue": 111.439, "op_income": 33.534, "op_margin_pct": 30.09, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 58.313, "op_income": 12.853, "op_margin_pct": 22.04, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 59.685, "op_income": 13.091, "op_margin_pct": 21.93, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 64.698, "op_income": 14.775, "op_margin_pct": 22.84, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 123.945, "op_income": 41.488, "op_margin_pct": 33.47, "is_forecast": 0, "rev_yoy": 11.2, "op_yoy": 23.7, "opm_diff": 3.4}, "2021-Q2": {"revenue": 89.584, "op_income": 27.503, "op_margin_pct": 30.7, "is_forecast": 0, "rev_yoy": 53.6, "op_yoy": 114.0, "opm_diff": 8.7}, "2021-Q3": {"revenue": 81.434, "op_income": 24.126, "op_margin_pct": 29.63, "is_forecast": 0, "rev_yoy": 36.4, "op_yoy": 84.3, "opm_diff": 7.7}, "2021-Q4": {"revenue": 83.36, "op_income": 23.786, "op_margin_pct": 28.53, "is_forecast": 0, "rev_yoy": 28.8, "op_yoy": 61.0, "opm_diff": 5.7}, "2022-Q1": {"revenue": 117.154, "op_income": 36.016, "op_margin_pct": 30.74, "is_forecast": 0, "rev_yoy": -5.5, "op_yoy": -13.2, "opm_diff": -2.7}, "2022-Q2": {"revenue": 97.278, "op_income": 29.979, "op_margin_pct": 30.82, "is_forecast": 0, "rev_yoy": 8.6, "op_yoy": 9.0, "opm_diff": 0.1}, "2022-Q3": {"revenue": 82.959, "op_income": 23.076, "op_margin_pct": 27.82, "is_forecast": 0, "rev_yoy": 1.9, "op_yoy": -4.4, "opm_diff": -1.8}, "2022-Q4": {"revenue": 90.146, "op_income": 24.894, "op_margin_pct": 27.62, "is_forecast": 0, "rev_yoy": 8.1, "op_yoy": 4.7, "opm_diff": -0.9}, "2023-Q1": {"revenue": 119.575, "op_income": 40.373, "op_margin_pct": 33.76, "is_forecast": 0, "rev_yoy": 2.1, "op_yoy": 12.1, "opm_diff": 3.0}, "2023-Q2": {"revenue": 94.836, "op_income": 28.318, "op_margin_pct": 29.86, "is_forecast": 0, "rev_yoy": -2.5, "op_yoy": -5.5, "opm_diff": -1.0}, "2023-Q3": {"revenue": 81.797, "op_income": 22.998, "op_margin_pct": 28.12, "is_forecast": 0, "rev_yoy": -1.4, "op_yoy": -0.3, "opm_diff": 0.3}, "2023-Q4": {"revenue": 89.498, "op_income": 26.969, "op_margin_pct": 30.13, "is_forecast": 0, "rev_yoy": -0.7, "op_yoy": 8.3, "opm_diff": 2.5}, "2024-Q1": {"revenue": 124.3, "op_income": 42.832, "op_margin_pct": 34.46, "is_forecast": 0, "rev_yoy": 4.0, "op_yoy": 6.1, "opm_diff": 0.7}, "2024-Q2": {"revenue": 90.753, "op_income": 27.9, "op_margin_pct": 30.74, "is_forecast": 0, "rev_yoy": -4.3, "op_yoy": -1.5, "opm_diff": 0.9}, "2024-Q3": {"revenue": 85.777, "op_income": 25.352, "op_margin_pct": 29.56, "is_forecast": 0, "rev_yoy": 4.9, "op_yoy": 10.2, "opm_diff": 1.4}, "2024-Q4": {"revenue": 94.93, "op_income": 29.591, "op_margin_pct": 31.17, "is_forecast": 0, "rev_yoy": 6.1, "op_yoy": 9.7, "opm_diff": 1.0}, "2025-Q1": {"revenue": 143.756, "op_income": 50.852, "op_margin_pct": 35.37, "is_forecast": 0, "rev_yoy": 15.7, "op_yoy": 18.7, "opm_diff": 0.9}, "2025-Q2": {"revenue": 95.359, "op_income": 29.589, "op_margin_pct": 31.03, "is_forecast": 0, "rev_yoy": 5.1, "op_yoy": 6.1, "opm_diff": 0.3}, "2025-Q3": {"revenue": 94.036, "op_income": 28.202, "op_margin_pct": 29.99, "is_forecast": 0, "rev_yoy": 9.6, "op_yoy": 11.2, "opm_diff": 0.4}, "2025-Q4": {"revenue": 102.466, "op_income": 32.427, "op_margin_pct": 31.65, "is_forecast": 0, "rev_yoy": 7.9, "op_yoy": 9.6, "opm_diff": 0.5}, "2026-Q2": {"revenue": 111.184, "op_income": 35.885, "op_margin_pct": 32.28, "is_forecast": 0, "rev_yoy": 16.6, "op_yoy": 21.3, "opm_diff": 1.2}}, "APPLIED_MATERIALS": {"2020-Q2": {"revenue": 3.957, "op_income": 0.932, "op_margin_pct": 23.55, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 4.395, "op_income": 1.108, "op_margin_pct": 25.21, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 5.162, "op_income": 1.283, "op_margin_pct": 24.85, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q2": {"revenue": 5.582, "op_income": 1.579, "op_margin_pct": 28.29, "is_forecast": 0, "rev_yoy": 41.1, "op_yoy": 69.4, "opm_diff": 4.7}, "2021-Q3": {"revenue": 6.196, "op_income": 2.013, "op_margin_pct": 32.49, "is_forecast": 0, "rev_yoy": 41.0, "op_yoy": 81.7, "opm_diff": 7.3}, "2021-Q4": {"revenue": 6.123, "op_income": 2.014, "op_margin_pct": 32.89, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2022-Q1": {"revenue": 6.271, "op_income": 1.976, "op_margin_pct": 31.51, "is_forecast": 0, "rev_yoy": 21.5, "op_yoy": 54.0, "opm_diff": 6.7}, "2022-Q2": {"revenue": 6.245, "op_income": 1.894, "op_margin_pct": 30.33, "is_forecast": 0, "rev_yoy": 11.9, "op_yoy": 19.9, "opm_diff": 2.0}, "2022-Q3": {"revenue": 6.52, "op_income": 1.924, "op_margin_pct": 29.51, "is_forecast": 0, "rev_yoy": 5.2, "op_yoy": -4.4, "opm_diff": -3.0}, "2022-Q4": {"revenue": 6.749, "op_income": 1.994, "op_margin_pct": 29.55, "is_forecast": 0, "rev_yoy": 10.2, "op_yoy": -1.0, "opm_diff": -3.3}, "2023-Q1": {"revenue": 6.739, "op_income": 1.97, "op_margin_pct": 29.23, "is_forecast": 0, "rev_yoy": 7.5, "op_yoy": -0.3, "opm_diff": -2.3}, "2023-Q2": {"revenue": 6.63, "op_income": 1.911, "op_margin_pct": 28.82, "is_forecast": 0, "rev_yoy": 6.2, "op_yoy": 0.9, "opm_diff": -1.5}, "2023-Q3": {"revenue": 6.425, "op_income": 1.802, "op_margin_pct": 28.05, "is_forecast": 0, "rev_yoy": -1.5, "op_yoy": -6.3, "opm_diff": -1.5}, "2023-Q4": {"revenue": 6.723, "op_income": 1.971, "op_margin_pct": 29.32, "is_forecast": 0, "rev_yoy": -0.4, "op_yoy": -1.2, "opm_diff": -0.2}, "2024-Q1": {"revenue": 6.707, "op_income": 1.967, "op_margin_pct": 29.33, "is_forecast": 0, "rev_yoy": -0.5, "op_yoy": -0.2, "opm_diff": 0.1}, "2024-Q2": {"revenue": 6.646, "op_income": 1.912, "op_margin_pct": 28.77, "is_forecast": 0, "rev_yoy": 0.2, "op_yoy": 0.1, "opm_diff": -0.1}, "2024-Q3": {"revenue": 6.778, "op_income": 1.942, "op_margin_pct": 28.65, "is_forecast": 0, "rev_yoy": 5.5, "op_yoy": 7.8, "opm_diff": 0.6}, "2024-Q4": {"revenue": 7.045, "op_income": 2.046, "op_margin_pct": 29.04, "is_forecast": 0, "rev_yoy": 4.8, "op_yoy": 3.8, "opm_diff": -0.3}, "2025-Q1": {"revenue": 7.166, "op_income": 2.175, "op_margin_pct": 30.35, "is_forecast": 0, "rev_yoy": 6.8, "op_yoy": 10.6, "opm_diff": 1.0}, "2025-Q2": {"revenue": 7.1, "op_income": 2.169, "op_margin_pct": 30.55, "is_forecast": 0, "rev_yoy": 6.8, "op_yoy": 13.4, "opm_diff": 1.8}, "2025-Q3": {"revenue": 7.302, "op_income": 2.233, "op_margin_pct": 30.58, "is_forecast": 0, "rev_yoy": 7.7, "op_yoy": 15.0, "opm_diff": 1.9}, "2025-Q4": {"revenue": 6.8, "op_income": 1.712, "op_margin_pct": 25.18, "is_forecast": 0, "rev_yoy": -3.5, "op_yoy": -16.3, "opm_diff": -3.9}, "2026-Q1": {"revenue": 7.012, "op_income": 1.831, "op_margin_pct": 26.11, "is_forecast": 0, "rev_yoy": -2.1, "op_yoy": -15.8, "opm_diff": -4.2}, "2026-Q2": {"revenue": 7.91, "op_income": 2.523, "op_margin_pct": 31.9, "is_forecast": 0, "rev_yoy": 11.4, "op_yoy": 16.3, "opm_diff": 1.3}}, "ARISTA": {"2020-Q1": {"revenue": 0.523029, "op_income": 0.149662, "op_margin_pct": 28.61, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 0.54057, "op_income": 0.166989, "op_margin_pct": 30.89, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 0.605431, "op_income": 0.188395, "op_margin_pct": 31.12, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 0.648482, "op_income": 0.194638, "op_margin_pct": 30.01, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 0.667562, "op_income": 0.206292, "op_margin_pct": 30.9, "is_forecast": 0, "rev_yoy": 27.6, "op_yoy": 37.8, "opm_diff": 2.3}, "2021-Q2": {"revenue": 0.707319, "op_income": 0.219365, "op_margin_pct": 31.01, "is_forecast": 0, "rev_yoy": 30.8, "op_yoy": 31.4, "opm_diff": 0.1}, "2021-Q3": {"revenue": 0.748697, "op_income": 0.233294, "op_margin_pct": 31.16, "is_forecast": 0, "rev_yoy": 23.7, "op_yoy": 23.8, "opm_diff": 0.0}, "2021-Q4": {"revenue": 0.824459, "op_income": 0.265788, "op_margin_pct": 32.24, "is_forecast": 0, "rev_yoy": 27.1, "op_yoy": 36.6, "opm_diff": 2.2}, "2022-Q1": {"revenue": 0.877066, "op_income": 0.277987, "op_margin_pct": 31.7, "is_forecast": 0, "rev_yoy": 31.4, "op_yoy": 34.8, "opm_diff": 0.8}, "2022-Q2": {"revenue": 1.051891, "op_income": 0.362853, "op_margin_pct": 34.5, "is_forecast": 0, "rev_yoy": 48.7, "op_yoy": 65.4, "opm_diff": 3.5}, "2022-Q3": {"revenue": 1.176801, "op_income": 0.417347, "op_margin_pct": 35.46, "is_forecast": 0, "rev_yoy": 57.2, "op_yoy": 78.9, "opm_diff": 4.3}, "2022-Q4": {"revenue": 1.275552, "op_income": 0.468919, "op_margin_pct": 36.76, "is_forecast": 0, "rev_yoy": 54.7, "op_yoy": 76.4, "opm_diff": 4.5}, "2023-Q1": {"revenue": 1.351351, "op_income": 0.484578, "op_margin_pct": 35.86, "is_forecast": 0, "rev_yoy": 54.1, "op_yoy": 74.3, "opm_diff": 4.2}, "2023-Q2": {"revenue": 1.458924, "op_income": 0.530062, "op_margin_pct": 36.33, "is_forecast": 0, "rev_yoy": 38.7, "op_yoy": 46.1, "opm_diff": 1.8}, "2023-Q3": {"revenue": 1.509456, "op_income": 0.602695, "op_margin_pct": 39.93, "is_forecast": 0, "rev_yoy": 28.3, "op_yoy": 44.4, "opm_diff": 4.5}, "2023-Q4": {"revenue": 1.540469, "op_income": 0.639965, "op_margin_pct": 41.54, "is_forecast": 0, "rev_yoy": 20.8, "op_yoy": 36.5, "opm_diff": 4.8}, "2024-Q1": {"revenue": 1.5714, "op_income": 0.6602, "op_margin_pct": 42.01, "is_forecast": 0, "rev_yoy": 16.3, "op_yoy": 36.2, "opm_diff": 6.1}, "2024-Q2": {"revenue": 1.6904, "op_income": 0.6996, "op_margin_pct": 41.39, "is_forecast": 0, "rev_yoy": 15.9, "op_yoy": 32.0, "opm_diff": 5.1}, "2024-Q3": {"revenue": 1.8109, "op_income": 0.7853, "op_margin_pct": 43.37, "is_forecast": 0, "rev_yoy": 20.0, "op_yoy": 30.3, "opm_diff": 3.4}, "2024-Q4": {"revenue": 1.9304, "op_income": 0.7995, "op_margin_pct": 41.42, "is_forecast": 0, "rev_yoy": 25.3, "op_yoy": 24.9, "opm_diff": -0.1}, "2025-Q1": {"revenue": 2.0048, "op_income": 0.8588, "op_margin_pct": 42.84, "is_forecast": 0, "rev_yoy": 27.6, "op_yoy": 30.1, "opm_diff": 0.8}, "2025-Q2": {"revenue": 2.2048, "op_income": 0.9862, "op_margin_pct": 44.73, "is_forecast": 0, "rev_yoy": 30.4, "op_yoy": 41.0, "opm_diff": 3.3}, "2025-Q3": {"revenue": 2.3083, "op_income": 0.9782, "op_margin_pct": 42.38, "is_forecast": 0, "rev_yoy": 27.5, "op_yoy": 24.6, "opm_diff": -1.0}, "2025-Q4": {"revenue": 2.4878, "op_income": 1.0329, "op_margin_pct": 41.52, "is_forecast": 0, "rev_yoy": 28.9, "op_yoy": 29.2, "opm_diff": 0.1}, "2026-Q1": {"revenue": 2.709, "op_income": 1.1578, "op_margin_pct": 42.74, "is_forecast": 0, "rev_yoy": 35.1, "op_yoy": 34.8, "opm_diff": -0.1}, "2026-Q2": {"revenue": 3.0357, "op_income": 1.378, "op_margin_pct": 45.39, "is_forecast": 0, "rev_yoy": 37.7, "op_yoy": 39.7, "opm_diff": 0.7}}, "ARM": {"2022-Q2": {"revenue": 0.63, "op_income": 0.183, "op_margin_pct": 29.05, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2022-Q3": {"revenue": 0.724, "op_income": 0.244, "op_margin_pct": 33.7, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2023-Q1": {"revenue": 0.675, "op_income": 0.111, "op_margin_pct": 16.44, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2023-Q2": {"revenue": 0.806, "op_income": -0.156, "op_margin_pct": -19.35, "is_forecast": 0, "rev_yoy": 27.9, "op_yoy": -185.2, "opm_diff": -48.4}, "2023-Q3": {"revenue": 0.824, "op_income": 0.134, "op_margin_pct": 16.26, "is_forecast": 0, "rev_yoy": 13.8, "op_yoy": -45.1, "opm_diff": -17.4}, "2024-Q1": {"revenue": 0.939, "op_income": 0.182, "op_margin_pct": 19.38, "is_forecast": 0, "rev_yoy": 39.1, "op_yoy": 64.0, "opm_diff": 2.9}, "2024-Q2": {"revenue": 0.844, "op_income": 0.064, "op_margin_pct": 7.58, "is_forecast": 0, "rev_yoy": 4.7, "op_yoy": 141.0, "opm_diff": 26.9}, "2024-Q3": {"revenue": 0.983, "op_income": 0.175, "op_margin_pct": 17.8, "is_forecast": 0, "rev_yoy": 19.3, "op_yoy": 30.6, "opm_diff": 1.5}, "2024-Q4": {"revenue": 0.928, "op_income": 0.022, "op_margin_pct": 2.37, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2025-Q1": {"revenue": 1.053, "op_income": 0.114, "op_margin_pct": 10.83, "is_forecast": 0, "rev_yoy": 12.1, "op_yoy": -37.4, "opm_diff": -8.5}, "2025-Q2": {"revenue": 1.135, "op_income": 0.163, "op_margin_pct": 14.36, "is_forecast": 0, "rev_yoy": 34.5, "op_yoy": 154.7, "opm_diff": 6.8}, "2025-Q3": {"revenue": 1.242, "op_income": 0.185, "op_margin_pct": 14.9, "is_forecast": 0, "rev_yoy": 26.3, "op_yoy": 5.7, "opm_diff": -2.9}, "2025-Q4": {"revenue": 1.241, "op_income": 0.41, "op_margin_pct": 33.04, "is_forecast": 0, "rev_yoy": 33.7, "op_yoy": 1763.6, "opm_diff": 30.7}, "2026-Q1": {"revenue": 1.289, "op_income": 0.091, "op_margin_pct": 7.06, "is_forecast": 0, "rev_yoy": 22.4, "op_yoy": -20.2, "opm_diff": -3.8}}, "ASE": {"2025-Q2": {"revenue": 4.834830019243104, "op_income": 0.3269082745349583, "op_margin_pct": 6.76, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2026-Q1": {"revenue": 5.507833809070726, "op_income": 0.5548049476688867, "op_margin_pct": 10.07, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2026-Q2": {"revenue": 6.048243114909782, "op_income": 0.6690091801202913, "op_margin_pct": 11.06, "is_forecast": 0, "rev_yoy": 25.1, "op_yoy": 104.6, "opm_diff": 4.3}}, "BROADCOM": {"2020-Q1": {"revenue": 5.858, "op_income": 0.714, "op_margin_pct": 12.19, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 5.742, "op_income": 0.766, "op_margin_pct": 13.34, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 5.821, "op_income": 1.008, "op_margin_pct": 17.32, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 6.467, "op_income": 1.526, "op_margin_pct": 23.6, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 6.655, "op_income": 1.837, "op_margin_pct": 27.6, "is_forecast": 0, "rev_yoy": 13.6, "op_yoy": 157.3, "opm_diff": 15.4}, "2021-Q2": {"revenue": 6.61, "op_income": 1.975, "op_margin_pct": 29.88, "is_forecast": 0, "rev_yoy": 15.1, "op_yoy": 157.8, "opm_diff": 16.5}, "2021-Q3": {"revenue": 6.778, "op_income": 2.126, "op_margin_pct": 31.37, "is_forecast": 0, "rev_yoy": 16.4, "op_yoy": 110.9, "opm_diff": 14.1}, "2021-Q4": {"revenue": 7.407, "op_income": 2.581, "op_margin_pct": 34.85, "is_forecast": 0, "rev_yoy": 14.5, "op_yoy": 69.1, "opm_diff": 11.2}, "2022-Q1": {"revenue": 7.706, "op_income": 3.108, "op_margin_pct": 40.33, "is_forecast": 0, "rev_yoy": 15.8, "op_yoy": 69.2, "opm_diff": 12.7}, "2022-Q2": {"revenue": 8.103, "op_income": 3.394, "op_margin_pct": 41.89, "is_forecast": 0, "rev_yoy": 22.6, "op_yoy": 71.8, "opm_diff": 12.0}, "2022-Q3": {"revenue": 8.464, "op_income": 3.737, "op_margin_pct": 44.15, "is_forecast": 0, "rev_yoy": 24.9, "op_yoy": 75.8, "opm_diff": 12.8}, "2022-Q4": {"revenue": 8.93, "op_income": 3.986, "op_margin_pct": 44.64, "is_forecast": 0, "rev_yoy": 20.6, "op_yoy": 54.4, "opm_diff": 9.8}, "2023-Q1": {"revenue": 8.915, "op_income": 4.103, "op_margin_pct": 46.02, "is_forecast": 0, "rev_yoy": 15.7, "op_yoy": 32.0, "opm_diff": 5.7}, "2023-Q2": {"revenue": 8.733, "op_income": 4.008, "op_margin_pct": 45.89, "is_forecast": 0, "rev_yoy": 7.8, "op_yoy": 18.1, "opm_diff": 4.0}, "2023-Q3": {"revenue": 8.876, "op_income": 3.856, "op_margin_pct": 43.44, "is_forecast": 0, "rev_yoy": 4.9, "op_yoy": 3.2, "opm_diff": -0.7}, "2023-Q4": {"revenue": 9.295, "op_income": 4.24, "op_margin_pct": 45.62, "is_forecast": 0, "rev_yoy": 4.1, "op_yoy": 6.4, "opm_diff": 1.0}, "2024-Q1": {"revenue": 11.961, "op_income": 2.083, "op_margin_pct": 17.41, "is_forecast": 0, "rev_yoy": 34.2, "op_yoy": -49.2, "opm_diff": -28.6}, "2024-Q2": {"revenue": 12.487, "op_income": 2.965, "op_margin_pct": 23.74, "is_forecast": 0, "rev_yoy": 43.0, "op_yoy": -26.0, "opm_diff": -22.2}, "2024-Q3": {"revenue": 13.072, "op_income": 3.788, "op_margin_pct": 28.98, "is_forecast": 0, "rev_yoy": 47.3, "op_yoy": -1.8, "opm_diff": -14.5}, "2024-Q4": {"revenue": 14.054, "op_income": 4.627, "op_margin_pct": 32.92, "is_forecast": 0, "rev_yoy": 51.2, "op_yoy": 9.1, "opm_diff": -12.7}, "2025-Q1": {"revenue": 14.916, "op_income": 6.26, "op_margin_pct": 41.97, "is_forecast": 0, "rev_yoy": 24.7, "op_yoy": 200.5, "opm_diff": 24.6}, "2025-Q2": {"revenue": 15.004, "op_income": 5.829, "op_margin_pct": 38.85, "is_forecast": 0, "rev_yoy": 20.2, "op_yoy": 96.6, "opm_diff": 15.1}, "2025-Q3": {"revenue": 15.952, "op_income": 5.887, "op_margin_pct": 36.9, "is_forecast": 0, "rev_yoy": 22.0, "op_yoy": 55.4, "opm_diff": 7.9}, "2025-Q4": {"revenue": 18.015, "op_income": 7.508, "op_margin_pct": 41.68, "is_forecast": 0, "rev_yoy": 28.2, "op_yoy": 62.3, "opm_diff": 8.8}, "2026-Q1": {"revenue": 19.311, "op_income": 8.563, "op_margin_pct": 44.34, "is_forecast": 0, "rev_yoy": 29.5, "op_yoy": 36.8, "opm_diff": 2.4}, "2026-Q2": {"revenue": 22.187, "op_income": 10.788, "op_margin_pct": 48.62, "is_forecast": 0, "rev_yoy": 47.9, "op_yoy": 85.1, "opm_diff": 9.8}}, "COHERENT": {"2020-Q1": {"revenue": 0.728084, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 0.786569, "op_income": 0.106283, "op_margin_pct": 13.51, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 0.627041, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 0.74629, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 0.795111, "op_income": 0.090441, "op_margin_pct": 11.37, "is_forecast": 0, "rev_yoy": 9.2, "op_yoy": null, "opm_diff": null}, "2021-Q2": {"revenue": 0.806819, "op_income": 0.079354, "op_margin_pct": 9.84, "is_forecast": 0, "rev_yoy": 2.6, "op_yoy": -25.3, "opm_diff": -3.7}, "2021-Q3": {"revenue": 0.783232, "op_income": 0.093479, "op_margin_pct": 11.94, "is_forecast": 0, "rev_yoy": 24.9, "op_yoy": null, "opm_diff": null}, "2021-Q4": {"revenue": 0.808006, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 8.3, "op_yoy": null, "opm_diff": null}, "2022-Q1": {"revenue": 1.34457, "op_income": -0.051018, "op_margin_pct": -3.79, "is_forecast": 0, "rev_yoy": 69.1, "op_yoy": -156.4, "opm_diff": -15.2}, "2022-Q2": {"revenue": 1.370285, "op_income": -0.066354, "op_margin_pct": -4.84, "is_forecast": 0, "rev_yoy": 69.8, "op_yoy": -183.6, "opm_diff": -14.7}, "2022-Q3": {"revenue": 0.827724, "op_income": 0.063029, "op_margin_pct": 7.61, "is_forecast": 0, "rev_yoy": 5.7, "op_yoy": -32.6, "opm_diff": -4.3}, "2022-Q4": {"revenue": 0.886962, "op_income": 0.048983, "op_margin_pct": 5.52, "is_forecast": 0, "rev_yoy": 9.8, "op_yoy": null, "opm_diff": null}, "2023-Q1": {"revenue": 1.053083, "op_income": -0.088297, "op_margin_pct": -8.38, "is_forecast": 0, "rev_yoy": -21.7, "op_yoy": -73.1, "opm_diff": -4.6}, "2023-Q2": {"revenue": 1.131434, "op_income": -0.037407, "op_margin_pct": -3.31, "is_forecast": 0, "rev_yoy": -17.4, "op_yoy": 43.6, "opm_diff": 1.5}, "2023-Q3": {"revenue": 1.240194, "op_income": -0.004747, "op_margin_pct": -0.38, "is_forecast": 0, "rev_yoy": 49.8, "op_yoy": -107.5, "opm_diff": -8.0}, "2023-Q4": {"revenue": 1.205051, "op_income": -0.233439, "op_margin_pct": -19.37, "is_forecast": 0, "rev_yoy": 35.9, "op_yoy": -576.6, "opm_diff": -24.9}, "2024-Q1": {"revenue": 1.348135, "op_income": 0.019303, "op_margin_pct": 1.43, "is_forecast": 0, "rev_yoy": 28.0, "op_yoy": 121.9, "opm_diff": 9.8}, "2024-Q2": {"revenue": 1.434665, "op_income": 0.128404, "op_margin_pct": 8.95, "is_forecast": 0, "rev_yoy": 26.8, "op_yoy": 443.3, "opm_diff": 12.3}, "2024-Q3": {"revenue": 1.208809, "op_income": -0.031851, "op_margin_pct": -2.63, "is_forecast": 0, "rev_yoy": -2.5, "op_yoy": -571.0, "opm_diff": -2.2}, "2024-Q4": {"revenue": 1.314362, "op_income": 0.009908, "op_margin_pct": 0.75, "is_forecast": 0, "rev_yoy": 9.1, "op_yoy": 104.2, "opm_diff": 20.1}, "2025-Q1": {"revenue": 1.581378, "op_income": 0.216886, "op_margin_pct": 13.72, "is_forecast": 0, "rev_yoy": 17.3, "op_yoy": 1023.6, "opm_diff": 12.3}, "2025-Q2": {"revenue": 1.685629, "op_income": 0.167988, "op_margin_pct": 9.97, "is_forecast": 0, "rev_yoy": 17.5, "op_yoy": 30.8, "opm_diff": 1.0}, "2025-Q3": {"revenue": 1.497879, "op_income": 0.00989, "op_margin_pct": 0.66, "is_forecast": 0, "rev_yoy": 23.9, "op_yoy": 131.1, "opm_diff": 3.3}, "2025-Q4": {"revenue": 1.529436, "op_income": -0.063416, "op_margin_pct": -4.15, "is_forecast": 0, "rev_yoy": 16.4, "op_yoy": -740.0, "opm_diff": -4.9}}, "EATON": {"2020-Q1": {"revenue": 4.789, "op_income": 0.621, "op_margin_pct": 12.97, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 3.856, "op_income": 0.047, "op_margin_pct": 1.22, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 4.526, "op_income": 0.525, "op_margin_pct": 11.6, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 4.687, "op_income": 0.553, "op_margin_pct": 11.8, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 4.692, "op_income": 0.538, "op_margin_pct": 11.47, "is_forecast": 0, "rev_yoy": -2.0, "op_yoy": -13.4, "opm_diff": -1.5}, "2021-Q2": {"revenue": 5.215, "op_income": 0.62, "op_margin_pct": 11.89, "is_forecast": 0, "rev_yoy": 35.2, "op_yoy": 1219.1, "opm_diff": 10.7}, "2021-Q3": {"revenue": 4.923, "op_income": 1.113, "op_margin_pct": 22.61, "is_forecast": 0, "rev_yoy": 8.8, "op_yoy": 112.0, "opm_diff": 11.0}, "2021-Q4": {"revenue": 4.798, "op_income": 0.625, "op_margin_pct": 13.03, "is_forecast": 0, "rev_yoy": 2.4, "op_yoy": 13.0, "opm_diff": 1.2}, "2022-Q1": {"revenue": 4.843, "op_income": 0.619, "op_margin_pct": 12.78, "is_forecast": 0, "rev_yoy": 3.2, "op_yoy": 15.1, "opm_diff": 1.3}, "2022-Q2": {"revenue": 5.212, "op_income": 0.72, "op_margin_pct": 13.81, "is_forecast": 0, "rev_yoy": -0.1, "op_yoy": 16.1, "opm_diff": 1.9}, "2022-Q3": {"revenue": 5.313, "op_income": 0.72, "op_margin_pct": 13.55, "is_forecast": 0, "rev_yoy": 7.9, "op_yoy": -35.3, "opm_diff": -9.1}, "2022-Q4": {"revenue": 5.384, "op_income": 0.852, "op_margin_pct": 15.82, "is_forecast": 0, "rev_yoy": 12.2, "op_yoy": 36.3, "opm_diff": 2.8}, "2023-Q1": {"revenue": 5.483, "op_income": 0.762, "op_margin_pct": 13.9, "is_forecast": 0, "rev_yoy": 13.2, "op_yoy": 23.1, "opm_diff": 1.1}, "2023-Q2": {"revenue": 5.866, "op_income": 0.898, "op_margin_pct": 15.31, "is_forecast": 0, "rev_yoy": 12.5, "op_yoy": 24.7, "opm_diff": 1.5}, "2023-Q3": {"revenue": 5.88, "op_income": 1.079, "op_margin_pct": 18.35, "is_forecast": 0, "rev_yoy": 10.7, "op_yoy": 49.9, "opm_diff": 4.8}, "2023-Q4": {"revenue": 5.967, "op_income": 1.088, "op_margin_pct": 18.23, "is_forecast": 0, "rev_yoy": 10.8, "op_yoy": 27.7, "opm_diff": 2.4}, "2024-Q1": {"revenue": 5.943, "op_income": 1.001, "op_margin_pct": 16.84, "is_forecast": 0, "rev_yoy": 8.4, "op_yoy": 31.4, "opm_diff": 2.9}, "2024-Q2": {"revenue": 6.35, "op_income": 1.195, "op_margin_pct": 18.82, "is_forecast": 0, "rev_yoy": 8.3, "op_yoy": 33.1, "opm_diff": 3.5}, "2024-Q3": {"revenue": 6.345, "op_income": 1.204, "op_margin_pct": 18.98, "is_forecast": 0, "rev_yoy": 7.9, "op_yoy": 11.6, "opm_diff": 0.6}, "2024-Q4": {"revenue": 6.24, "op_income": 1.166, "op_margin_pct": 18.69, "is_forecast": 0, "rev_yoy": 4.6, "op_yoy": 7.2, "opm_diff": 0.5}, "2025-Q1": {"revenue": 6.377, "op_income": 1.177, "op_margin_pct": 18.46, "is_forecast": 0, "rev_yoy": 7.3, "op_yoy": 17.6, "opm_diff": 1.6}, "2025-Q2": {"revenue": 7.028, "op_income": 1.186, "op_margin_pct": 16.88, "is_forecast": 0, "rev_yoy": 10.7, "op_yoy": -0.8, "opm_diff": -1.9}, "2025-Q3": {"revenue": 6.988, "op_income": 1.275, "op_margin_pct": 18.25, "is_forecast": 0, "rev_yoy": 10.1, "op_yoy": 5.9, "opm_diff": -0.7}, "2025-Q4": {"revenue": 7.055, "op_income": 1.294, "op_margin_pct": 18.34, "is_forecast": 0, "rev_yoy": 13.1, "op_yoy": 11.0, "opm_diff": -0.4}, "2026-Q1": {"revenue": 7.451, "op_income": 1.107, "op_margin_pct": 14.86, "is_forecast": 0, "rev_yoy": 16.8, "op_yoy": -5.9, "opm_diff": -3.6}, "2026-Q2": {"revenue": 8.531, "op_income": 1.144, "op_margin_pct": 13.41, "is_forecast": 0, "rev_yoy": 21.4, "op_yoy": -3.5, "opm_diff": -3.5}}, "GE_VERNOVA": {"2023-Q1": {"revenue": 6.822, "op_income": -0.469, "op_margin_pct": -6.87, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2023-Q2": {"revenue": 8.119, "op_income": -0.341, "op_margin_pct": -4.2, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2023-Q3": {"revenue": 8.253, "op_income": -0.307, "op_margin_pct": -3.72, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2023-Q4": {"revenue": 10.045, "op_income": 0.194, "op_margin_pct": 1.93, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2024-Q1": {"revenue": 7.26, "op_income": -0.289, "op_margin_pct": -3.98, "is_forecast": 0, "rev_yoy": 6.4, "op_yoy": 38.4, "opm_diff": 2.9}, "2024-Q2": {"revenue": 8.204, "op_income": 0.527, "op_margin_pct": 6.42, "is_forecast": 0, "rev_yoy": 1.0, "op_yoy": 254.5, "opm_diff": 10.6}, "2024-Q3": {"revenue": 8.913, "op_income": -0.359, "op_margin_pct": -4.03, "is_forecast": 0, "rev_yoy": 8.0, "op_yoy": -16.9, "opm_diff": -0.3}, "2024-Q4": {"revenue": 10.558, "op_income": 0.592, "op_margin_pct": 5.61, "is_forecast": 0, "rev_yoy": 5.1, "op_yoy": 205.2, "opm_diff": 3.7}, "2025-Q1": {"revenue": 8.032, "op_income": 0.043, "op_margin_pct": 0.54, "is_forecast": 0, "rev_yoy": 10.6, "op_yoy": 114.9, "opm_diff": 4.5}, "2025-Q2": {"revenue": 9.111, "op_income": 0.378, "op_margin_pct": 4.15, "is_forecast": 0, "rev_yoy": 11.1, "op_yoy": -28.3, "opm_diff": -2.3}, "2025-Q3": {"revenue": 9.969, "op_income": 0.366, "op_margin_pct": 3.67, "is_forecast": 0, "rev_yoy": 11.8, "op_yoy": 201.9, "opm_diff": 7.7}, "2025-Q4": {"revenue": 10.956, "op_income": 0.601, "op_margin_pct": 5.49, "is_forecast": 0, "rev_yoy": 3.8, "op_yoy": 1.5, "opm_diff": -0.1}, "2026-Q1": {"revenue": 9.339, "op_income": 0.179, "op_margin_pct": 1.92, "is_forecast": 0, "rev_yoy": 16.3, "op_yoy": 316.3, "opm_diff": 1.4}, "2026-Q2": {"revenue": 11.104, "op_income": 0.653, "op_margin_pct": 5.88, "is_forecast": 0, "rev_yoy": 21.9, "op_yoy": 72.8, "opm_diff": 1.7}}, "GOOGLE": {"2020-Q1": {"revenue": 41.16, "op_income": 7.98, "op_margin_pct": 19.39, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 38.3, "op_income": 6.38, "op_margin_pct": 16.66, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 46.17, "op_income": 11.21, "op_margin_pct": 24.28, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 56.9, "op_income": 15.65, "op_margin_pct": 27.5, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 55.31, "op_income": 16.44, "op_margin_pct": 29.72, "is_forecast": 0, "rev_yoy": 34.4, "op_yoy": 106.0, "opm_diff": 10.3}, "2021-Q2": {"revenue": 61.88, "op_income": 19.36, "op_margin_pct": 31.29, "is_forecast": 0, "rev_yoy": 61.6, "op_yoy": 203.4, "opm_diff": 14.6}, "2021-Q3": {"revenue": 65.12, "op_income": 21.03, "op_margin_pct": 32.29, "is_forecast": 0, "rev_yoy": 41.0, "op_yoy": 87.6, "opm_diff": 8.0}, "2021-Q4": {"revenue": 75.33, "op_income": 21.89, "op_margin_pct": 29.06, "is_forecast": 0, "rev_yoy": 32.4, "op_yoy": 39.9, "opm_diff": 1.6}, "2022-Q1": {"revenue": 68.01, "op_income": 20.09, "op_margin_pct": 29.54, "is_forecast": 0, "rev_yoy": 23.0, "op_yoy": 22.2, "opm_diff": -0.2}, "2022-Q2": {"revenue": 69.69, "op_income": 19.45, "op_margin_pct": 27.91, "is_forecast": 0, "rev_yoy": 12.6, "op_yoy": 0.5, "opm_diff": -3.4}, "2022-Q3": {"revenue": 69.09, "op_income": 17.14, "op_margin_pct": 24.81, "is_forecast": 0, "rev_yoy": 6.1, "op_yoy": -18.5, "opm_diff": -7.5}, "2022-Q4": {"revenue": 76.05, "op_income": 18.16, "op_margin_pct": 23.88, "is_forecast": 0, "rev_yoy": 1.0, "op_yoy": -17.0, "opm_diff": -5.2}, "2023-Q1": {"revenue": 69.79, "op_income": 17.42, "op_margin_pct": 24.96, "is_forecast": 0, "rev_yoy": 2.6, "op_yoy": -13.3, "opm_diff": -4.6}, "2023-Q2": {"revenue": 74.6, "op_income": 21.84, "op_margin_pct": 29.28, "is_forecast": 0, "rev_yoy": 7.0, "op_yoy": 12.3, "opm_diff": 1.4}, "2023-Q3": {"revenue": 76.69, "op_income": 21.34, "op_margin_pct": 27.83, "is_forecast": 0, "rev_yoy": 11.0, "op_yoy": 24.5, "opm_diff": 3.0}, "2023-Q4": {"revenue": 86.31, "op_income": 23.7, "op_margin_pct": 27.46, "is_forecast": 0, "rev_yoy": 13.5, "op_yoy": 30.5, "opm_diff": 3.6}, "2024-Q1": {"revenue": 80.54, "op_income": 25.47, "op_margin_pct": 31.62, "is_forecast": 0, "rev_yoy": 15.4, "op_yoy": 46.2, "opm_diff": 6.7}, "2024-Q2": {"revenue": 84.74, "op_income": 27.43, "op_margin_pct": 32.37, "is_forecast": 0, "rev_yoy": 13.6, "op_yoy": 25.6, "opm_diff": 3.1}, "2024-Q3": {"revenue": 88.27, "op_income": 28.52, "op_margin_pct": 32.31, "is_forecast": 0, "rev_yoy": 15.1, "op_yoy": 33.6, "opm_diff": 4.5}, "2024-Q4": {"revenue": 96.47, "op_income": 30.97, "op_margin_pct": 32.1, "is_forecast": 0, "rev_yoy": 11.8, "op_yoy": 30.7, "opm_diff": 4.6}, "2025-Q1": {"revenue": 90.23, "op_income": 28.82, "op_margin_pct": 31.94, "is_forecast": 0, "rev_yoy": 12.0, "op_yoy": 13.2, "opm_diff": 0.3}, "2025-Q2": {"revenue": 96.428, "op_income": 31.271, "op_margin_pct": 32.4, "is_forecast": 0, "rev_yoy": 13.8, "op_yoy": 14.0, "opm_diff": 0.0}, "2025-Q3": {"revenue": 102.346, "op_income": 31.228, "op_margin_pct": 30.51, "is_forecast": 0, "rev_yoy": 15.9, "op_yoy": 9.5, "opm_diff": -1.8}, "2025-Q4": {"revenue": 113.828, "op_income": 35.934, "op_margin_pct": 31.57, "is_forecast": 0, "rev_yoy": 18.0, "op_yoy": 16.0, "opm_diff": -0.5}, "2026-Q1": {"revenue": 110.0, "op_income": 37.5, "op_margin_pct": 34.09, "is_forecast": 0, "rev_yoy": 21.9, "op_yoy": 30.1, "opm_diff": 2.2}, "2026-Q2": {"revenue": 118.0, "op_income": 40.5, "op_margin_pct": 34.32, "is_forecast": 0, "rev_yoy": 22.4, "op_yoy": 29.5, "opm_diff": 1.9}, "2026-Q3": {"revenue": 125.0, "op_income": 43.5, "op_margin_pct": 34.8, "is_forecast": 1, "rev_yoy": 22.1, "op_yoy": 39.3, "opm_diff": 4.3}, "2026-Q4": {"revenue": 135.0, "op_income": 47.0, "op_margin_pct": 34.81, "is_forecast": 1, "rev_yoy": 18.6, "op_yoy": 30.8, "opm_diff": 3.2}}, "INTEL": {"2020-Q1": {"revenue": 19.828, "op_income": 7.038, "op_margin_pct": 35.5, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 19.728, "op_income": 5.697, "op_margin_pct": 28.88, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 18.333, "op_income": 5.059, "op_margin_pct": 27.6, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 19.978, "op_income": 5.884, "op_margin_pct": 29.45, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 19.673, "op_income": 3.694, "op_margin_pct": 18.78, "is_forecast": 0, "rev_yoy": -0.8, "op_yoy": -47.5, "opm_diff": -16.7}, "2021-Q2": {"revenue": 19.631, "op_income": 5.546, "op_margin_pct": 28.25, "is_forecast": 0, "rev_yoy": -0.5, "op_yoy": -2.7, "opm_diff": -0.6}, "2021-Q3": {"revenue": 19.192, "op_income": 5.227, "op_margin_pct": 27.24, "is_forecast": 0, "rev_yoy": 4.7, "op_yoy": 3.3, "opm_diff": -0.4}, "2021-Q4": {"revenue": 20.528, "op_income": 4.989, "op_margin_pct": 24.3, "is_forecast": 0, "rev_yoy": 2.8, "op_yoy": -15.2, "opm_diff": -5.1}, "2022-Q1": {"revenue": 18.353, "op_income": 4.341, "op_margin_pct": 23.65, "is_forecast": 0, "rev_yoy": -6.7, "op_yoy": 17.5, "opm_diff": 4.9}, "2022-Q2": {"revenue": 15.321, "op_income": -0.7, "op_margin_pct": -4.57, "is_forecast": 0, "rev_yoy": -22.0, "op_yoy": -112.6, "opm_diff": -32.8}, "2022-Q3": {"revenue": 15.338, "op_income": -0.175, "op_margin_pct": -1.14, "is_forecast": 0, "rev_yoy": -20.1, "op_yoy": -103.3, "opm_diff": -28.4}, "2022-Q4": {"revenue": 14.042, "op_income": -1.132, "op_margin_pct": -8.06, "is_forecast": 0, "rev_yoy": -31.6, "op_yoy": -122.7, "opm_diff": -32.4}, "2023-Q1": {"revenue": 11.715, "op_income": -1.468, "op_margin_pct": -12.53, "is_forecast": 0, "rev_yoy": -36.2, "op_yoy": -133.8, "opm_diff": -36.2}, "2023-Q2": {"revenue": 12.949, "op_income": -1.016, "op_margin_pct": -7.85, "is_forecast": 0, "rev_yoy": -15.5, "op_yoy": -45.1, "opm_diff": -3.3}, "2023-Q3": {"revenue": 14.158, "op_income": -0.008, "op_margin_pct": -0.06, "is_forecast": 0, "rev_yoy": -7.7, "op_yoy": 95.4, "opm_diff": 1.1}, "2023-Q4": {"revenue": 15.406, "op_income": 2.585, "op_margin_pct": 16.78, "is_forecast": 0, "rev_yoy": 9.7, "op_yoy": 328.4, "opm_diff": 24.8}, "2024-Q1": {"revenue": 12.724, "op_income": -1.069, "op_margin_pct": -8.4, "is_forecast": 0, "rev_yoy": 8.6, "op_yoy": 27.2, "opm_diff": 4.1}, "2024-Q2": {"revenue": 12.833, "op_income": -1.964, "op_margin_pct": -15.3, "is_forecast": 0, "rev_yoy": -0.9, "op_yoy": -93.3, "opm_diff": -7.5}, "2024-Q3": {"revenue": 13.284, "op_income": -9.057, "op_margin_pct": -68.18, "is_forecast": 0, "rev_yoy": -6.2, "op_yoy": -113112.5, "opm_diff": -68.1}, "2024-Q4": {"revenue": 14.26, "op_income": 0.412, "op_margin_pct": 2.89, "is_forecast": 0, "rev_yoy": -7.4, "op_yoy": -84.1, "opm_diff": -13.9}, "2025-Q1": {"revenue": 12.667, "op_income": -0.301, "op_margin_pct": -2.38, "is_forecast": 0, "rev_yoy": -0.4, "op_yoy": 71.8, "opm_diff": 6.0}, "2025-Q2": {"revenue": 12.859, "op_income": -3.176, "op_margin_pct": -24.7, "is_forecast": 0, "rev_yoy": 0.2, "op_yoy": -61.7, "opm_diff": -9.4}, "2025-Q3": {"revenue": 13.653, "op_income": 0.683, "op_margin_pct": 5.0, "is_forecast": 0, "rev_yoy": 2.8, "op_yoy": 107.5, "opm_diff": 73.2}, "2025-Q4": {"revenue": 13.674, "op_income": 0.58, "op_margin_pct": 4.24, "is_forecast": 0, "rev_yoy": -4.1, "op_yoy": 40.8, "opm_diff": 1.4}, "2026-Q1": {"revenue": 13.577, "op_income": -3.136, "op_margin_pct": -23.1, "is_forecast": 0, "rev_yoy": 7.2, "op_yoy": -941.9, "opm_diff": -20.7}, "2026-Q2": {"revenue": 16.128, "op_income": 1.796, "op_margin_pct": 11.14, "is_forecast": 0, "rev_yoy": 25.4, "op_yoy": 156.5, "opm_diff": 35.8}}, "KIOXIA": {"2025-Q2": {"revenue": 2.3641310344827584, "op_income": 0.30964827586206894, "op_margin_pct": 13.1, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2026-Q1": {"revenue": 6.470322580645161, "op_income": 3.850322580645161, "op_margin_pct": 59.51, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2026-Q2": {"revenue": 11.04448125, "op_income": 7.93760625, "op_margin_pct": 71.87, "is_forecast": 0, "rev_yoy": 367.2, "op_yoy": 2463.4, "opm_diff": 58.8}, "2026-Q3": {"revenue": 14.753086419753087, "op_income": 11.666666666666666, "op_margin_pct": 79.08, "is_forecast": 1, "rev_yoy": null, "op_yoy": null, "opm_diff": null}}, "KLA": {"2020-Q1": {"revenue": 1.53862, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 1.65087, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 1.423964, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 1.459593, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 2.083838, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 35.4, "op_yoy": null, "opm_diff": null}, "2021-Q2": {"revenue": 2.35263, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 42.5, "op_yoy": null, "opm_diff": null}, "2021-Q3": {"revenue": 1.803773, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 26.7, "op_yoy": null, "opm_diff": null}, "2021-Q4": {"revenue": 1.925471, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 31.9, "op_yoy": null, "opm_diff": null}, "2022-Q1": {"revenue": 2.724424, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 30.7, "op_yoy": null, "opm_diff": null}, "2022-Q2": {"revenue": 2.983887, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 26.8, "op_yoy": null, "opm_diff": null}, "2022-Q3": {"revenue": 2.288676, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 26.9, "op_yoy": null, "opm_diff": null}, "2022-Q4": {"revenue": 2.486739, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 29.1, "op_yoy": null, "opm_diff": null}, "2023-Q1": {"revenue": 2.396956, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": -12.0, "op_yoy": null, "opm_diff": null}, "2023-Q2": {"revenue": 2.486726, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": -16.7, "op_yoy": null, "opm_diff": null}, "2023-Q3": {"revenue": 2.432608, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 6.3, "op_yoy": null, "opm_diff": null}, "2023-Q4": {"revenue": 2.355137, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": -5.3, "op_yoy": null, "opm_diff": null}, "2024-Q1": {"revenue": 2.841541, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 18.5, "op_yoy": null, "opm_diff": null}, "2024-Q2": {"revenue": 3.076851, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 23.7, "op_yoy": null, "opm_diff": null}, "2024-Q3": {"revenue": 2.35983, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": -3.0, "op_yoy": null, "opm_diff": null}, "2024-Q4": {"revenue": 2.568735, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 9.1, "op_yoy": null, "opm_diff": null}, "2025-Q1": {"revenue": 3.209696, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 13.0, "op_yoy": null, "opm_diff": null}, "2025-Q2": {"revenue": 3.297146, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 7.2, "op_yoy": null, "opm_diff": null}, "2025-Q3": {"revenue": 3.063029, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 29.8, "op_yoy": null, "opm_diff": null}, "2025-Q4": {"revenue": 3.174741, "op_income": null, "op_margin_pct": null, "is_forecast": 0, "rev_yoy": 23.6, "op_yoy": null, "opm_diff": null}}, "LAM_RESEARCH": {"2020-Q1": {"revenue": 3.17708, "op_income": 0.961064, "op_margin_pct": 30.25, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 3.456237, "op_income": 1.009724, "op_margin_pct": 29.21, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 2.503625, "op_income": 0.694114, "op_margin_pct": 27.72, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 2.791864, "op_income": 0.755722, "op_margin_pct": 27.07, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 4.304465, "op_income": 1.372233, "op_margin_pct": 31.88, "is_forecast": 0, "rev_yoy": 35.5, "op_yoy": 42.8, "opm_diff": 1.6}, "2021-Q2": {"revenue": 4.226604, "op_income": 1.338139, "op_margin_pct": 31.66, "is_forecast": 0, "rev_yoy": 22.3, "op_yoy": 32.5, "opm_diff": 2.4}, "2021-Q3": {"revenue": 3.847654, "op_income": 1.195308, "op_margin_pct": 31.07, "is_forecast": 0, "rev_yoy": 53.7, "op_yoy": 72.2, "opm_diff": 3.4}, "2021-Q4": {"revenue": 4.145179, "op_income": 1.315927, "op_margin_pct": 31.75, "is_forecast": 0, "rev_yoy": 48.5, "op_yoy": 74.1, "opm_diff": 4.7}, "2022-Q1": {"revenue": 5.074121, "op_income": 1.69784, "op_margin_pct": 33.46, "is_forecast": 0, "rev_yoy": 17.9, "op_yoy": 23.7, "opm_diff": 1.6}, "2022-Q2": {"revenue": 5.277569, "op_income": 1.680162, "op_margin_pct": 31.84, "is_forecast": 0, "rev_yoy": 24.9, "op_yoy": 25.6, "opm_diff": 0.2}, "2022-Q3": {"revenue": 4.060416, "op_income": 1.192097, "op_margin_pct": 29.36, "is_forecast": 0, "rev_yoy": 5.5, "op_yoy": -0.3, "opm_diff": -1.7}, "2022-Q4": {"revenue": 4.635554, "op_income": 1.479353, "op_margin_pct": 31.91, "is_forecast": 0, "rev_yoy": 11.8, "op_yoy": 12.4, "opm_diff": 0.2}, "2023-Q1": {"revenue": 3.482062, "op_income": 1.023029, "op_margin_pct": 29.38, "is_forecast": 0, "rev_yoy": -31.4, "op_yoy": -39.7, "opm_diff": -4.1}, "2023-Q2": {"revenue": 3.758259, "op_income": 1.057212, "op_margin_pct": 28.13, "is_forecast": 0, "rev_yoy": -28.8, "op_yoy": -37.1, "opm_diff": -3.7}, "2023-Q3": {"revenue": 3.869569, "op_income": 0.942253, "op_margin_pct": 24.35, "is_forecast": 0, "rev_yoy": -4.7, "op_yoy": -21.0, "opm_diff": -5.0}, "2023-Q4": {"revenue": 3.207257, "op_income": 0.854605, "op_margin_pct": 26.65, "is_forecast": 0, "rev_yoy": -30.8, "op_yoy": -42.2, "opm_diff": -5.3}, "2024-Q1": {"revenue": 4.167976, "op_income": 1.264197, "op_margin_pct": 30.33, "is_forecast": 0, "rev_yoy": 19.7, "op_yoy": 23.6, "opm_diff": 0.9}, "2024-Q2": {"revenue": 4.376047, "op_income": 1.333884, "op_margin_pct": 30.48, "is_forecast": 0, "rev_yoy": 16.4, "op_yoy": 26.2, "opm_diff": 2.4}, "2024-Q3": {"revenue": 3.793558, "op_income": 1.057112, "op_margin_pct": 27.87, "is_forecast": 0, "rev_yoy": -2.0, "op_yoy": 12.2, "opm_diff": 3.5}, "2024-Q4": {"revenue": 3.871507, "op_income": 1.12656, "op_margin_pct": 29.1, "is_forecast": 0, "rev_yoy": 20.7, "op_yoy": 31.8, "opm_diff": 2.5}, "2025-Q1": {"revenue": 5.324173, "op_income": 1.829088, "op_margin_pct": 34.35, "is_forecast": 0, "rev_yoy": 27.7, "op_yoy": 44.7, "opm_diff": 4.0}, "2025-Q2": {"revenue": 5.344791, "op_income": 1.810203, "op_margin_pct": 33.87, "is_forecast": 0, "rev_yoy": 22.1, "op_yoy": 35.7, "opm_diff": 3.4}, "2025-Q3": {"revenue": 4.720175, "op_income": 1.561759, "op_margin_pct": 33.09, "is_forecast": 0, "rev_yoy": 24.4, "op_yoy": 47.7, "opm_diff": 5.2}, "2025-Q4": {"revenue": 5.171393, "op_income": 1.741128, "op_margin_pct": 33.67, "is_forecast": 0, "rev_yoy": 33.6, "op_yoy": 54.6, "opm_diff": 4.6}}, "MARVELL": {"2020-Q1": {"revenue": 0.693641, "op_income": -0.095996, "op_margin_pct": -13.84, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 0.727297, "op_income": -0.151267, "op_margin_pct": -20.8, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 0.750143, "op_income": -0.00939, "op_margin_pct": -1.25, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 0.8323, "op_income": -0.0823, "op_margin_pct": -9.89, "is_forecast": 0, "rev_yoy": 20.0, "op_yoy": 14.3, "opm_diff": 3.9}, "2021-Q2": {"revenue": 1.0759, "op_income": -0.2667, "op_margin_pct": -24.79, "is_forecast": 0, "rev_yoy": 47.9, "op_yoy": -76.3, "opm_diff": -4.0}, "2021-Q3": {"revenue": 1.2112, "op_income": -0.0334, "op_margin_pct": -2.76, "is_forecast": 0, "rev_yoy": 61.5, "op_yoy": -255.7, "opm_diff": -1.5}, "2021-Q4": {"revenue": 0.797819, "op_income": -0.001747, "op_margin_pct": -0.22, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2022-Q1": {"revenue": 1.4469, "op_income": 0.0698, "op_margin_pct": 4.82, "is_forecast": 0, "rev_yoy": 73.8, "op_yoy": 184.8, "opm_diff": 14.7}, "2022-Q2": {"revenue": 1.5169, "op_income": 0.0391, "op_margin_pct": 2.58, "is_forecast": 0, "rev_yoy": 41.0, "op_yoy": 114.7, "opm_diff": 27.4}, "2022-Q3": {"revenue": 1.5373, "op_income": 0.1058, "op_margin_pct": 6.88, "is_forecast": 0, "rev_yoy": 26.9, "op_yoy": 416.8, "opm_diff": 9.6}, "2022-Q4": {"revenue": 1.343, "op_income": 0.0347, "op_margin_pct": 2.58, "is_forecast": 0, "rev_yoy": 68.3, "op_yoy": 2086.3, "opm_diff": 2.8}, "2023-Q1": {"revenue": 1.3217, "op_income": -0.1824, "op_margin_pct": -13.8, "is_forecast": 0, "rev_yoy": -8.7, "op_yoy": -361.3, "opm_diff": -18.6}, "2023-Q2": {"revenue": 1.3409, "op_income": -0.2057, "op_margin_pct": -15.34, "is_forecast": 0, "rev_yoy": -11.6, "op_yoy": -626.1, "opm_diff": -17.9}, "2023-Q3": {"revenue": 1.4186, "op_income": -0.1463, "op_margin_pct": -10.31, "is_forecast": 0, "rev_yoy": -7.7, "op_yoy": -238.3, "opm_diff": -17.2}, "2023-Q4": {"revenue": 1.4185, "op_income": 0.0233, "op_margin_pct": 1.64, "is_forecast": 0, "rev_yoy": 5.6, "op_yoy": -32.9, "opm_diff": -0.9}, "2024-Q1": {"revenue": 1.1609, "op_income": -0.1523, "op_margin_pct": -13.12, "is_forecast": 0, "rev_yoy": -12.2, "op_yoy": 16.5, "opm_diff": 0.7}, "2024-Q2": {"revenue": 1.2729, "op_income": -0.1004, "op_margin_pct": -7.89, "is_forecast": 0, "rev_yoy": -5.1, "op_yoy": 51.2, "opm_diff": 7.5}, "2024-Q3": {"revenue": 1.5161, "op_income": -0.7028, "op_margin_pct": -46.36, "is_forecast": 0, "rev_yoy": 6.9, "op_yoy": -380.4, "opm_diff": -36.0}, "2024-Q4": {"revenue": 1.4265, "op_income": -0.0333, "op_margin_pct": -2.33, "is_forecast": 0, "rev_yoy": 0.6, "op_yoy": -242.9, "opm_diff": -4.0}, "2025-Q1": {"revenue": 1.8953, "op_income": 0.2706, "op_margin_pct": 14.28, "is_forecast": 0, "rev_yoy": 63.3, "op_yoy": 277.7, "opm_diff": 27.4}, "2025-Q2": {"revenue": 2.0061, "op_income": 0.2901, "op_margin_pct": 14.46, "is_forecast": 0, "rev_yoy": 57.6, "op_yoy": 388.9, "opm_diff": 22.4}, "2025-Q3": {"revenue": 2.0745, "op_income": 0.3578, "op_margin_pct": 17.25, "is_forecast": 0, "rev_yoy": 36.8, "op_yoy": 150.9, "opm_diff": 63.6}, "2025-Q4": {"revenue": 1.8174, "op_income": 0.2352, "op_margin_pct": 12.94, "is_forecast": 0, "rev_yoy": 27.4, "op_yoy": 806.3, "opm_diff": 15.3}, "2026-Q1": {"revenue": 2.4178, "op_income": 0.3394, "op_margin_pct": 14.04, "is_forecast": 0, "rev_yoy": 27.6, "op_yoy": 25.4, "opm_diff": -0.2}, "2026-Q2": {"revenue": 2.7393, "op_income": 0.4597, "op_margin_pct": 16.78, "is_forecast": 0, "rev_yoy": 36.5, "op_yoy": 58.5, "opm_diff": 2.3}}, "META": {"2020-Q1": {"revenue": 17.74, "op_income": 5.89, "op_margin_pct": 33.2, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 18.69, "op_income": 5.96, "op_margin_pct": 31.89, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 21.47, "op_income": 8.05, "op_margin_pct": 37.49, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 28.07, "op_income": 12.88, "op_margin_pct": 45.89, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 26.17, "op_income": 11.38, "op_margin_pct": 43.48, "is_forecast": 0, "rev_yoy": 47.5, "op_yoy": 93.2, "opm_diff": 10.3}, "2021-Q2": {"revenue": 29.08, "op_income": 12.37, "op_margin_pct": 42.54, "is_forecast": 0, "rev_yoy": 55.6, "op_yoy": 107.6, "opm_diff": 10.6}, "2021-Q3": {"revenue": 29.01, "op_income": 10.42, "op_margin_pct": 35.92, "is_forecast": 0, "rev_yoy": 35.1, "op_yoy": 29.4, "opm_diff": -1.6}, "2021-Q4": {"revenue": 33.67, "op_income": 12.59, "op_margin_pct": 37.39, "is_forecast": 0, "rev_yoy": 20.0, "op_yoy": -2.3, "opm_diff": -8.5}, "2022-Q1": {"revenue": 27.91, "op_income": 7.47, "op_margin_pct": 26.76, "is_forecast": 0, "rev_yoy": 6.6, "op_yoy": -34.4, "opm_diff": -16.7}, "2022-Q2": {"revenue": 28.82, "op_income": 8.36, "op_margin_pct": 29.01, "is_forecast": 0, "rev_yoy": -0.9, "op_yoy": -32.4, "opm_diff": -13.5}, "2022-Q3": {"revenue": 27.71, "op_income": 5.66, "op_margin_pct": 20.43, "is_forecast": 0, "rev_yoy": -4.5, "op_yoy": -45.7, "opm_diff": -15.5}, "2022-Q4": {"revenue": 32.17, "op_income": 6.4, "op_margin_pct": 19.89, "is_forecast": 0, "rev_yoy": -4.5, "op_yoy": -49.2, "opm_diff": -17.5}, "2023-Q1": {"revenue": 28.65, "op_income": 7.22, "op_margin_pct": 25.2, "is_forecast": 0, "rev_yoy": 2.7, "op_yoy": -3.3, "opm_diff": -1.6}, "2023-Q2": {"revenue": 32.0, "op_income": 9.39, "op_margin_pct": 29.34, "is_forecast": 0, "rev_yoy": 11.0, "op_yoy": 12.3, "opm_diff": 0.3}, "2023-Q3": {"revenue": 34.15, "op_income": 13.75, "op_margin_pct": 40.26, "is_forecast": 0, "rev_yoy": 23.2, "op_yoy": 142.9, "opm_diff": 19.8}, "2023-Q4": {"revenue": 40.11, "op_income": 16.38, "op_margin_pct": 40.84, "is_forecast": 0, "rev_yoy": 24.7, "op_yoy": 155.9, "opm_diff": 21.0}, "2024-Q1": {"revenue": 36.46, "op_income": 13.82, "op_margin_pct": 37.9, "is_forecast": 0, "rev_yoy": 27.3, "op_yoy": 91.4, "opm_diff": 12.7}, "2024-Q2": {"revenue": 39.07, "op_income": 14.85, "op_margin_pct": 38.01, "is_forecast": 0, "rev_yoy": 22.1, "op_yoy": 58.1, "opm_diff": 8.7}, "2024-Q3": {"revenue": 40.59, "op_income": 17.35, "op_margin_pct": 42.74, "is_forecast": 0, "rev_yoy": 18.9, "op_yoy": 26.2, "opm_diff": 2.5}, "2024-Q4": {"revenue": 48.39, "op_income": 21.46, "op_margin_pct": 44.35, "is_forecast": 0, "rev_yoy": 20.6, "op_yoy": 31.0, "opm_diff": 3.5}, "2025-Q1": {"revenue": 42.31, "op_income": 17.56, "op_margin_pct": 41.5, "is_forecast": 0, "rev_yoy": 16.0, "op_yoy": 27.1, "opm_diff": 3.6}, "2025-Q2": {"revenue": 47.516, "op_income": 20.441, "op_margin_pct": 43.0, "is_forecast": 0, "rev_yoy": 21.6, "op_yoy": 37.6, "opm_diff": 5.0}, "2025-Q3": {"revenue": 51.242, "op_income": 20.535, "op_margin_pct": 40.0, "is_forecast": 0, "rev_yoy": 26.2, "op_yoy": 18.4, "opm_diff": -2.7}, "2025-Q4": {"revenue": 59.893, "op_income": 24.745, "op_margin_pct": 41.0, "is_forecast": 0, "rev_yoy": 23.8, "op_yoy": 15.3, "opm_diff": -3.4}, "2026-Q1": {"revenue": 55.0, "op_income": 24.5, "op_margin_pct": 44.55, "is_forecast": 0, "rev_yoy": 30.0, "op_yoy": 39.5, "opm_diff": 3.0}, "2026-Q2": {"revenue": 60.0, "op_income": 27.0, "op_margin_pct": 45.0, "is_forecast": 0, "rev_yoy": 26.3, "op_yoy": 32.1, "opm_diff": 2.0}, "2026-Q3": {"revenue": 63.0, "op_income": 28.5, "op_margin_pct": 45.24, "is_forecast": 1, "rev_yoy": 22.9, "op_yoy": 38.8, "opm_diff": 5.2}, "2026-Q4": {"revenue": 72.0, "op_income": 33.0, "op_margin_pct": 45.83, "is_forecast": 1, "rev_yoy": 20.2, "op_yoy": 33.4, "opm_diff": 4.8}}, "MICRON": {"2020-Q1": {"revenue": 4.797, "op_income": 0.44, "op_margin_pct": 9.17, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 5.438, "op_income": 0.888, "op_margin_pct": 16.33, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 6.056, "op_income": 1.157, "op_margin_pct": 19.11, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 5.773, "op_income": 0.866, "op_margin_pct": 15.0, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 6.236, "op_income": 0.663, "op_margin_pct": 10.63, "is_forecast": 0, "rev_yoy": 30.0, "op_yoy": 50.7, "opm_diff": 1.5}, "2021-Q2": {"revenue": 7.422, "op_income": 1.799, "op_margin_pct": 24.24, "is_forecast": 0, "rev_yoy": 36.5, "op_yoy": 102.6, "opm_diff": 7.9}, "2021-Q3": {"revenue": 8.274, "op_income": 2.955, "op_margin_pct": 35.71, "is_forecast": 0, "rev_yoy": 36.6, "op_yoy": 155.4, "opm_diff": 16.6}, "2021-Q4": {"revenue": 7.687, "op_income": 2.631, "op_margin_pct": 34.23, "is_forecast": 0, "rev_yoy": 33.2, "op_yoy": 203.8, "opm_diff": 19.2}, "2022-Q1": {"revenue": 7.786, "op_income": 2.546, "op_margin_pct": 32.7, "is_forecast": 0, "rev_yoy": 24.9, "op_yoy": 284.0, "opm_diff": 22.1}, "2022-Q2": {"revenue": 8.642, "op_income": 3.004, "op_margin_pct": 34.76, "is_forecast": 0, "rev_yoy": 16.4, "op_yoy": 67.0, "opm_diff": 10.5}, "2022-Q3": {"revenue": 6.643, "op_income": 1.521, "op_margin_pct": 22.9, "is_forecast": 0, "rev_yoy": -19.7, "op_yoy": -48.5, "opm_diff": -12.8}, "2022-Q4": {"revenue": 4.085, "op_income": -0.209, "op_margin_pct": -5.12, "is_forecast": 0, "rev_yoy": -46.9, "op_yoy": -107.9, "opm_diff": -39.3}, "2023-Q1": {"revenue": 3.693, "op_income": -2.303, "op_margin_pct": -62.36, "is_forecast": 0, "rev_yoy": -52.6, "op_yoy": -190.5, "opm_diff": -95.1}, "2023-Q2": {"revenue": 3.752, "op_income": -1.761, "op_margin_pct": -46.93, "is_forecast": 0, "rev_yoy": -56.6, "op_yoy": -158.6, "opm_diff": -81.7}, "2023-Q3": {"revenue": 4.01, "op_income": -1.472, "op_margin_pct": -36.71, "is_forecast": 0, "rev_yoy": -39.6, "op_yoy": -196.8, "opm_diff": -59.6}, "2023-Q4": {"revenue": 4.726, "op_income": -1.128, "op_margin_pct": -23.87, "is_forecast": 0, "rev_yoy": 15.7, "op_yoy": -439.7, "opm_diff": -18.8}, "2024-Q1": {"revenue": 5.824, "op_income": 0.191, "op_margin_pct": 3.28, "is_forecast": 0, "rev_yoy": 57.7, "op_yoy": 108.3, "opm_diff": 65.6}, "2024-Q2": {"revenue": 6.811, "op_income": 0.719, "op_margin_pct": 10.56, "is_forecast": 0, "rev_yoy": 81.5, "op_yoy": 140.8, "opm_diff": 57.5}, "2024-Q3": {"revenue": 7.75, "op_income": 1.522, "op_margin_pct": 19.64, "is_forecast": 0, "rev_yoy": 93.3, "op_yoy": 203.4, "opm_diff": 56.4}, "2024-Q4": {"revenue": 8.709, "op_income": 2.174, "op_margin_pct": 24.96, "is_forecast": 0, "rev_yoy": 84.3, "op_yoy": 292.7, "opm_diff": 48.8}, "2025-Q1": {"revenue": 8.053, "op_income": 1.773, "op_margin_pct": 22.02, "is_forecast": 0, "rev_yoy": 38.3, "op_yoy": 828.3, "opm_diff": 18.7}, "2025-Q2": {"revenue": 9.301, "op_income": 2.169, "op_margin_pct": 23.32, "is_forecast": 0, "rev_yoy": 36.6, "op_yoy": 201.7, "opm_diff": 12.8}, "2025-Q3": {"revenue": 11.315, "op_income": 3.654, "op_margin_pct": 32.29, "is_forecast": 0, "rev_yoy": 46.0, "op_yoy": 140.1, "opm_diff": 12.6}, "2025-Q4": {"revenue": 13.643, "op_income": 6.136, "op_margin_pct": 44.98, "is_forecast": 0, "rev_yoy": 56.7, "op_yoy": 182.2, "opm_diff": 20.0}, "2026-Q1": {"revenue": 23.86, "op_income": 16.135, "op_margin_pct": 67.62, "is_forecast": 0, "rev_yoy": 196.3, "op_yoy": 810.0, "opm_diff": 45.6}, "2026-Q2": {"revenue": 41.456, "op_income": 33.318, "op_margin_pct": 80.37, "is_forecast": 0, "rev_yoy": 345.7, "op_yoy": 1436.1, "opm_diff": 57.1}}, "MICROSOFT": {"2020-Q1": {"revenue": 35.02, "op_income": 12.98, "op_margin_pct": 37.06, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 38.03, "op_income": 13.41, "op_margin_pct": 35.26, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 37.15, "op_income": 15.88, "op_margin_pct": 42.75, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 43.08, "op_income": 17.9, "op_margin_pct": 41.55, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 41.71, "op_income": 17.05, "op_margin_pct": 40.88, "is_forecast": 0, "rev_yoy": 19.1, "op_yoy": 31.4, "opm_diff": 3.8}, "2021-Q2": {"revenue": 46.15, "op_income": 19.1, "op_margin_pct": 41.39, "is_forecast": 0, "rev_yoy": 21.4, "op_yoy": 42.4, "opm_diff": 6.1}, "2021-Q3": {"revenue": 45.32, "op_income": 20.24, "op_margin_pct": 44.66, "is_forecast": 0, "rev_yoy": 22.0, "op_yoy": 27.5, "opm_diff": 1.9}, "2021-Q4": {"revenue": 51.73, "op_income": 22.25, "op_margin_pct": 43.01, "is_forecast": 0, "rev_yoy": 20.1, "op_yoy": 24.3, "opm_diff": 1.5}, "2022-Q1": {"revenue": 49.36, "op_income": 20.36, "op_margin_pct": 41.25, "is_forecast": 0, "rev_yoy": 18.3, "op_yoy": 19.4, "opm_diff": 0.4}, "2022-Q2": {"revenue": 51.87, "op_income": 21.15, "op_margin_pct": 40.78, "is_forecast": 0, "rev_yoy": 12.4, "op_yoy": 10.7, "opm_diff": -0.6}, "2022-Q3": {"revenue": 50.12, "op_income": 21.52, "op_margin_pct": 42.94, "is_forecast": 0, "rev_yoy": 10.6, "op_yoy": 6.3, "opm_diff": -1.7}, "2022-Q4": {"revenue": 52.75, "op_income": 20.4, "op_margin_pct": 38.67, "is_forecast": 0, "rev_yoy": 2.0, "op_yoy": -8.3, "opm_diff": -4.3}, "2023-Q1": {"revenue": 52.86, "op_income": 22.35, "op_margin_pct": 42.28, "is_forecast": 0, "rev_yoy": 7.1, "op_yoy": 9.8, "opm_diff": 1.0}, "2023-Q2": {"revenue": 56.19, "op_income": 24.25, "op_margin_pct": 43.16, "is_forecast": 0, "rev_yoy": 8.3, "op_yoy": 14.7, "opm_diff": 2.4}, "2023-Q3": {"revenue": 56.52, "op_income": 26.9, "op_margin_pct": 47.59, "is_forecast": 0, "rev_yoy": 12.8, "op_yoy": 25.0, "opm_diff": 4.7}, "2023-Q4": {"revenue": 62.02, "op_income": 27.03, "op_margin_pct": 43.58, "is_forecast": 0, "rev_yoy": 17.6, "op_yoy": 32.5, "opm_diff": 4.9}, "2024-Q1": {"revenue": 61.86, "op_income": 27.58, "op_margin_pct": 44.58, "is_forecast": 0, "rev_yoy": 17.0, "op_yoy": 23.4, "opm_diff": 2.3}, "2024-Q2": {"revenue": 64.73, "op_income": 27.93, "op_margin_pct": 43.15, "is_forecast": 0, "rev_yoy": 15.2, "op_yoy": 15.2, "opm_diff": -0.0}, "2024-Q3": {"revenue": 65.59, "op_income": 30.55, "op_margin_pct": 46.58, "is_forecast": 0, "rev_yoy": 16.0, "op_yoy": 13.6, "opm_diff": -1.0}, "2024-Q4": {"revenue": 69.63, "op_income": 31.64, "op_margin_pct": 45.44, "is_forecast": 0, "rev_yoy": 12.3, "op_yoy": 17.1, "opm_diff": 1.9}, "2025-Q1": {"revenue": 70.07, "op_income": 32.05, "op_margin_pct": 45.74, "is_forecast": 0, "rev_yoy": 13.3, "op_yoy": 16.2, "opm_diff": 1.2}, "2025-Q2": {"revenue": 76.441, "op_income": 34.323, "op_margin_pct": 44.9, "is_forecast": 0, "rev_yoy": 18.1, "op_yoy": 22.9, "opm_diff": 1.8}, "2025-Q3": {"revenue": 77.673, "op_income": 37.961, "op_margin_pct": 48.87, "is_forecast": 0, "rev_yoy": 18.4, "op_yoy": 24.3, "opm_diff": 2.3}, "2025-Q4": {"revenue": 81.273, "op_income": 38.275, "op_margin_pct": 47.09, "is_forecast": 0, "rev_yoy": 16.7, "op_yoy": 21.0, "opm_diff": 1.7}, "2026-Q1": {"revenue": 78.0, "op_income": 36.5, "op_margin_pct": 46.79, "is_forecast": 0, "rev_yoy": 11.3, "op_yoy": 13.9, "opm_diff": 1.0}, "2026-Q2": {"revenue": 90.0, "op_income": 40.6, "op_margin_pct": 45.1, "is_forecast": 0, "rev_yoy": 17.7, "op_yoy": 18.3, "opm_diff": 0.2}, "2026-Q3": {"revenue": 86.0, "op_income": 41.0, "op_margin_pct": 47.67, "is_forecast": 1, "rev_yoy": 10.7, "op_yoy": 8.0, "opm_diff": -1.2}, "2026-Q4": {"revenue": 91.0, "op_income": 43.5, "op_margin_pct": 47.8, "is_forecast": 1, "rev_yoy": 12.0, "op_yoy": 13.7, "opm_diff": 0.7}}, "NVIDIA": {"2020-Q1": {"revenue": 3.08, "op_income": 0.98, "op_margin_pct": 31.82, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 3.87, "op_income": 1.37, "op_margin_pct": 35.4, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 4.73, "op_income": 1.4, "op_margin_pct": 29.6, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 5.0, "op_income": 1.51, "op_margin_pct": 30.2, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 5.66, "op_income": 1.96, "op_margin_pct": 34.63, "is_forecast": 0, "rev_yoy": 83.8, "op_yoy": 100.0, "opm_diff": 2.8}, "2021-Q2": {"revenue": 6.51, "op_income": 2.44, "op_margin_pct": 37.48, "is_forecast": 0, "rev_yoy": 68.2, "op_yoy": 78.1, "opm_diff": 2.1}, "2021-Q3": {"revenue": 7.1, "op_income": 2.67, "op_margin_pct": 37.61, "is_forecast": 0, "rev_yoy": 50.1, "op_yoy": 90.7, "opm_diff": 8.0}, "2021-Q4": {"revenue": 7.64, "op_income": 2.97, "op_margin_pct": 38.87, "is_forecast": 0, "rev_yoy": 52.8, "op_yoy": 96.7, "opm_diff": 8.7}, "2022-Q1": {"revenue": 8.29, "op_income": 3.07, "op_margin_pct": 37.03, "is_forecast": 0, "rev_yoy": 46.5, "op_yoy": 56.6, "opm_diff": 2.4}, "2022-Q2": {"revenue": 6.7, "op_income": 1.33, "op_margin_pct": 19.85, "is_forecast": 0, "rev_yoy": 2.9, "op_yoy": -45.5, "opm_diff": -17.6}, "2022-Q3": {"revenue": 5.93, "op_income": 0.6, "op_margin_pct": 10.12, "is_forecast": 0, "rev_yoy": -16.5, "op_yoy": -77.5, "opm_diff": -27.5}, "2022-Q4": {"revenue": 6.05, "op_income": 1.26, "op_margin_pct": 20.83, "is_forecast": 0, "rev_yoy": -20.8, "op_yoy": -57.6, "opm_diff": -18.0}, "2023-Q1": {"revenue": 7.19, "op_income": 2.14, "op_margin_pct": 29.76, "is_forecast": 0, "rev_yoy": -13.3, "op_yoy": -30.3, "opm_diff": -7.3}, "2023-Q2": {"revenue": 13.51, "op_income": 6.8, "op_margin_pct": 50.33, "is_forecast": 0, "rev_yoy": 101.6, "op_yoy": 411.3, "opm_diff": 30.5}, "2023-Q3": {"revenue": 18.12, "op_income": 10.42, "op_margin_pct": 57.51, "is_forecast": 0, "rev_yoy": 205.6, "op_yoy": 1636.7, "opm_diff": 47.4}, "2023-Q4": {"revenue": 22.1, "op_income": 13.62, "op_margin_pct": 61.63, "is_forecast": 0, "rev_yoy": 265.3, "op_yoy": 981.0, "opm_diff": 40.8}, "2024-Q1": {"revenue": 26.04, "op_income": 16.91, "op_margin_pct": 64.94, "is_forecast": 0, "rev_yoy": 262.2, "op_yoy": 690.2, "opm_diff": 35.2}, "2024-Q2": {"revenue": 30.04, "op_income": 18.64, "op_margin_pct": 62.05, "is_forecast": 0, "rev_yoy": 122.4, "op_yoy": 174.1, "opm_diff": 11.7}, "2024-Q3": {"revenue": 35.08, "op_income": 21.87, "op_margin_pct": 62.34, "is_forecast": 0, "rev_yoy": 93.6, "op_yoy": 109.9, "opm_diff": 4.8}, "2024-Q4": {"revenue": 39.33, "op_income": 24.35, "op_margin_pct": 61.91, "is_forecast": 0, "rev_yoy": 78.0, "op_yoy": 78.8, "opm_diff": 0.3}, "2025-Q1": {"revenue": 44.06, "op_income": 29.29, "op_margin_pct": 66.48, "is_forecast": 0, "rev_yoy": 69.2, "op_yoy": 73.2, "opm_diff": 1.5}, "2025-Q2": {"revenue": 46.743, "op_income": 28.44, "op_margin_pct": 60.8, "is_forecast": 0, "rev_yoy": 55.6, "op_yoy": 52.6, "opm_diff": -1.2}, "2025-Q3": {"revenue": 57.006, "op_income": 36.01, "op_margin_pct": 63.17, "is_forecast": 0, "rev_yoy": 62.5, "op_yoy": 64.7, "opm_diff": 0.8}, "2025-Q4": {"revenue": 68.127, "op_income": 44.299, "op_margin_pct": 65.02, "is_forecast": 0, "rev_yoy": 73.2, "op_yoy": 81.9, "opm_diff": 3.1}, "2026-Q1": {"revenue": 81.615, "op_income": 53.536, "op_margin_pct": 65.6, "is_forecast": 0, "rev_yoy": 85.2, "op_yoy": 82.8, "opm_diff": -0.9}, "2026-Q2": {"revenue": 96.221, "op_income": 63.734, "op_margin_pct": 66.2, "is_forecast": 0, "rev_yoy": 105.9, "op_yoy": 124.1, "opm_diff": 5.4}, "2026-Q3": {"revenue": 108.0, "op_income": null, "op_margin_pct": null, "is_forecast": 1, "rev_yoy": 89.5, "op_yoy": null, "opm_diff": null}, "2026-Q4": {"revenue": 72.0, "op_income": 47.5, "op_margin_pct": 65.97, "is_forecast": 1, "rev_yoy": 5.7, "op_yoy": 7.2, "opm_diff": 1.0}}, "ORACLE": {"2020-Q1": {"revenue": 9.367, "op_income": 3.211, "op_margin_pct": 34.28, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 9.8, "op_income": 3.583, "op_margin_pct": 36.56, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 9.796, "op_income": 3.528, "op_margin_pct": 36.01, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 10.44, "op_income": 4.308, "op_margin_pct": 41.26, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 9.728, "op_income": 3.427, "op_margin_pct": 35.23, "is_forecast": 0, "rev_yoy": 3.9, "op_yoy": 6.7, "opm_diff": 0.9}, "2021-Q2": {"revenue": 10.36, "op_income": -0.824, "op_margin_pct": -7.95, "is_forecast": 0, "rev_yoy": 5.7, "op_yoy": -123.0, "opm_diff": -44.5}, "2021-Q3": {"revenue": 10.085, "op_income": 3.878, "op_margin_pct": 38.45, "is_forecast": 0, "rev_yoy": 3.0, "op_yoy": 9.9, "opm_diff": 2.4}, "2021-Q4": {"revenue": 11.227, "op_income": 4.541, "op_margin_pct": 40.45, "is_forecast": 0, "rev_yoy": 7.5, "op_yoy": 5.4, "opm_diff": -0.8}, "2022-Q1": {"revenue": 11.445, "op_income": 2.623, "op_margin_pct": 22.92, "is_forecast": 0, "rev_yoy": 17.7, "op_yoy": -23.5, "opm_diff": -12.3}, "2022-Q2": {"revenue": 12.275, "op_income": 3.071, "op_margin_pct": 25.02, "is_forecast": 0, "rev_yoy": 18.5, "op_yoy": 472.7, "opm_diff": 33.0}, "2022-Q3": {"revenue": 10.513, "op_income": 3.822, "op_margin_pct": 36.35, "is_forecast": 0, "rev_yoy": 4.2, "op_yoy": -1.4, "opm_diff": -2.1}, "2022-Q4": {"revenue": 11.839, "op_income": 4.501, "op_margin_pct": 38.02, "is_forecast": 0, "rev_yoy": 5.5, "op_yoy": -0.9, "opm_diff": -2.4}, "2023-Q1": {"revenue": 12.453, "op_income": 3.296, "op_margin_pct": 26.47, "is_forecast": 0, "rev_yoy": 8.8, "op_yoy": 25.7, "opm_diff": 3.5}, "2023-Q2": {"revenue": 12.941, "op_income": 3.622, "op_margin_pct": 27.99, "is_forecast": 0, "rev_yoy": 5.4, "op_yoy": 17.9, "opm_diff": 3.0}, "2023-Q3": {"revenue": 12.398, "op_income": 3.26, "op_margin_pct": 26.29, "is_forecast": 0, "rev_yoy": 17.9, "op_yoy": -14.7, "opm_diff": -10.1}, "2023-Q4": {"revenue": 13.836, "op_income": 4.139, "op_margin_pct": 29.91, "is_forecast": 0, "rev_yoy": 16.9, "op_yoy": -8.0, "opm_diff": -8.1}, "2024-Q1": {"revenue": 13.307, "op_income": 3.991, "op_margin_pct": 29.99, "is_forecast": 0, "rev_yoy": 6.9, "op_yoy": 21.1, "opm_diff": 3.5}, "2024-Q2": {"revenue": 14.059, "op_income": 4.22, "op_margin_pct": 30.02, "is_forecast": 0, "rev_yoy": 8.6, "op_yoy": 16.5, "opm_diff": 2.0}, "2024-Q3": {"revenue": 13.28, "op_income": 3.75, "op_margin_pct": 28.24, "is_forecast": 0, "rev_yoy": 7.1, "op_yoy": 15.0, "opm_diff": 1.9}, "2024-Q4": {"revenue": 14.287, "op_income": 4.685, "op_margin_pct": 32.79, "is_forecast": 0, "rev_yoy": 3.3, "op_yoy": 13.2, "opm_diff": 2.9}, "2025-Q1": {"revenue": 14.926, "op_income": 4.277, "op_margin_pct": 28.65, "is_forecast": 0, "rev_yoy": 12.2, "op_yoy": 7.2, "opm_diff": -1.3}, "2025-Q2": {"revenue": 16.058, "op_income": 4.731, "op_margin_pct": 29.46, "is_forecast": 0, "rev_yoy": 14.2, "op_yoy": 12.1, "opm_diff": -0.6}, "2025-Q3": {"revenue": 14.13, "op_income": 4.358, "op_margin_pct": 30.84, "is_forecast": 0, "rev_yoy": 6.4, "op_yoy": 16.2, "opm_diff": 2.6}, "2025-Q4": {"revenue": 15.903, "op_income": 5.109, "op_margin_pct": 32.13, "is_forecast": 0, "rev_yoy": 11.3, "op_yoy": 9.1, "opm_diff": -0.7}, "2026-Q1": {"revenue": 19.345, "op_income": 6.728, "op_margin_pct": 34.78, "is_forecast": 0, "rev_yoy": 29.6, "op_yoy": 57.3, "opm_diff": 6.1}}, "SAMSUNG": {"2020-Q1": {"revenue": 46.33980187944923, "op_income": 5.401983049384557, "op_margin_pct": 11.66, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 43.448989087578454, "op_income": 6.685090826199064, "op_margin_pct": 15.39, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 56.38166349881317, "op_income": 10.398947792866528, "op_margin_pct": 18.44, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 55.05495583455217, "op_income": 8.095001629613275, "op_margin_pct": 14.7, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 58.65576136550684, "op_income": 8.413993601597403, "op_margin_pct": 14.34, "is_forecast": 0, "rev_yoy": 26.6, "op_yoy": 55.8, "opm_diff": 2.7}, "2021-Q2": {"revenue": 56.782219202145, "op_income": 11.210185257907376, "op_margin_pct": 19.74, "is_forecast": 0, "rev_yoy": 30.7, "op_yoy": 67.7, "opm_diff": 4.3}, "2021-Q3": {"revenue": 63.77124931858161, "op_income": 13.636944636658031, "op_margin_pct": 21.38, "is_forecast": 0, "rev_yoy": 13.1, "op_yoy": 31.1, "opm_diff": 2.9}, "2021-Q4": {"revenue": 64.70946570503787, "op_income": 11.721565748058968, "op_margin_pct": 18.11, "is_forecast": 0, "rev_yoy": 17.5, "op_yoy": 44.8, "opm_diff": 3.4}, "2022-Q1": {"revenue": 64.48439865801947, "op_income": 11.706347506444265, "op_margin_pct": 18.15, "is_forecast": 0, "rev_yoy": 9.9, "op_yoy": 39.1, "opm_diff": 3.8}, "2022-Q2": {"revenue": 61.24768934166615, "op_income": 11.186430307221409, "op_margin_pct": 18.26, "is_forecast": 0, "rev_yoy": 7.9, "op_yoy": -0.2, "opm_diff": -1.5}, "2022-Q3": {"revenue": 57.251176462463256, "op_income": 8.090326447222276, "op_margin_pct": 14.13, "is_forecast": 0, "rev_yoy": -10.2, "op_yoy": -40.7, "opm_diff": -7.2}, "2022-Q4": {"revenue": 51.83261553841268, "op_income": 3.170572991350534, "op_margin_pct": 6.12, "is_forecast": 0, "rev_yoy": -19.9, "op_yoy": -73.0, "opm_diff": -12.0}, "2023-Q1": {"revenue": 49.94770181809634, "op_income": 0.5014357515855947, "op_margin_pct": 1.0, "is_forecast": 0, "rev_yoy": -22.5, "op_yoy": -95.7, "opm_diff": -17.1}, "2023-Q2": {"revenue": 45.611317836899374, "op_income": 0.5092415089272219, "op_margin_pct": 1.12, "is_forecast": 0, "rev_yoy": -25.5, "op_yoy": -95.4, "opm_diff": -17.1}, "2023-Q3": {"revenue": 51.32550390743879, "op_income": 1.8504595622414874, "op_margin_pct": 3.61, "is_forecast": 0, "rev_yoy": -10.4, "op_yoy": -77.1, "opm_diff": -10.5}, "2023-Q4": {"revenue": 51.27676613337997, "op_income": 2.1333797653604534, "op_margin_pct": 4.16, "is_forecast": 0, "rev_yoy": -1.1, "op_yoy": -32.7, "opm_diff": -2.0}, "2024-Q1": {"revenue": 54.090918015582375, "op_income": 4.971370523957168, "op_margin_pct": 9.19, "is_forecast": 0, "rev_yoy": 8.3, "op_yoy": 891.4, "opm_diff": 8.2}, "2024-Q2": {"revenue": 54.06021286941225, "op_income": 7.61966548341655, "op_margin_pct": 14.09, "is_forecast": 0, "rev_yoy": 18.5, "op_yoy": 1396.3, "opm_diff": 13.0}, "2024-Q3": {"revenue": 58.35567800647407, "op_income": 6.772504729449204, "op_margin_pct": 11.61, "is_forecast": 0, "rev_yoy": 13.7, "op_yoy": 266.0, "opm_diff": 8.0}, "2024-Q4": {"revenue": 54.1729615297631, "op_income": 4.6472779456705835, "op_margin_pct": 8.58, "is_forecast": 0, "rev_yoy": 5.6, "op_yoy": 117.8, "opm_diff": 4.4}, "2025-Q1": {"revenue": 54.40749849157965, "op_income": 5.9917118591992775, "op_margin_pct": 11.01, "is_forecast": 0, "rev_yoy": 0.6, "op_yoy": 20.5, "opm_diff": 1.8}, "2025-Q2": {"revenue": 58.93602195207797, "op_income": 7.715261055544753, "op_margin_pct": 13.09, "is_forecast": 0, "rev_yoy": 9.0, "op_yoy": 1.3, "opm_diff": -1.0}, "2025-Q3": {"revenue": 62.07887164335431, "op_income": 8.796309338547301, "op_margin_pct": 14.17, "is_forecast": 0, "rev_yoy": 6.4, "op_yoy": 29.9, "opm_diff": 2.6}, "2025-Q4": {"revenue": 64.74483590115562, "op_income": 13.873893407390492, "op_margin_pct": 21.43, "is_forecast": 0, "rev_yoy": 19.5, "op_yoy": 198.5, "opm_diff": 12.8}, "2026-Q1": {"revenue": 91.36380039915514, "op_income": 39.029196287017726, "op_margin_pct": 42.72, "is_forecast": 0, "rev_yoy": 67.9, "op_yoy": 551.4, "opm_diff": 31.7}, "2026-Q2": {"revenue": 114.29684299943523, "op_income": 59.64762360611926, "op_margin_pct": 52.19, "is_forecast": 0, "rev_yoy": 93.9, "op_yoy": 673.1, "opm_diff": 39.1}, "2026-Q3": {"revenue": 66.05597385266054, "op_income": 11.743284240472985, "op_margin_pct": 17.78, "is_forecast": 1, "rev_yoy": 6.4, "op_yoy": 33.5, "opm_diff": 3.6}, "2026-Q4": {"revenue": 72.37185704692979, "op_income": 13.056778333208984, "op_margin_pct": 18.04, "is_forecast": 1, "rev_yoy": 11.8, "op_yoy": -5.9, "opm_diff": -3.4}}, "SK_HYNIX": {"2020-Q1": {"revenue": 5.318231374200301, "op_income": 0.25125502555277013, "op_margin_pct": 4.72, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 7.0624088360213415, "op_income": 1.5995002590292238, "op_margin_pct": 22.65, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 6.8456231219437145, "op_income": 1.0946260834596344, "op_margin_pct": 15.99, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 7.128968285968818, "op_income": 0.8676410586436328, "op_margin_pct": 12.17, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 7.615650925113214, "op_income": 1.184058801077673, "op_margin_pct": 15.55, "is_forecast": 0, "rev_yoy": 43.2, "op_yoy": 371.3, "opm_diff": 10.8}, "2021-Q2": {"revenue": 9.20358885136071, "op_income": 2.398997481604681, "op_margin_pct": 26.07, "is_forecast": 0, "rev_yoy": 30.3, "op_yoy": 50.0, "opm_diff": 3.4}, "2021-Q3": {"revenue": 10.180298113712475, "op_income": 3.5945675812176985, "op_margin_pct": 35.31, "is_forecast": 0, "rev_yoy": 48.7, "op_yoy": 228.4, "opm_diff": 19.3}, "2021-Q4": {"revenue": 10.462363659767126, "op_income": 3.566330746705757, "op_margin_pct": 34.09, "is_forecast": 0, "rev_yoy": 46.8, "op_yoy": 311.0, "opm_diff": 21.9}, "2022-Q1": {"revenue": 10.081387087702709, "op_income": 2.371115713061657, "op_margin_pct": 23.52, "is_forecast": 0, "rev_yoy": 32.4, "op_yoy": 100.3, "opm_diff": 8.0}, "2022-Q2": {"revenue": 10.956354790264372, "op_income": 3.3241945381033835, "op_margin_pct": 30.34, "is_forecast": 0, "rev_yoy": 19.0, "op_yoy": 38.6, "opm_diff": 4.3}, "2022-Q3": {"revenue": 8.18726123414752, "op_income": 1.2377826638146523, "op_margin_pct": 15.12, "is_forecast": 0, "rev_yoy": -19.6, "op_yoy": -65.6, "opm_diff": -20.2}, "2022-Q4": {"revenue": 5.664364740927868, "op_income": -1.3903440727732042, "op_margin_pct": -24.55, "is_forecast": 0, "rev_yoy": -45.9, "op_yoy": -139.0, "opm_diff": -58.6}, "2023-Q1": {"revenue": 3.9879812118291826, "op_income": -2.663877430298472, "op_margin_pct": -66.8, "is_forecast": 0, "rev_yoy": -60.4, "op_yoy": -212.3, "opm_diff": -90.3}, "2023-Q2": {"revenue": 5.556052880982077, "op_income": -2.1889784264334313, "op_margin_pct": -39.4, "is_forecast": 0, "rev_yoy": -49.3, "op_yoy": -165.8, "opm_diff": -69.7}, "2023-Q3": {"revenue": 6.906859353716169, "op_income": -1.3630957269186266, "op_margin_pct": -19.74, "is_forecast": 0, "rev_yoy": -15.6, "op_yoy": -210.1, "opm_diff": -34.9}, "2023-Q4": {"revenue": 8.548649414387633, "op_income": 0.2647811765518293, "op_margin_pct": 3.1, "is_forecast": 0, "rev_yoy": 50.9, "op_yoy": 119.0, "opm_diff": 27.7}, "2024-Q1": {"revenue": 9.348583299967867, "op_income": 2.173564419702907, "op_margin_pct": 23.25, "is_forecast": 0, "rev_yoy": 134.4, "op_yoy": 181.6, "opm_diff": 90.0}, "2024-Q2": {"revenue": 11.98418651702105, "op_income": 3.9922959956215065, "op_margin_pct": 33.31, "is_forecast": 0, "rev_yoy": 115.7, "op_yoy": 282.4, "opm_diff": 72.7}, "2024-Q3": {"revenue": 12.962190424446897, "op_income": 5.186351661005218, "op_margin_pct": 40.01, "is_forecast": 0, "rev_yoy": 87.7, "op_yoy": 480.5, "opm_diff": 59.8}, "2024-Q4": {"revenue": 14.13487461321653, "op_income": 5.7769239693874335, "op_margin_pct": 40.87, "is_forecast": 0, "rev_yoy": 65.3, "op_yoy": 2081.8, "opm_diff": 37.8}, "2025-Q1": {"revenue": 12.148092489149652, "op_income": 5.1242910446404855, "op_margin_pct": 42.18, "is_forecast": 0, "rev_yoy": 29.9, "op_yoy": 135.8, "opm_diff": 18.9}, "2025-Q2": {"revenue": 15.882007758043606, "op_income": 6.5814748683915045, "op_margin_pct": 41.44, "is_forecast": 0, "rev_yoy": 32.5, "op_yoy": 64.9, "opm_diff": 8.1}, "2025-Q3": {"revenue": 17.627876015345006, "op_income": 8.207533420034371, "op_margin_pct": 46.56, "is_forecast": 0, "rev_yoy": 36.0, "op_yoy": 58.3, "opm_diff": 6.6}, "2025-Q4": {"revenue": 22.65841476200923, "op_income": 13.231690898622524, "op_margin_pct": 58.4, "is_forecast": 0, "rev_yoy": 60.3, "op_yoy": 129.0, "opm_diff": 17.5}, "2026-Q1": {"revenue": 35.874313509530246, "op_income": 25.6625835859025, "op_margin_pct": 71.53, "is_forecast": 0, "rev_yoy": 195.3, "op_yoy": 400.8, "opm_diff": 29.4}, "2026-Q2": {"revenue": 52.86225656454405, "op_income": 40.34885158587526, "op_margin_pct": 76.33, "is_forecast": 0, "rev_yoy": 232.8, "op_yoy": 513.1, "opm_diff": 34.9}}, "TSMC": {"2020-Q1": {"revenue": 10.31, "op_income": 4.28, "op_margin_pct": 41.51, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 10.38, "op_income": 4.38, "op_margin_pct": 42.2, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 12.14, "op_income": 5.11, "op_margin_pct": 42.09, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 12.68, "op_income": 5.26, "op_margin_pct": 41.48, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 12.92, "op_income": 5.36, "op_margin_pct": 41.49, "is_forecast": 0, "rev_yoy": 25.3, "op_yoy": 25.2, "opm_diff": -0.0}, "2021-Q2": {"revenue": 13.29, "op_income": 5.2, "op_margin_pct": 39.13, "is_forecast": 0, "rev_yoy": 28.0, "op_yoy": 18.7, "opm_diff": -3.1}, "2021-Q3": {"revenue": 14.88, "op_income": 6.13, "op_margin_pct": 41.2, "is_forecast": 0, "rev_yoy": 22.6, "op_yoy": 20.0, "opm_diff": -0.9}, "2021-Q4": {"revenue": 15.74, "op_income": 6.56, "op_margin_pct": 41.68, "is_forecast": 0, "rev_yoy": 24.1, "op_yoy": 24.7, "opm_diff": 0.2}, "2022-Q1": {"revenue": 17.57, "op_income": 7.97, "op_margin_pct": 45.36, "is_forecast": 0, "rev_yoy": 36.0, "op_yoy": 48.7, "opm_diff": 3.9}, "2022-Q2": {"revenue": 18.16, "op_income": 8.91, "op_margin_pct": 49.06, "is_forecast": 0, "rev_yoy": 36.6, "op_yoy": 71.3, "opm_diff": 9.9}, "2022-Q3": {"revenue": 20.23, "op_income": 10.23, "op_margin_pct": 50.57, "is_forecast": 0, "rev_yoy": 36.0, "op_yoy": 66.9, "opm_diff": 9.4}, "2022-Q4": {"revenue": 19.93, "op_income": 10.36, "op_margin_pct": 51.98, "is_forecast": 0, "rev_yoy": 26.6, "op_yoy": 57.9, "opm_diff": 10.3}, "2023-Q1": {"revenue": 16.72, "op_income": 7.6, "op_margin_pct": 45.45, "is_forecast": 0, "rev_yoy": -4.8, "op_yoy": -4.6, "opm_diff": 0.1}, "2023-Q2": {"revenue": 15.68, "op_income": 6.58, "op_margin_pct": 41.96, "is_forecast": 0, "rev_yoy": -13.7, "op_yoy": -26.2, "opm_diff": -7.1}, "2023-Q3": {"revenue": 17.28, "op_income": 7.21, "op_margin_pct": 41.72, "is_forecast": 0, "rev_yoy": -14.6, "op_yoy": -29.5, "opm_diff": -8.9}, "2023-Q4": {"revenue": 19.62, "op_income": 8.16, "op_margin_pct": 41.59, "is_forecast": 0, "rev_yoy": -1.6, "op_yoy": -21.2, "opm_diff": -10.4}, "2024-Q1": {"revenue": 18.87, "op_income": 8.0, "op_margin_pct": 42.4, "is_forecast": 0, "rev_yoy": 12.9, "op_yoy": 5.3, "opm_diff": -3.1}, "2024-Q2": {"revenue": 20.82, "op_income": 8.84, "op_margin_pct": 42.46, "is_forecast": 0, "rev_yoy": 32.8, "op_yoy": 34.3, "opm_diff": 0.5}, "2024-Q3": {"revenue": 23.5, "op_income": 11.16, "op_margin_pct": 47.49, "is_forecast": 0, "rev_yoy": 36.0, "op_yoy": 54.8, "opm_diff": 5.8}, "2024-Q4": {"revenue": 26.36, "op_income": 12.24, "op_margin_pct": 46.43, "is_forecast": 0, "rev_yoy": 34.4, "op_yoy": 50.0, "opm_diff": 4.8}, "2025-Q1": {"revenue": 25.53, "op_income": 12.03, "op_margin_pct": 47.12, "is_forecast": 0, "rev_yoy": 35.3, "op_yoy": 50.4, "opm_diff": 4.7}, "2025-Q2": {"revenue": 28.93, "op_income": 14.07, "op_margin_pct": 48.63, "is_forecast": 0, "rev_yoy": 39.0, "op_yoy": 59.2, "opm_diff": 6.2}, "2025-Q3": {"revenue": 29.90694864048338, "op_income": 15.132916012084591, "op_margin_pct": 50.6, "is_forecast": 0, "rev_yoy": 27.3, "op_yoy": 35.6, "opm_diff": 3.1}, "2025-Q4": {"revenue": 33.73395678813286, "op_income": 18.216336665591744, "op_margin_pct": 54.0, "is_forecast": 0, "rev_yoy": 28.0, "op_yoy": 48.8, "opm_diff": 7.6}, "2026-Q1": {"revenue": 33.5, "op_income": 16.4, "op_margin_pct": 48.96, "is_forecast": 0, "rev_yoy": 31.2, "op_yoy": 36.3, "opm_diff": 1.8}, "2026-Q2": {"revenue": 36.5, "op_income": 18.0, "op_margin_pct": 49.32, "is_forecast": 0, "rev_yoy": 26.2, "op_yoy": 27.9, "opm_diff": 0.7}, "2026-Q3": {"revenue": 39.0, "op_income": 19.3, "op_margin_pct": 49.49, "is_forecast": 1, "rev_yoy": 30.4, "op_yoy": 27.5, "opm_diff": -1.1}, "2026-Q4": {"revenue": 41.5, "op_income": 20.5, "op_margin_pct": 49.4, "is_forecast": 1, "rev_yoy": 23.0, "op_yoy": 12.5, "opm_diff": -4.6}}, "VERTIV": {"2020-Q1": {"revenue": 0.8973, "op_income": -0.0122, "op_margin_pct": -1.36, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 1.0057, "op_income": 0.0706, "op_margin_pct": 7.02, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 1.162, "op_income": 0.0351, "op_margin_pct": 3.02, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 1.3056, "op_income": 0.12, "op_margin_pct": 9.19, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 1.0984, "op_income": 0.0798, "op_margin_pct": 7.27, "is_forecast": 0, "rev_yoy": 22.4, "op_yoy": 754.1, "opm_diff": 8.6}, "2021-Q2": {"revenue": 1.2603, "op_income": 0.1022, "op_margin_pct": 8.11, "is_forecast": 0, "rev_yoy": 25.3, "op_yoy": 44.8, "opm_diff": 1.1}, "2021-Q3": {"revenue": 1.2289, "op_income": 0.0818, "op_margin_pct": 6.66, "is_forecast": 0, "rev_yoy": 5.8, "op_yoy": 133.0, "opm_diff": 3.6}, "2021-Q4": {"revenue": 1.4105, "op_income": -0.0039, "op_margin_pct": -0.28, "is_forecast": 0, "rev_yoy": 8.0, "op_yoy": -103.2, "opm_diff": -9.5}, "2022-Q1": {"revenue": 1.1564, "op_income": -0.0452, "op_margin_pct": -3.91, "is_forecast": 0, "rev_yoy": 5.3, "op_yoy": -156.6, "opm_diff": -11.2}, "2022-Q2": {"revenue": 1.3994, "op_income": 0.0262, "op_margin_pct": 1.87, "is_forecast": 0, "rev_yoy": 11.0, "op_yoy": -74.4, "opm_diff": -6.2}, "2022-Q3": {"revenue": 1.4811, "op_income": 0.08, "op_margin_pct": 5.4, "is_forecast": 0, "rev_yoy": 20.5, "op_yoy": -2.2, "opm_diff": -1.3}, "2022-Q4": {"revenue": 1.6546, "op_income": 0.1624, "op_margin_pct": 9.82, "is_forecast": 0, "rev_yoy": 17.3, "op_yoy": 4264.1, "opm_diff": 10.1}, "2023-Q1": {"revenue": 1.5211, "op_income": 0.1303, "op_margin_pct": 8.57, "is_forecast": 0, "rev_yoy": 31.5, "op_yoy": 388.3, "opm_diff": 12.5}, "2023-Q2": {"revenue": 1.7341, "op_income": 0.2058, "op_margin_pct": 11.87, "is_forecast": 0, "rev_yoy": 23.9, "op_yoy": 685.5, "opm_diff": 10.0}, "2023-Q3": {"revenue": 1.7426, "op_income": 0.2509, "op_margin_pct": 14.4, "is_forecast": 0, "rev_yoy": 17.7, "op_yoy": 213.6, "opm_diff": 9.0}, "2023-Q4": {"revenue": 1.8654, "op_income": 0.2852, "op_margin_pct": 15.29, "is_forecast": 0, "rev_yoy": 12.7, "op_yoy": 75.6, "opm_diff": 5.5}, "2024-Q1": {"revenue": 1.6391, "op_income": 0.2026, "op_margin_pct": 12.36, "is_forecast": 0, "rev_yoy": 7.8, "op_yoy": 55.5, "opm_diff": 3.8}, "2024-Q2": {"revenue": 1.9528, "op_income": 0.336, "op_margin_pct": 17.21, "is_forecast": 0, "rev_yoy": 12.6, "op_yoy": 63.3, "opm_diff": 5.3}, "2024-Q3": {"revenue": 2.0735, "op_income": 0.3716, "op_margin_pct": 17.92, "is_forecast": 0, "rev_yoy": 19.0, "op_yoy": 48.1, "opm_diff": 3.5}, "2024-Q4": {"revenue": 2.3464, "op_income": 0.4572, "op_margin_pct": 19.49, "is_forecast": 0, "rev_yoy": 25.8, "op_yoy": 60.3, "opm_diff": 4.2}, "2025-Q1": {"revenue": 2.036, "op_income": 0.2907, "op_margin_pct": 14.28, "is_forecast": 0, "rev_yoy": 24.2, "op_yoy": 43.5, "opm_diff": 1.9}, "2025-Q2": {"revenue": 2.6381, "op_income": 0.4424, "op_margin_pct": 16.77, "is_forecast": 0, "rev_yoy": 35.1, "op_yoy": 31.7, "opm_diff": -0.4}, "2025-Q3": {"revenue": 2.6758, "op_income": 0.5167, "op_margin_pct": 19.31, "is_forecast": 0, "rev_yoy": 29.0, "op_yoy": 39.0, "opm_diff": 1.4}, "2025-Q4": {"revenue": 2.88, "op_income": 0.5799, "op_margin_pct": 20.14, "is_forecast": 0, "rev_yoy": 22.7, "op_yoy": 26.8, "opm_diff": 0.7}, "2026-Q1": {"revenue": 2.6495, "op_income": 0.4401, "op_margin_pct": 16.61, "is_forecast": 0, "rev_yoy": 30.1, "op_yoy": 51.4, "opm_diff": 2.3}, "2026-Q2": {"revenue": 3.2743, "op_income": 0.6379, "op_margin_pct": 19.48, "is_forecast": 0, "rev_yoy": 24.1, "op_yoy": 44.2, "opm_diff": 2.7}}, "WDC": {"2020-Q1": {"revenue": 3.922, "op_income": 0.07, "op_margin_pct": 1.78, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q2": {"revenue": 4.234, "op_income": 0.05, "op_margin_pct": 1.18, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q3": {"revenue": 4.175, "op_income": 0.153, "op_margin_pct": 3.66, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2020-Q4": {"revenue": 4.287, "op_income": 0.261, "op_margin_pct": 6.09, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2021-Q1": {"revenue": 5.051, "op_income": 0.778, "op_margin_pct": 15.4, "is_forecast": 0, "rev_yoy": 28.8, "op_yoy": 1011.4, "opm_diff": 13.6}, "2021-Q2": {"revenue": 4.833, "op_income": 0.727, "op_margin_pct": 15.04, "is_forecast": 0, "rev_yoy": 14.1, "op_yoy": 1354.0, "opm_diff": 13.9}, "2021-Q3": {"revenue": 4.137, "op_income": 0.317, "op_margin_pct": 7.66, "is_forecast": 0, "rev_yoy": -0.9, "op_yoy": 107.2, "opm_diff": 4.0}, "2021-Q4": {"revenue": 4.92, "op_income": 0.675, "op_margin_pct": 13.72, "is_forecast": 0, "rev_yoy": 14.8, "op_yoy": 158.6, "opm_diff": 7.6}, "2022-Q1": {"revenue": 3.736, "op_income": 0.158, "op_margin_pct": 4.23, "is_forecast": 0, "rev_yoy": -26.0, "op_yoy": -79.7, "opm_diff": -11.2}, "2022-Q2": {"revenue": 3.107, "op_income": -0.321, "op_margin_pct": -10.33, "is_forecast": 0, "rev_yoy": -35.7, "op_yoy": -144.2, "opm_diff": -25.4}, "2022-Q3": {"revenue": 4.381, "op_income": 0.324, "op_margin_pct": 7.4, "is_forecast": 0, "rev_yoy": 5.9, "op_yoy": 2.2, "opm_diff": -0.3}, "2022-Q4": {"revenue": 4.528, "op_income": 0.562, "op_margin_pct": 12.41, "is_forecast": 0, "rev_yoy": -8.0, "op_yoy": -16.7, "opm_diff": -1.3}, "2023-Q1": {"revenue": 2.75, "op_income": -0.596, "op_margin_pct": -21.67, "is_forecast": 0, "rev_yoy": -26.4, "op_yoy": -477.2, "opm_diff": -25.9}, "2023-Q2": {"revenue": 3.032, "op_income": -0.21, "op_margin_pct": -6.93, "is_forecast": 0, "rev_yoy": -2.4, "op_yoy": 34.6, "opm_diff": 3.4}, "2023-Q3": {"revenue": 2.803, "op_income": -0.472, "op_margin_pct": -16.84, "is_forecast": 0, "rev_yoy": -36.0, "op_yoy": -245.7, "opm_diff": -24.2}, "2024-Q1": {"revenue": 2.212, "op_income": 0.334, "op_margin_pct": 15.1, "is_forecast": 0, "rev_yoy": -19.6, "op_yoy": 156.0, "opm_diff": 36.8}, "2024-Q2": {"revenue": 2.409, "op_income": 0.56, "op_margin_pct": 23.25, "is_forecast": 0, "rev_yoy": -20.5, "op_yoy": 366.7, "opm_diff": 30.2}, "2024-Q3": {"revenue": 1.752, "op_income": 0.094, "op_margin_pct": 5.37, "is_forecast": 0, "rev_yoy": -37.5, "op_yoy": 119.9, "opm_diff": 22.2}, "2025-Q1": {"revenue": 2.818, "op_income": 0.792, "op_margin_pct": 28.11, "is_forecast": 0, "rev_yoy": 27.4, "op_yoy": 137.1, "opm_diff": 13.0}, "2025-Q3": {"revenue": 2.294, "op_income": 0.76, "op_margin_pct": 33.13, "is_forecast": 0, "rev_yoy": 30.9, "op_yoy": 708.5, "opm_diff": 27.8}, "2025-Q4": {"revenue": 2.605, "op_income": 0.68, "op_margin_pct": 26.1, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}, "2026-Q2": {"revenue": 3.017, "op_income": 0.908, "op_margin_pct": 30.1, "is_forecast": 0, "rev_yoy": null, "op_yoy": null, "opm_diff": null}}};
+
+    // State
+    let selectedEntities = new Set(["NVIDIA", "TSMC", "SK_HYNIX", "GOOGLE", "VERTIV"]);
+    let currentMetric = "revenue"; // "revenue" | "op_income" | "op_margin_pct"
+    let currentMode = "absolute";   // "absolute" | "index" | "yoy"
+    let basePeriod = "2023-Q1";
+    let chartInstance = null;
+
+    const PRESETS = {
+      "core": ["NVIDIA", "TSMC", "SK_HYNIX", "GOOGLE", "VERTIV"],
+      "hyperscalers": ["GOOGLE", "AMAZON", "MICROSOFT", "META", "ORACLE"],
+      "memory": ["SK_HYNIX", "SAMSUNG", "MICRON"],
+      "compute": ["NVIDIA", "BROADCOM", "AMD", "INTEL"],
+      "foundry": ["TSMC", "APPLIED_MATERIALS", "LAM_RESEARCH", "KLA"],
+      "power": ["VERTIV", "EATON", "GE_VERNOVA"]
+    };
+
+    function initSelector() {
+      const container = document.getElementById("entity-selector-list");
+      container.innerHTML = "";
+
+      const layerGroups = {};
+      ENTITIES.forEach(e => {
+        if (!layerGroups[e.layer]) layerGroups[e.layer] = [];
+        layerGroups[e.layer].push(e);
+      });
+
+      Object.keys(layerGroups).forEach(layer => {
+        const group = layerGroups[layer];
+        const sec = document.createElement("div");
+
+        const first = group[0];
+        sec.innerHTML = `
+          <div class="layer-section-title">
+            <span class="layer-indicator" style="background:${first.layer_color};"></span>
+            ${first.layer_name_ko}
+          </div>
+          <div class="entity-chips-grid" id="chips-${layer}"></div>
+        `;
+        container.appendChild(sec);
+
+        const chipsGrid = sec.querySelector(`#chips-${layer}`);
+        group.forEach(e => {
+          const chip = document.createElement("div");
+          chip.className = "entity-chip" + (selectedEntities.has(e.entity_id) ? " selected" : "");
+          chip.id = "chip-" + e.entity_id;
+          chip.innerHTML = `
+            <span class="chip-dot" style="background:${e.color};"></span>
+            <span>${e.name_ko}</span>
+          `;
+          chip.onclick = () => toggleEntity(e.entity_id);
+          chipsGrid.appendChild(chip);
+        });
+      });
+    }
+
+    function toggleEntity(eid) {
+      if (selectedEntities.has(eid)) {
+        if (selectedEntities.size > 1) selectedEntities.delete(eid);
+      } else {
+        selectedEntities.add(eid);
+      }
+      updateSelectionUI();
+      renderChart();
+      renderTable();
+    }
+
+    function updateSelectionUI() {
+      ENTITIES.forEach(e => {
+        const chip = document.getElementById("chip-" + e.entity_id);
+        if (chip) {
+          chip.classList.toggle("selected", selectedEntities.has(e.entity_id));
+        }
+      });
+      document.getElementById("selected-count").innerText = selectedEntities.size;
+
+      Object.keys(PRESETS).forEach(pk => {
+        const pbtn = document.getElementById("preset-" + pk);
+        if (pbtn) {
+          const isMatch = PRESETS[pk].length === selectedEntities.size &&
+                          PRESETS[pk].every(x => selectedEntities.has(x));
+          pbtn.classList.toggle("active", isMatch);
+        }
+      });
+    }
+
+    function applyPreset(presetKey) {
+      const list = PRESETS[presetKey];
+      if (!list) return;
+      selectedEntities = new Set(list);
+      updateSelectionUI();
+      renderChart();
+      renderTable();
+    }
+
+    function clearAllSelection() {
+      selectedEntities = new Set(["NVIDIA"]);
+      updateSelectionUI();
+      renderChart();
+      renderTable();
+    }
+
+    function setMetric(metric) {
+      currentMetric = metric;
+
+      document.getElementById("metric-revenue").classList.toggle("active", metric === "revenue");
+      document.getElementById("metric-op_income").classList.toggle("active", metric === "op_income");
+      document.getElementById("metric-op_margin_pct").classList.toggle("active", metric === "op_margin_pct");
+
+      // Set button colors
+      const btnOp = document.getElementById("metric-op_income");
+      btnOp.classList.toggle("active-accent", metric === "op_income");
+      const btnOpm = document.getElementById("metric-op_margin_pct");
+      btnOpm.classList.toggle("active-purple", metric === "op_margin_pct");
+
+      // Mode adjustments for OPM
+      const btnIndex = document.getElementById("mode-index");
+      if (metric === "op_margin_pct") {
+        btnIndex.style.display = "none";
+        document.getElementById("mode-absolute").innerText = "마진율 (%)";
+        document.getElementById("mode-yoy").innerText = "YoY 변동 (%p)";
+        if (currentMode === "index") currentMode = "absolute";
+      } else {
+        btnIndex.style.display = "block";
+        document.getElementById("mode-absolute").innerText = "절대 수치 ($B)";
+        document.getElementById("mode-yoy").innerText = "YoY 성장률 (%)";
+      }
+
+      setMode(currentMode);
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById("mode-absolute").classList.toggle("active", mode === "absolute");
+      document.getElementById("mode-index").classList.toggle("active", mode === "index");
+      document.getElementById("mode-yoy").classList.toggle("active", mode === "yoy");
+
+      document.getElementById("index-base-control").style.display = (mode === "index" ? "flex" : "none");
+      renderChart();
+      renderTable();
+    }
+
+    function onBasePeriodChange() {
+      basePeriod = document.getElementById("base-period-select").value;
+      if (currentMode === "index") {
+        renderChart();
+        renderTable();
+      }
+    }
+
+    function getEntityValue(eid, periodStr) {
+      const pdata = EARNINGS[eid] ? EARNINGS[eid][periodStr] : null;
+      if (!pdata) return null;
+
+      if (currentMetric === "revenue") {
+        if (pdata.revenue == null) return null;
+        if (currentMode === "absolute") return pdata.revenue;
+        if (currentMode === "yoy") return pdata.rev_yoy;
+        if (currentMode === "index") {
+          const baseData = EARNINGS[eid] ? EARNINGS[eid][basePeriod] : null;
+          if (!baseData || !baseData.revenue || baseData.revenue <= 0) return null;
+          return ((pdata.revenue / baseData.revenue) * 100);
+        }
+      } else if (currentMetric === "op_income") {
+        if (pdata.op_income == null) return null;
+        if (currentMode === "absolute") return pdata.op_income;
+        if (currentMode === "yoy") return pdata.op_yoy;
+        if (currentMode === "index") {
+          const baseData = EARNINGS[eid] ? EARNINGS[eid][basePeriod] : null;
+          if (!baseData || !baseData.op_income || baseData.op_income <= 0) return null;
+          return ((pdata.op_income / baseData.op_income) * 100);
+        }
+      } else if (currentMetric === "op_margin_pct") {
+        if (pdata.op_margin_pct == null) return null;
+        if (currentMode === "absolute") return pdata.op_margin_pct;
+        if (currentMode === "yoy") return pdata.opm_diff;
+      }
+      return null;
+    }
+
+    function renderChart() {
+      const labels = PERIODS.map(p => p.period);
+      const datasets = [];
+
+      selectedEntities.forEach(eid => {
+        const entityMeta = ENTITIES.find(e => e.entity_id === eid);
+        if (!entityMeta) return;
+
+        const dataPoints = labels.map(p => getEntityValue(eid, p));
+
+        datasets.push({
+          label: `${entityMeta.name_ko} (${entityMeta.ticker || entityMeta.entity_id})`,
+          data: dataPoints,
+          borderColor: entityMeta.color,
+          backgroundColor: entityMeta.color + "22",
+          borderWidth: 2.5,
+          pointRadius: (ctx) => {
+            const p = PERIODS[ctx.dataIndex];
+            return p && p.is_forecast === 1 ? 4 : 3;
+          },
+          pointHoverRadius: 6,
+          pointBackgroundColor: entityMeta.color,
+          tension: 0.25,
+          spanGaps: true,
+          segment: {
+            borderDash: ctx => {
+              const pIndex = ctx.p1DataIndex;
+              const p = PERIODS[pIndex];
+              return p && p.is_forecast === 1 ? [6, 6] : undefined;
+            }
+          }
+        });
+      });
+
+      let yTitle = "분기 매출액 ($B)";
+      if (currentMetric === "op_income") {
+        yTitle = currentMode === "index" ? `영업이익 성장 지수 (${basePeriod}=100)` :
+                 currentMode === "yoy" ? "영업이익 YoY 성장률 (%)" : "분기 영업이익 ($B)";
+      } else if (currentMetric === "op_margin_pct") {
+        yTitle = currentMode === "yoy" ? "영업이익률 YoY 변동 (%p)" : "영업이익률 (OPM %)";
+      } else {
+        yTitle = currentMode === "index" ? `매출 성장 지수 (${basePeriod}=100)` :
+                 currentMode === "yoy" ? "매출 YoY 성장률 (%)" : "분기 매출액 ($B)";
+      }
+
+      if (chartInstance) chartInstance.destroy();
+
+      const ctx = document.getElementById("overlay-chart").getContext("2d");
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                color: "#d1d5db",
+                usePointStyle: true,
+                pointStyle: "circle",
+                padding: 16,
+                font: { family: 'Inter', size: 12, weight: '600' }
+              }
+            },
+            tooltip: {
+              backgroundColor: "rgba(17, 24, 39, 0.95)",
+              titleColor: "#fff",
+              bodyColor: "#d1d5db",
+              borderColor: "rgba(255,255,255,0.15)",
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                title: function(items) {
+                  const period = items[0].label;
+                  const isF = PERIODS.find(p => p.period === period)?.is_forecast === 1;
+                  return `${period} ${isF ? ' [전망치 가이던스]' : ' [확정 실적]'}`;
+                },
+                label: function(ctx) {
+                  const val = ctx.parsed.y;
+                  if (val == null) return null;
+                  const eid = Array.from(selectedEntities)[ctx.datasetIndex];
+                  const pdata = EARNINGS[eid] ? EARNINGS[eid][ctx.label] : null;
+
+                  let extra = "";
+                  if (pdata && pdata.revenue != null && pdata.op_income != null) {
+                    extra = ` | 매출:$${pdata.revenue.toFixed(1)}B, 영업익:$${pdata.op_income.toFixed(1)}B, OPM:${pdata.op_margin_pct != null ? pdata.op_margin_pct.toFixed(1) + '%' : '-'}`;
+                  }
+
+                  if (currentMetric === "revenue") {
+                    if (currentMode === "absolute") return ` ${ctx.dataset.label}: $${val.toFixed(2)}B${extra}`;
+                    if (currentMode === "index") return ` ${ctx.dataset.label}: ${val.toFixed(1)} pt${extra}`;
+                    if (currentMode === "yoy") return ` ${ctx.dataset.label}: ${val > 0 ? '+' : ''}${val.toFixed(1)}%${extra}`;
+                  } else if (currentMetric === "op_income") {
+                    if (currentMode === "absolute") return ` ${ctx.dataset.label}: $${val.toFixed(2)}B 영업익${extra}`;
+                    if (currentMode === "index") return ` ${ctx.dataset.label}: ${val.toFixed(1)} pt${extra}`;
+                    if (currentMode === "yoy") return ` ${ctx.dataset.label}: ${val > 0 ? '+' : ''}${val.toFixed(1)}%${extra}`;
+                  } else if (currentMetric === "op_margin_pct") {
+                    if (currentMode === "absolute") return ` ${ctx.dataset.label}: ${val.toFixed(1)}% OPM${extra}`;
+                    if (currentMode === "yoy") return ` ${ctx.dataset.label}: ${val > 0 ? '+' : ''}${val.toFixed(1)}%p${extra}`;
+                  }
+                  return ` ${ctx.dataset.label}: ${val}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: {
+                color: (ctx) => {
+                  const p = PERIODS[ctx.index];
+                  return p && p.is_forecast === 1 ? "#f59e0b" : "#9ca3af";
+                },
+                font: (ctx) => ({
+                  family: 'Inter',
+                  size: 11,
+                  weight: PERIODS[ctx.index]?.is_forecast === 1 ? '700' : '400'
+                })
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: yTitle,
+                color: "#9ca3af",
+                font: { family: 'Inter', size: 12, weight: '600' }
+              },
+              grid: { color: "rgba(255, 255, 255, 0.06)" },
+              ticks: {
+                color: "#9ca3af",
+                font: { family: 'JetBrains Mono', size: 11 },
+                callback: function(val) {
+                  if (currentMetric === "op_margin_pct") {
+                    return currentMode === "yoy" ? val + "%p" : val + "%";
+                  }
+                  if (currentMode === "absolute") return "$" + val + "B";
+                  if (currentMode === "index") return val + "p";
+                  if (currentMode === "yoy") return val + "%";
+                  return val;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      const thead = document.getElementById("table-head-row");
+      const tbody = document.getElementById("table-body");
+      const title = document.getElementById("table-dynamic-title");
+
+      let metricName = "매출액 ($B)";
+      if (currentMetric === "op_income") metricName = "영업이익 ($B)";
+      if (currentMetric === "op_margin_pct") metricName = "영업이익률 (OPM %)";
+      title.innerText = `📋 선택 기업 분기별 [${metricName}] 데이터 테이블`;
+
+      thead.innerHTML = '<th class="fixed-col">기업명</th><th style="text-align:center;">레이어</th>';
+      PERIODS.forEach(p => {
+        const th = document.createElement("th");
+        th.innerText = p.period;
+        if (p.is_forecast === 1) {
+          th.style.color = "#f59e0b";
+          th.title = "전망치 구간";
+        }
+        thead.appendChild(th);
+      });
+
+      tbody.innerHTML = "";
+      selectedEntities.forEach(eid => {
+        const entityMeta = ENTITIES.find(e => e.entity_id === eid);
+        if (!entityMeta) return;
+
+        const tr = document.createElement("tr");
+        let rowHtml = `
+          <td class="fixed-col">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${entityMeta.color}; margin-right:6px;"></span>
+            ${entityMeta.name_ko}
+          </td>
+          <td style="text-align:center; font-size:0.75rem; color:${entityMeta.layer_color};">
+            ${entityMeta.layer_name_ko.split(" ")[0]}
+          </td>
+        `;
+
+        PERIODS.forEach(p => {
+          const val = getEntityValue(eid, p.period);
+          let formatted = "-";
+          if (val != null) {
+            if (currentMetric === "op_margin_pct") {
+              formatted = currentMode === "yoy" ? `${val > 0 ? '+' : ''}${val.toFixed(1)}%p` : `${val.toFixed(1)}%`;
+            } else if (currentMode === "absolute") {
+              formatted = `$${val.toFixed(1)}B`;
+            } else if (currentMode === "index") {
+              formatted = `${val.toFixed(1)}`;
+            } else if (currentMode === "yoy") {
+              formatted = `${val > 0 ? '+' : ''}${val.toFixed(1)}%`;
+            }
+          }
+          const fClass = p.is_forecast === 1 ? ' class="forecast-col"' : '';
+          rowHtml += `<td${fClass} style="font-family:'JetBrains Mono';">${formatted}</td>`;
+        });
+
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initSelector();
+      renderChart();
+      renderTable();
+    });
+  </script>
+</body>
+</html>

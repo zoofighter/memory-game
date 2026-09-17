@@ -194,33 +194,50 @@ ORDER BY e.layer, e.entity_id, f.period, f.metric;
 -- ============================================================
 INSERT INTO entities (entity_id, name_en, name_ko, layer, country, ticker, is_public, description) VALUES
 -- L1: AI 프론티어 랩
-('ANTHROPIC',  'Anthropic',           '앤트로픽',     'L1_AI_LAB',       'US', NULL,   0, 'Claude AI 개발사, 구글·아마존 투자'),
-('OPENAI',     'OpenAI',              '오픈AI',       'L1_AI_LAB',       'US', NULL,   0, 'GPT/ChatGPT 개발사, MS 투자'),
--- L2: 하이퍼스케일러
-('GOOGLE',     'Alphabet/Google',     '구글',         'L2_HYPERSCALER',  'US', 'GOOGL', 1, 'GCP + Gemini + TPU'),
-('AMAZON',     'Amazon/AWS',          '아마존',       'L2_HYPERSCALER',  'US', 'AMZN',  1, 'AWS + Trainium + Bedrock'),
-('MICROSOFT',  'Microsoft',           '마이크로소프트', 'L2_HYPERSCALER', 'US', 'MSFT',  1, 'Azure + OpenAI 파트너'),
-('ORACLE',     'Oracle',              '오라클',       'L2_HYPERSCALER',  'US', 'ORCL',  1, 'OCI + AI 인프라 확장'),
-('META',       'Meta Platforms',      '메타',         'L2_HYPERSCALER',  'US', 'META',  1, 'Llama 오픈소스 + MTIA ASIC'),
+('ANTHROPIC',          'Anthropic',           '앤트로픽',         'L1_AI_LAB',       'US', NULL,   0, 'Claude AI 개발사, 구글·아마존 투자'),
+('OPENAI',             'OpenAI',              '오픈AI',           'L1_AI_LAB',       'US', NULL,   0, 'GPT/ChatGPT 개발사, MS 투자'),
+-- L2: 하이퍼스케일러 & 네오클라우드
+('GOOGLE',             'Alphabet/Google',     '구글',             'L2_HYPERSCALER',  'US', 'GOOGL', 1, 'GCP + Gemini + TPU'),
+('AMAZON',             'Amazon/AWS',          '아마존',           'L2_HYPERSCALER',  'US', 'AMZN',  1, 'AWS + Trainium + Bedrock'),
+('MICROSOFT',          'Microsoft',           '마이크로소프트',   'L2_HYPERSCALER',  'US', 'MSFT',  1, 'Azure + OpenAI 파트너'),
+('ORACLE',             'Oracle',              '오라클',           'L2_HYPERSCALER',  'US', 'ORCL',  1, 'OCI + AI 인프라 확장'),
+('META',               'Meta Platforms',      '메타',             'L2_HYPERSCALER',  'US', 'META',  1, 'Llama 오픈소스 + MTIA ASIC'),
+('COREWEAVE',          'CoreWeave',           '코어위브',         'L2_HYPERSCALER',  'US', NULL,    0, '엔비디아 전략 투자 GPU 특화 네오클라우드, 앤트로픽 $518B 공급 파트너'),
+('NEBIUS',             'Nebius Group',        '네비우스',         'L2_HYPERSCALER',  'NL', 'NBIS',  1, '나스닥 상장 대규모 AI 인프라 및 GPU 네오클라우드'),
 -- L3: 컴퓨팅 & 가속기
-('NVIDIA',     'NVIDIA',              '엔비디아',     'L3_COMPUTE',      'US', 'NVDA',  1, 'GPU + CUDA + DGX Cloud'),
-('AMD',        'AMD',                 'AMD',          'L3_COMPUTE',      'US', 'AMD',   1, 'MI300/MI400 GPU + EPYC CPU'),
-('BROADCOM',   'Broadcom',            '브로드컴',     'L3_COMPUTE',      'US', 'AVGO',  1, 'AI ASIC 설계 + 네트워킹'),
--- L4: 파운드리 & 장비
-('TSMC',       'TSMC',                'TSMC',         'L4_FOUNDRY',      'TW', 'TSM',   1, 'N2/A16 선단공정 + CoWoS'),
-('ASML',       'ASML',                'ASML',         'L4_FOUNDRY',      'NL', 'ASML',  1, 'EUV/High-NA EUV 독점'),
+('NVIDIA',             'NVIDIA',              '엔비디아',         'L3_COMPUTE',      'US', 'NVDA',  1, 'GPU + CUDA + DGX Cloud'),
+('AMD',                'AMD',                 'AMD',              'L3_COMPUTE',      'US', 'AMD',   1, 'MI300/MI400 GPU + EPYC CPU'),
+('BROADCOM',           'Broadcom',            '브로드컴',         'L3_COMPUTE',      'US', 'AVGO',  1, 'AI ASIC 설계 + 네트워킹'),
+('ARM',                'Arm Holdings',        'Arm',              'L3_COMPUTE',      'UK', 'ARM',   1, '서버 CPU 및 AI ASIC 아키텍처 라이선스'),
+('INTEL',              'Intel',               '인텔',             'L3_COMPUTE',      'US', 'INTC',  1, '데이터센터 x86 제온 CPU 및 파운드리'),
+-- L4: 파운드리, 장비 & 패키징
+('TSMC',               'TSMC',                'TSMC',             'L4_FOUNDRY',      'TW', 'TSM',   1, 'N2/A16 선단공정 + CoWoS'),
+('ASML',               'ASML',                'ASML',             'L4_FOUNDRY',      'NL', 'ASML',  1, 'EUV/High-NA EUV 독점'),
+('APPLIED_MATERIALS',  'Applied Materials',   '어플라이드',       'L4_FOUNDRY',      'US', 'AMAT',  1, '반도체 증착·배선 및 첨단 패키징 장비 1위'),
+('LAM_RESEARCH',       'Lam Research',        '램리서치',         'L4_FOUNDRY',      'US', 'LRCX',  1, 'HBM 3D 적층 및 DRAM 식각 장비 독점'),
+('KLA',                'KLA Corporation',     'KLA',              'L4_FOUNDRY',      'US', 'KLAC',  1, '선단공정 및 패키징 수율 검사·계측 장비'),
+('ASE',                'ASE Technology',      'ASE',              'L4_FOUNDRY',      'TW', 'ASX',   1, '글로벌 1위 OSAT, CoWoS 패키징 외주 파트너'),
+('AMKOR',              'Amkor Technology',    '앰코',             'L4_FOUNDRY',      'US', 'AMKR',  1, '미국 애리조나 첨단 2.5D 패키징 협력사'),
 -- L5: 메모리 & 스토리지
-('SAMSUNG',    'Samsung Electronics', '삼성전자',     'L5_MEMORY',       'KR', '005930', 1, 'DRAM 1위 + HBM + 파운드리'),
-('SK_HYNIX',   'SK hynix',            'SK하이닉스',   'L5_MEMORY',       'KR', '000660', 1, 'HBM 세계 1위 (점유율 50%+)'),
-('MICRON',     'Micron Technology',   '마이크론',     'L5_MEMORY',       'US', 'MU',    1, 'HBM 3위 + 미국 유일 메모리'),
-('WDC',        'Western Digital',     '샌디스크/WDC', 'L5_MEMORY',       'US', 'WDC',   1, 'NAND + SSD'),
--- L6: 광통신
-('MARVELL',    'Marvell Technology',  '마벨',         'L6_OPTICAL',      'US', 'MRVL',  1, 'AI DC 네트워킹 + 커스텀 ASIC'),
-('COHERENT',   'Coherent/Novalit',    '노발리',       'L6_OPTICAL',      'US', 'COHR',  1, '광트랜시버 800G/1.6T'),
+('SAMSUNG',            'Samsung Electronics', '삼성전자',         'L5_MEMORY',       'KR', '005930', 1, 'DRAM 1위 + HBM + 파운드리'),
+('SK_HYNIX',           'SK hynix',            'SK하이닉스',       'L5_MEMORY',       'KR', '000660', 1, 'HBM 세계 1위 (점유율 50%+)'),
+('MICRON',             'Micron Technology',   '마이크론',         'L5_MEMORY',       'US', 'MU',    1, 'HBM 3위 + 미국 유일 메모리'),
+('WDC',                'Western Digital',     '샌디스크/WDC',     'L5_MEMORY',       'US', 'WDC',   1, 'NAND + SSD'),
+('KIOXIA',             'Kioxia Holdings',     '키옥시아',         'L5_MEMORY',       'JP', '285A',  1, 'NAND 플래시 및 AI 추론용 eSSD'),
+-- L6: 광통신 & 네트워킹
+('MARVELL',            'Marvell Technology',  '마벨',             'L6_OPTICAL',      'US', 'MRVL',  1, 'AI DC 네트워킹 + 커스텀 ASIC'),
+('COHERENT',           'Coherent/Novalit',    '노발리',           'L6_OPTICAL',      'US', 'COHR',  1, '광트랜시버 800G/1.6T'),
+('ARISTA',             'Arista Networks',     '아리스타',         'L6_OPTICAL',      'US', 'ANET',  1, 'AI 클러스터 800G/1.6T 고속 Ethernet 스위치'),
 -- L7: 인프라 & 특수
-('SPACEX',     'SpaceX',              '스페이스X',    'L7_INFRA',        'US', NULL,    0, 'Starlink + 위성 인프라'),
-('SOFTBANK',   'SoftBank Group',      '소프트뱅크',   'L7_INFRA',        'JP', '9984',  1, 'ARM + AI 투자 펀드'),
-('APPLE',      'Apple',               '애플',         'L7_INFRA',        'US', 'AAPL',  1, 'TSMC 최대 고객 + 온디바이스 AI');
+('SPACEX',             'SpaceX / xAI',        '스페이스X / xAI',  'L7_INFRA',        'US', NULL,    0, 'Starlink 위성망 + xAI Colossus 100k GPU 슈퍼컴퓨터 & 전력 인프라'),
+('SOFTBANK',           'SoftBank Group',      '소프트뱅크',       'L7_INFRA',        'JP', '9984',  1, 'ARM + AI 투자 펀드'),
+('APPLE',              'Apple',               '애플',             'L7_INFRA',        'US', 'AAPL',  1, 'TSMC 최대 고객 + 온디바이스 AI'),
+-- L8: 전력 & 에너지 인프라
+('VERTIV',             'Vertiv Holdings',     '버티브',           'L8_POWER',        'US', 'VRT',   1, 'AI 데이터센터 고밀도 액체냉각 및 배전 인프라 1위'),
+('EATON',              'Eaton Corporation',   '이튼',             'L8_POWER',        'US', 'ETN',   1, '데이터센터 배전, 변압기, 고전압 UPS 및 전력 솔루션'),
+('GE_VERNOVA',         'GE Vernova',          'GE 버노바',        'L8_POWER',        'US', 'GEV',   1, '데이터센터 가스터빈, 독립 발전 및 전력망 솔루션'),
+('SCHNEIDER',          'Schneider Electric',  '슈나이더',         'L8_POWER',        'FR', 'SU',    1, '데이터센터 전력 분배, 냉각 및 인프라 자동화');
+
 
 -- ============================================================
 -- SEED DATA: contracts (핵심 계약 10건)
@@ -299,7 +316,25 @@ INSERT INTO entity_aliases (alias, entity_id) VALUES
 ('SK하이닉스', 'SK_HYNIX'), ('하이닉스', 'SK_HYNIX'),
 ('마이크론', 'MICRON'), ('MU', 'MICRON'),
 ('브로드컴', 'BROADCOM'), ('AVGO', 'BROADCOM'),
-('메타', 'META'), ('페이스북', 'META');
+('메타', 'META'), ('페이스북', 'META'),
+-- xAI -> SPACEX 매핑
+('xAI', 'SPACEX'), ('XAI', 'SPACEX'), ('xai', 'SPACEX'), ('엑스에이아이', 'SPACEX'), ('Colossus', 'SPACEX'), ('콜로서스', 'SPACEX'), ('Grok', 'SPACEX'),
+-- 신규 확장 기업
+('코어위브', 'COREWEAVE'), ('CoreWeave', 'COREWEAVE'), ('CRWV', 'COREWEAVE'),
+('네비우스', 'NEBIUS'), ('Nebius', 'NEBIUS'), ('NBIS', 'NEBIUS'),
+('Arm', 'ARM'), ('ARM', 'ARM'), ('암', 'ARM'),
+('인텔', 'INTEL'), ('Intel', 'INTEL'), ('INTC', 'INTEL'),
+('어플라이드', 'APPLIED_MATERIALS'), ('AMAT', 'APPLIED_MATERIALS'), ('Applied Materials', 'APPLIED_MATERIALS'),
+('램리서치', 'LAM_RESEARCH'), ('Lam Research', 'LAM_RESEARCH'), ('LRCX', 'LAM_RESEARCH'),
+('KLA', 'KLA'), ('KLAC', 'KLA'),
+('ASE', 'ASE'), ('일월광', 'ASE'),
+('앰코', 'AMKOR'), ('Amkor', 'AMKOR'), ('AMKR', 'AMKOR'),
+('키옥시아', 'KIOXIA'), ('Kioxia', 'KIOXIA'),
+('아리스타', 'ARISTA'), ('Arista', 'ARISTA'), ('ANET', 'ARISTA'),
+('버티브', 'VERTIV'), ('Vertiv', 'VERTIV'), ('VRT', 'VERTIV'),
+('이튼', 'EATON'), ('Eaton', 'EATON'), ('ETN', 'EATON'),
+('GE버노바', 'GE_VERNOVA'), ('GE Vernova', 'GE_VERNOVA'), ('GEV', 'GE_VERNOVA'),
+('슈나이더', 'SCHNEIDER'), ('Schneider', 'SCHNEIDER');
 
 -- 완료 확인
 SELECT '=== DB 초기화 완료 ===' AS status;

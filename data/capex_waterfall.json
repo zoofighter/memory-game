@@ -1,0 +1,503 @@
+{
+  "generated_at": "2026-09-17",
+  "waterfall_nodes": [
+    {
+      "id": "capex_total",
+      "label": "하이퍼스케일러 Capex",
+      "layer": "L2_HYPERSCALER",
+      "pct": 100,
+      "depth": 0,
+      "source": "input",
+      "children": [
+        "L3_COMPUTE",
+        "L6_OPTICAL",
+        "L7L8_INFRA",
+        "L4_EQUIPMENT",
+        "OTHER"
+      ]
+    },
+    {
+      "id": "L3_COMPUTE",
+      "label": "L3 컴퓨팅 (GPU/ASIC)",
+      "layer": "L3_COMPUTE",
+      "pct": 45,
+      "depth": 1,
+      "source": "industry_estimate",
+      "children": [
+        "L4_FOUNDRY_WAFER",
+        "L5_MEMORY_HBM"
+      ],
+      "contracts_flow": [
+        {
+          "id": "CON-GOOG-NVDA-GPU",
+          "buyer": "Alphabet/Google",
+          "seller": "NVIDIA",
+          "value_b": 30.0,
+          "type": "SUPPLY",
+          "desc": "구글, 엔비디아 Blackwell GPU 대량 공급 계약"
+        },
+        {
+          "id": "CON-META-NVDA-GPU",
+          "buyer": "Meta Platforms",
+          "seller": "NVIDIA",
+          "value_b": 25.0,
+          "type": "SUPPLY",
+          "desc": "메타, 엔비디아 GPU 대량 수주 (Llama 학습용)"
+        },
+        {
+          "id": "CON-META-BRCM-ASIC",
+          "buyer": "Meta Platforms",
+          "seller": "Broadcom",
+          "value_b": 10.0,
+          "type": "SUPPLY",
+          "desc": "메타, 브로드컴 MTIA ASIC 공동 개발"
+        }
+      ]
+    },
+    {
+      "id": "L4_FOUNDRY_WAFER",
+      "label": "→ L4 파운드리 (웨이퍼)",
+      "layer": "L4_FOUNDRY",
+      "pct": 27.9,
+      "parent_pct": 62,
+      "depth": 2,
+      "source": "industry_estimate",
+      "children": [],
+      "contracts_flow": [
+        {
+          "id": "CON-NVDA-TSMC-FOUND",
+          "buyer": "NVIDIA",
+          "seller": "TSMC",
+          "value_b": 35.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, TSMC 파운드리 위탁 (Blackwell/Rubin)"
+        }
+      ]
+    },
+    {
+      "id": "L5_MEMORY_HBM",
+      "label": "→ L5 메모리 (HBM)",
+      "layer": "L5_MEMORY",
+      "pct": 17.1,
+      "parent_pct": 38,
+      "depth": 2,
+      "source": "industry_estimate",
+      "children": [],
+      "contracts_flow": [
+        {
+          "id": "CON-NVDA-SKH-HBM",
+          "buyer": "NVIDIA",
+          "seller": "SK hynix",
+          "value_b": 18.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, SK하이닉스 HBM3E/HBM4 공급 계약"
+        },
+        {
+          "id": "CON-NVDA-SAM-HBM",
+          "buyer": "NVIDIA",
+          "seller": "Samsung Electronics",
+          "value_b": 14.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, 삼성전자 HBM4 공급 계약"
+        }
+      ]
+    },
+    {
+      "id": "L6_OPTICAL",
+      "label": "L6 네트워킹/광통신",
+      "layer": "L6_OPTICAL",
+      "pct": 17,
+      "depth": 1,
+      "source": "industry_estimate",
+      "children": []
+    },
+    {
+      "id": "L7L8_INFRA",
+      "label": "L7/L8 인프라·전력",
+      "layer": "L7L8_INFRA",
+      "pct": 23,
+      "depth": 1,
+      "source": "industry_estimate",
+      "children": []
+    },
+    {
+      "id": "L4_EQUIPMENT",
+      "label": "L4 장비 (ASML/AMAT/LAM)",
+      "layer": "L4_EQUIPMENT",
+      "pct": 7,
+      "depth": 1,
+      "source": "industry_estimate",
+      "children": []
+    },
+    {
+      "id": "OTHER",
+      "label": "기타 (SW, 인력 등)",
+      "layer": "OTHER",
+      "pct": 8,
+      "depth": 1,
+      "source": "industry_estimate",
+      "children": []
+    }
+  ],
+  "layer_flows": {
+    "L1_AI_LAB→L2_HYPERSCALER": {
+      "total_b": 430.0,
+      "count": 2,
+      "contracts": [
+        {
+          "id": "CON-2026-ANTH-AWS",
+          "buyer": "Anthropic",
+          "seller": "Amazon/AWS",
+          "value_b": 280.0,
+          "type": "INFRA_COMPUTE",
+          "desc": "앤트로픽, AWS와 10년 장기 컴퓨트 약정 (총 $518B/14.8~15GW 규모 컴퓨팅 조달 패키지 중 최대 비중)"
+        },
+        {
+          "id": "CON-2026-ANTH-GOOG",
+          "buyer": "Anthropic",
+          "seller": "Alphabet/Google",
+          "value_b": 150.0,
+          "type": "INFRA_COMPUTE",
+          "desc": "앤트로픽, 구글 클라우드 TPU 및 인프라 장기 약정 (15GW 조달 패키지 파트너십)"
+        }
+      ]
+    },
+    "L2_HYPERSCALER→L1_AI_LAB": {
+      "total_b": 225.0,
+      "count": 3,
+      "contracts": [
+        {
+          "id": "CON-GOOG-ANTH-200B",
+          "buyer": "Alphabet/Google",
+          "seller": "Anthropic",
+          "value_b": 200.0,
+          "type": "INVESTMENT",
+          "desc": "구글, 앤트로픽에 $200B 투자 (현금+GCP 크레딧)"
+        },
+        {
+          "id": "CON-MSFT-OPAI-13B",
+          "buyer": "Microsoft",
+          "seller": "OpenAI",
+          "value_b": 13.0,
+          "type": "INVESTMENT",
+          "desc": "MS, 오픈AI에 $13B 투자 (Azure 크레딧 포함)"
+        },
+        {
+          "id": "CON-AMZN-ANTH-12B",
+          "buyer": "Amazon/AWS",
+          "seller": "Anthropic",
+          "value_b": 12.0,
+          "type": "INVESTMENT",
+          "desc": "아마존, 앤트로픽에 $12B 투자"
+        }
+      ]
+    },
+    "L1_AI_LAB→L3_COMPUTE": {
+      "total_b": 65.0,
+      "count": 1,
+      "contracts": [
+        {
+          "id": "CON-2026-OPAI-BRCM",
+          "buyer": "OpenAI",
+          "seller": "Broadcom",
+          "value_b": 65.0,
+          "type": "PARTNERSHIP",
+          "desc": "오픈AI-브로드컴 10GW 커스텀 AI 칩 개발 및 공급 계약 체결 (누적 확보 용량 26GW로 확대)"
+        }
+      ]
+    },
+    "L3_COMPUTE→L4_FOUNDRY": {
+      "total_b": 35.0,
+      "count": 1,
+      "contracts": [
+        {
+          "id": "CON-NVDA-TSMC-FOUND",
+          "buyer": "NVIDIA",
+          "seller": "TSMC",
+          "value_b": 35.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, TSMC 파운드리 위탁 (Blackwell/Rubin)"
+        }
+      ]
+    },
+    "L2_HYPERSCALER→L3_COMPUTE": {
+      "total_b": 65.0,
+      "count": 3,
+      "contracts": [
+        {
+          "id": "CON-GOOG-NVDA-GPU",
+          "buyer": "Alphabet/Google",
+          "seller": "NVIDIA",
+          "value_b": 30.0,
+          "type": "SUPPLY",
+          "desc": "구글, 엔비디아 Blackwell GPU 대량 공급 계약"
+        },
+        {
+          "id": "CON-META-NVDA-GPU",
+          "buyer": "Meta Platforms",
+          "seller": "NVIDIA",
+          "value_b": 25.0,
+          "type": "SUPPLY",
+          "desc": "메타, 엔비디아 GPU 대량 수주 (Llama 학습용)"
+        },
+        {
+          "id": "CON-META-BRCM-ASIC",
+          "buyer": "Meta Platforms",
+          "seller": "Broadcom",
+          "value_b": 10.0,
+          "type": "SUPPLY",
+          "desc": "메타, 브로드컴 MTIA ASIC 공동 개발"
+        }
+      ]
+    },
+    "L3_COMPUTE→L5_MEMORY": {
+      "total_b": 32.0,
+      "count": 2,
+      "contracts": [
+        {
+          "id": "CON-NVDA-SKH-HBM",
+          "buyer": "NVIDIA",
+          "seller": "SK hynix",
+          "value_b": 18.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, SK하이닉스 HBM3E/HBM4 공급 계약"
+        },
+        {
+          "id": "CON-NVDA-SAM-HBM",
+          "buyer": "NVIDIA",
+          "seller": "Samsung Electronics",
+          "value_b": 14.0,
+          "type": "SUPPLY",
+          "desc": "엔비디아, 삼성전자 HBM4 공급 계약"
+        }
+      ]
+    },
+    "L1_AI_LAB→L5_MEMORY": {
+      "total_b": 25.0,
+      "count": 2,
+      "contracts": [
+        {
+          "id": "CON-2026-ANTH-SKH",
+          "buyer": "Anthropic",
+          "seller": "SK hynix",
+          "value_b": 15.0,
+          "type": "SUPPLY",
+          "desc": "앤트로픽 메모리 직납(Direct Buy) 계약 — CY27 메모리 수요의 20% 직납 개시, CY28 엔비디아 규모 구매력 도달 전망"
+        },
+        {
+          "id": "CON-2026-ANTH-MU",
+          "buyer": "Anthropic",
+          "seller": "Micron Technology",
+          "value_b": 10.0,
+          "type": "SUPPLY",
+          "desc": "앤트로픽-마이크론 메모리 직접 조달 및 공급 다변화 파트너십"
+        }
+      ]
+    }
+  },
+  "hyperscaler_capex": {
+    "GOOGLE": {
+      "quarters": [
+        {
+          "period": "2025-Q3",
+          "capex": 23.953
+        },
+        {
+          "period": "2025-Q4",
+          "capex": 27.851
+        }
+      ],
+      "latest_q": "2025-Q4",
+      "latest_capex": 27.851,
+      "annual_est": 111.4
+    },
+    "META": {
+      "quarters": [
+        {
+          "period": "2025-Q4",
+          "capex": 22.14
+        }
+      ],
+      "latest_q": "2025-Q4",
+      "latest_capex": 22.14,
+      "annual_est": 88.56
+    }
+  },
+  "company_shares": {
+    "L3_COMPUTE": [
+      {
+        "entity_id": "NVIDIA",
+        "name": "NVIDIA",
+        "latest_revenue": 96.221,
+        "share_pct": 65.3
+      },
+      {
+        "entity_id": "BROADCOM",
+        "name": "Broadcom",
+        "latest_revenue": 22.187,
+        "share_pct": 15.1
+      },
+      {
+        "entity_id": "INTEL",
+        "name": "Intel",
+        "latest_revenue": 16.128,
+        "share_pct": 10.9
+      },
+      {
+        "entity_id": "AMD",
+        "name": "AMD",
+        "latest_revenue": 11.536,
+        "share_pct": 7.8
+      },
+      {
+        "entity_id": "ARM",
+        "name": "Arm Holdings",
+        "latest_revenue": 1.289,
+        "share_pct": 0.9
+      }
+    ],
+    "L4_FOUNDRY": [
+      {
+        "entity_id": "TSMC",
+        "name": "TSMC",
+        "latest_revenue": 36.5,
+        "share_pct": 60.3
+      },
+      {
+        "entity_id": "APPLIED_MATERIALS",
+        "name": "Applied Materials",
+        "latest_revenue": 7.91,
+        "share_pct": 13.1
+      },
+      {
+        "entity_id": "ASE",
+        "name": "ASE Technology",
+        "latest_revenue": 6.048243114909782,
+        "share_pct": 10.0
+      },
+      {
+        "entity_id": "LAM_RESEARCH",
+        "name": "Lam Research",
+        "latest_revenue": 5.171393,
+        "share_pct": 8.5
+      },
+      {
+        "entity_id": "KLA",
+        "name": "KLA Corporation",
+        "latest_revenue": 3.174741,
+        "share_pct": 5.2
+      },
+      {
+        "entity_id": "AMKOR",
+        "name": "Amkor Technology",
+        "latest_revenue": 1.684701,
+        "share_pct": 2.8
+      },
+      {
+        "entity_id": "ASML",
+        "name": "ASML",
+        "latest_revenue": 0,
+        "share_pct": 0.0
+      }
+    ],
+    "L5_MEMORY": [
+      {
+        "entity_id": "SAMSUNG",
+        "name": "Samsung Electronics",
+        "latest_revenue": 114.29684299943523,
+        "share_pct": 51.3
+      },
+      {
+        "entity_id": "SK_HYNIX",
+        "name": "SK hynix",
+        "latest_revenue": 52.86225656454405,
+        "share_pct": 23.7
+      },
+      {
+        "entity_id": "MICRON",
+        "name": "Micron Technology",
+        "latest_revenue": 41.456,
+        "share_pct": 18.6
+      },
+      {
+        "entity_id": "KIOXIA",
+        "name": "Kioxia Holdings",
+        "latest_revenue": 11.04448125,
+        "share_pct": 5.0
+      },
+      {
+        "entity_id": "WDC",
+        "name": "Western Digital",
+        "latest_revenue": 3.017,
+        "share_pct": 1.4
+      }
+    ],
+    "L6_OPTICAL": [
+      {
+        "entity_id": "ARISTA",
+        "name": "Arista Networks",
+        "latest_revenue": 3.0357,
+        "share_pct": 41.6
+      },
+      {
+        "entity_id": "MARVELL",
+        "name": "Marvell Technology",
+        "latest_revenue": 2.7393,
+        "share_pct": 37.5
+      },
+      {
+        "entity_id": "COHERENT",
+        "name": "Coherent/Novalit",
+        "latest_revenue": 1.529436,
+        "share_pct": 20.9
+      }
+    ],
+    "L7_INFRA": [
+      {
+        "entity_id": "APPLE",
+        "name": "Apple",
+        "latest_revenue": 111.184,
+        "share_pct": 100.0
+      },
+      {
+        "entity_id": "SPACEX",
+        "name": "SpaceX / xAI",
+        "latest_revenue": 0,
+        "share_pct": 0.0
+      },
+      {
+        "entity_id": "SOFTBANK",
+        "name": "SoftBank Group",
+        "latest_revenue": 0,
+        "share_pct": 0.0
+      }
+    ],
+    "L8_POWER": [
+      {
+        "entity_id": "GE_VERNOVA",
+        "name": "GE Vernova",
+        "latest_revenue": 11.104,
+        "share_pct": 48.5
+      },
+      {
+        "entity_id": "EATON",
+        "name": "Eaton Corporation",
+        "latest_revenue": 8.531,
+        "share_pct": 37.2
+      },
+      {
+        "entity_id": "VERTIV",
+        "name": "Vertiv Holdings",
+        "latest_revenue": 3.2743,
+        "share_pct": 14.3
+      },
+      {
+        "entity_id": "SCHNEIDER",
+        "name": "Schneider Electric",
+        "latest_revenue": 0,
+        "share_pct": 0.0
+      }
+    ]
+  },
+  "default_capex_b": 100
+}

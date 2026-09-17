@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — HBM3E/HBM4 공급 삼국지 단가(ASP) 및 수급 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.75);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --skh: #f59e0b;       /* SK하이닉스 오렌지/앰버 */
+      --sam: #38bdf8;       /* 삼성전자 스카이블루 */
+      --mu: #a855f7;        /* 마이크론 바이올렛 */
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1.5rem 2rem;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .page-header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f59e0b, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .page-header .sub {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.35rem;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .nav-btn {
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.08);
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    /* KPI Summary Ribbon */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.c1::before { background: #f59e0b; }
+    .kpi-card.c2::before { background: #38bdf8; }
+    .kpi-card.c3::before { background: #10b981; }
+    .kpi-card.c4::before { background: #ec4899; }
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      margin: 0.3rem 0;
+    }
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Layout Grids */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 1024px) {
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.45;
+    }
+    .chart-box {
+      position: relative;
+      height: 340px;
+      width: 100%;
+    }
+
+    /* Simulator Panel */
+    .simulator-card {
+      background: linear-gradient(135deg, rgba(26, 34, 52, 0.85), rgba(17, 24, 39, 0.95));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border-card);
+      padding-bottom: 0.75rem;
+    }
+    .sim-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #f59e0b;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .sim-grid { grid-template-columns: 1fr; }
+    }
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .slider-lbl {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: #f59e0b;
+      cursor: pointer;
+    }
+    .sim-result-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
+    }
+    .gauge-status {
+      font-size: 1.35rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+    .status-shortage { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .status-balanced { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-glut { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+
+    /* Table Styles */
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 280px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      white-space: nowrap;
+    }
+    th {
+      background: #111827;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: left;
+    }
+    tr:hover td {
+      background: rgba(255,255,255,0.03);
+    }
+    .badge-co {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h1>💾 HBM3E/HBM4 공급 삼국지 단가(ASP) 및 수급 대시보드</h1>
+      <div class="sub">
+        SK하이닉스·삼성전자·마이크론의 세대별 단가 프리미엄, Fab 증설 캐파, 고객사 직납 계약 및 2026~2028 수급 밸런스를 분석합니다.
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-btn">← 메인 대시보드</a>
+      <a href="multi_company_overlay.html" class="nav-btn">🏆 멀티 기업 비교 ↗</a>
+      <a href="layer_capital_absorption.html" class="nav-btn">⚡ 레이어별 자본 흡수 ↗</a>
+      <a href="network_graph.html" class="nav-btn" style="color:#ec4899; border-color:rgba(236,72,153,0.3); background:rgba(236,72,153,0.08);">🕸 의존도 네트워크 ↗</a>
+    </div>
+  </header>
+
+  <!-- KPI Ribbon -->
+  <div class="kpi-grid">
+    <div class="kpi-card c1">
+      <div class="kpi-label">2025 글로벌 HBM 시장 규모</div>
+      <div class="kpi-value">$31.5B</div>
+      <div class="kpi-sub">SK하이닉스 63.5% · 삼성 25.4% · 마이크론 11.1%</div>
+    </div>
+    <div class="kpi-card c2">
+      <div class="kpi-label">식별된 HBM 장기 공급 계약</div>
+      <div class="kpi-value">$57.0B</div>
+      <div class="kpi-sub">엔비디아 조달($32B) + 앤트로픽 직접구매($25B)</div>
+    </div>
+    <div class="kpi-card c3">
+      <div class="kpi-label">HBM3E vs DDR5 가격 프리미엄</div>
+      <div class="kpi-value">4.7배</div>
+      <div class="kpi-sub">HBM3E $2.00/GB vs 범용 DDR5 $0.42/GB</div>
+    </div>
+    <div class="kpi-card c4">
+      <div class="kpi-label">SK하이닉스 2026-Q2 OPM</div>
+      <div class="kpi-value">76.3%</div>
+      <div class="kpi-sub">HBM 독점력 기반 사상 최대 영업이익률 달성</div>
+    </div>
+  </div>
+
+  <!-- Row 1: ASP Comparison & Market Share -->
+  <div class="grid-2col">
+    <!-- Chart 1: Generation ASP & Premium -->
+    <div class="card">
+      <div class="card-title">
+        <span>📊 세대별 GB당 단가(ASP) & 범용 DDR5 대비 프리미엄</span>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono';">단위: $/GB, 배율(X)</span>
+      </div>
+      <div class="card-desc">
+        HBM3E(8/12단)에서 HBM4(16단)로 진화하며 TSMC 첨단 파운드리 베이스 다이가 적용되어 GB당 단가가 $2.85까지 상승합니다.
+      </div>
+      <div class="chart-box">
+        <canvas id="chart-asp"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: 3사 점유율 파이 및 HBM 매출 비중 -->
+    <div class="card">
+      <div class="card-title">
+        <span>🏆 2025~2026 HBM 매출 점유율 및 DRAM 내 비중</span>
+        <span style="font-size:0.75rem; color:var(--text-dim);">DB 추정치 기준</span>
+      </div>
+      <div class="card-desc">
+        SK하이닉스가 전체 HBM 매출의 60% 이상을 수성하며, DRAM 매출 중 HBM 비중이 52%에 도달했습니다.
+      </div>
+      <div class="chart-box">
+        <canvas id="chart-share"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Simulator: Supply-Demand Balance 2026-2028 -->
+  <div class="simulator-card">
+    <div class="sim-header">
+      <div class="sim-title">⚡ 2026~2028 HBM 수급 밸런스 & 피크아웃 시뮬레이터</div>
+      <div style="font-size:0.78rem; color:var(--text-muted);">CoWoS 패키징 병목 해소 속도와 3사 메가팹 증설 슬라이더를 조절해 보세요</div>
+    </div>
+    <div class="sim-grid">
+      <div class="slider-group">
+        <div class="slider-item">
+          <div class="slider-lbl">
+            <span>TSMC CoWoS 패키징 생산 캐파 (월간):</span>
+            <span class="slider-val" id="val-cowos">100K 장/월</span>
+          </div>
+          <input type="range" id="range-cowos" min="70" max="150" value="100" step="5" oninput="updateSimulator()">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim);">
+            <span>70K (2024 수준)</span><span>100K (현재)</span><span>120K (2026말 목표)</span><span>150K (초과공급)</span>
+          </div>
+        </div>
+
+        <div class="slider-item">
+          <div class="slider-lbl">
+            <span>메모리 3사 첨단 Fab 증설 캐파 (M15X / P4 / 보이시):</span>
+            <span class="slider-val" id="val-fabs">150K WSPM</span>
+          </div>
+          <input type="range" id="range-fabs" min="100" max="250" value="150" step="10" oninput="updateSimulator()">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim);">
+            <span>100K (타이트)</span><span>150K (기준치)</span><span>200K (2027 램프업)</span><span>250K (공급폭증)</span>
+          </div>
+        </div>
+
+        <div class="slider-item">
+          <div class="slider-lbl">
+            <span>가속기 수요 성장률 (NVIDIA Rubin + 커스텀 ASIC):</span>
+            <span class="slider-val" id="val-demand">+35% YoY</span>
+          </div>
+          <input type="range" id="range-demand" min="10" max="60" value="35" step="5" oninput="updateSimulator()">
+        </div>
+      </div>
+
+      <div class="sim-result-box">
+        <div style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">시뮬레이션 수급 판정</div>
+        <div class="gauge-status status-shortage" id="sim-status">극심한 공급 부족 (Shortage)</div>
+        <div style="font-size:0.85rem; color:var(--text-main); line-height:1.5;" id="sim-desc">
+          패키징 캐파가 100K 이하로 제한되어 HBM 생산량이 충분해도 최종 가속기 출하가 제한되며, HBM3E 프리미엄(4.5배+)이 견고하게 유지됩니다.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:0.4rem; font-size:0.78rem; text-align:left; background:rgba(255,255,255,0.02); padding:0.6rem; border-radius:6px;">
+          <div>예상 HBM4 단가: <b id="sim-asp" style="color:#38bdf8;">$2.85 / GB</b></div>
+          <div>SK하이닉스 OPM: <b id="sim-opm" style="color:#10b981;">65% ~ 75%</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: 3사 분기 실적 시계열 & OPM 마진 비교 -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">
+      <span>📈 메모리 3사 분기별 매출 및 OPM 마진율 추이 (2020-Q1 ~ 2026-Q4)</span>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="nav-btn" style="font-size:0.75rem; padding:2px 8px;" onclick="setMetricView('rev')">매출 ($B)</button>
+        <button class="nav-btn" style="font-size:0.75rem; padding:2px 8px;" onclick="setMetricView('opm')">영업이익률 (OPM %)</button>
+      </div>
+    </div>
+    <div class="card-desc">
+      2023년 극심한 적자(-30%)에서 HBM 공급 개시와 함께 2024~2026년 OPM이 수직 반등하는 레버리지 곡선을 보여줍니다.
+    </div>
+    <div class="chart-box" style="height:360px;">
+      <canvas id="chart-trio-timeline"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 3: Contracts & Fab Capacity Tables -->
+  <div class="grid-2col">
+    <!-- Contracts -->
+    <div class="card">
+      <div class="card-title">🔗 식별된 주요 HBM 공급 계약 ($57.0B)</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>계약 ID</th>
+              <th>구매사 $ightarrow$ 공급사</th>
+              <th>품목</th>
+              <th>규모</th>
+              <th>시점</th>
+            </tr>
+          </thead>
+          <tbody id="contracts-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fab Capacity -->
+    <div class="card">
+      <div class="card-title">🏭 메모리 3사 첨단 생산 팹 (Fab Capacity)</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>팹 명칭</th>
+              <th>기업</th>
+              <th>공정/노드</th>
+              <th>목표 캐파</th>
+              <th>가동 시점</th>
+            </tr>
+          </thead>
+          <tbody id="fabs-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    const PERIODS = [{"period": "2020-Q1", "is_forecast": 0}, {"period": "2020-Q2", "is_forecast": 0}, {"period": "2020-Q3", "is_forecast": 0}, {"period": "2020-Q4", "is_forecast": 0}, {"period": "2021-Q1", "is_forecast": 0}, {"period": "2021-Q2", "is_forecast": 0}, {"period": "2021-Q3", "is_forecast": 0}, {"period": "2021-Q4", "is_forecast": 0}, {"period": "2022-Q1", "is_forecast": 0}, {"period": "2022-Q2", "is_forecast": 0}, {"period": "2022-Q3", "is_forecast": 0}, {"period": "2022-Q4", "is_forecast": 0}, {"period": "2023-Q1", "is_forecast": 0}, {"period": "2023-Q2", "is_forecast": 0}, {"period": "2023-Q3", "is_forecast": 0}, {"period": "2023-Q4", "is_forecast": 0}, {"period": "2024-Q1", "is_forecast": 0}, {"period": "2024-Q2", "is_forecast": 0}, {"period": "2024-Q3", "is_forecast": 0}, {"period": "2024-Q4", "is_forecast": 0}, {"period": "2025-Q1", "is_forecast": 0}, {"period": "2025-Q2", "is_forecast": 0}, {"period": "2025-Q3", "is_forecast": 0}, {"period": "2025-Q4", "is_forecast": 0}, {"period": "2026-Q1", "is_forecast": 0}, {"period": "2026-Q2", "is_forecast": 0}, {"period": "2026-Q3", "is_forecast": 1}, {"period": "2026-Q4", "is_forecast": 1}];
+    const EARNINGS = {"SK_HYNIX": {"2020-Q1": {"revenue": 5.318231374200301, "op_income": 0.25125502555277013, "op_margin_pct": 4.7, "is_forecast": 0}, "2020-Q2": {"revenue": 7.0624088360213415, "op_income": 1.5995002590292238, "op_margin_pct": 22.6, "is_forecast": 0}, "2020-Q3": {"revenue": 6.8456231219437145, "op_income": 1.0946260834596344, "op_margin_pct": 16.0, "is_forecast": 0}, "2020-Q4": {"revenue": 7.128968285968818, "op_income": 0.8676410586436328, "op_margin_pct": 12.2, "is_forecast": 0}, "2021-Q1": {"revenue": 7.615650925113214, "op_income": 1.184058801077673, "op_margin_pct": 15.5, "is_forecast": 0}, "2021-Q2": {"revenue": 9.20358885136071, "op_income": 2.398997481604681, "op_margin_pct": 26.1, "is_forecast": 0}, "2021-Q3": {"revenue": 10.180298113712475, "op_income": 3.5945675812176985, "op_margin_pct": 35.3, "is_forecast": 0}, "2021-Q4": {"revenue": 10.462363659767126, "op_income": 3.566330746705757, "op_margin_pct": 34.1, "is_forecast": 0}, "2022-Q1": {"revenue": 10.081387087702709, "op_income": 2.371115713061657, "op_margin_pct": 23.5, "is_forecast": 0}, "2022-Q2": {"revenue": 10.956354790264372, "op_income": 3.3241945381033835, "op_margin_pct": 30.3, "is_forecast": 0}, "2022-Q3": {"revenue": 8.18726123414752, "op_income": 1.2377826638146523, "op_margin_pct": 15.1, "is_forecast": 0}, "2022-Q4": {"revenue": 5.664364740927868, "op_income": -1.3903440727732042, "op_margin_pct": -24.5, "is_forecast": 0}, "2023-Q1": {"revenue": 3.9879812118291826, "op_income": -2.663877430298472, "op_margin_pct": -66.8, "is_forecast": 0}, "2023-Q2": {"revenue": 5.556052880982077, "op_income": -2.1889784264334313, "op_margin_pct": -39.4, "is_forecast": 0}, "2023-Q3": {"revenue": 6.906859353716169, "op_income": -1.3630957269186266, "op_margin_pct": -19.7, "is_forecast": 0}, "2023-Q4": {"revenue": 8.548649414387633, "op_income": 0.2647811765518293, "op_margin_pct": 3.1, "is_forecast": 0}, "2024-Q1": {"revenue": 9.348583299967867, "op_income": 2.173564419702907, "op_margin_pct": 23.3, "is_forecast": 0}, "2024-Q2": {"revenue": 11.98418651702105, "op_income": 3.9922959956215065, "op_margin_pct": 33.3, "is_forecast": 0}, "2024-Q3": {"revenue": 12.962190424446897, "op_income": 5.186351661005218, "op_margin_pct": 40.0, "is_forecast": 0}, "2024-Q4": {"revenue": 14.13487461321653, "op_income": 5.7769239693874335, "op_margin_pct": 40.9, "is_forecast": 0}, "2025-Q1": {"revenue": 12.148092489149652, "op_income": 5.1242910446404855, "op_margin_pct": 42.18, "is_forecast": 0}, "2025-Q2": {"revenue": 15.882007758043606, "op_income": 6.5814748683915045, "op_margin_pct": 41.44, "is_forecast": 0}, "2025-Q3": {"revenue": 17.627876015345006, "op_income": 8.207533420034371, "op_margin_pct": 46.56, "is_forecast": 0}, "2025-Q4": {"revenue": 22.65841476200923, "op_income": 13.231690898622524, "op_margin_pct": 58.4, "is_forecast": 0}, "2026-Q1": {"revenue": 35.874313509530246, "op_income": 25.6625835859025, "op_margin_pct": 71.53, "is_forecast": 0}, "2026-Q2": {"revenue": 52.86225656454405, "op_income": 40.34885158587526, "op_margin_pct": 76.33, "is_forecast": 0}}, "SAMSUNG": {"2020-Q1": {"revenue": 46.33980187944923, "op_income": 5.401983049384557, "op_margin_pct": 11.7, "is_forecast": 0}, "2020-Q2": {"revenue": 43.448989087578454, "op_income": 6.685090826199064, "op_margin_pct": 15.4, "is_forecast": 0}, "2020-Q3": {"revenue": 56.38166349881317, "op_income": 10.398947792866528, "op_margin_pct": 18.4, "is_forecast": 0}, "2020-Q4": {"revenue": 55.05495583455217, "op_income": 8.095001629613275, "op_margin_pct": 14.7, "is_forecast": 0}, "2021-Q1": {"revenue": 58.65576136550684, "op_income": 8.413993601597403, "op_margin_pct": 14.3, "is_forecast": 0}, "2021-Q2": {"revenue": 56.782219202145, "op_income": 11.210185257907376, "op_margin_pct": 19.7, "is_forecast": 0}, "2021-Q3": {"revenue": 63.77124931858161, "op_income": 13.636944636658031, "op_margin_pct": 21.4, "is_forecast": 0}, "2021-Q4": {"revenue": 64.70946570503787, "op_income": 11.721565748058968, "op_margin_pct": 18.1, "is_forecast": 0}, "2022-Q1": {"revenue": 64.48439865801947, "op_income": 11.706347506444265, "op_margin_pct": 18.2, "is_forecast": 0}, "2022-Q2": {"revenue": 61.24768934166615, "op_income": 11.186430307221409, "op_margin_pct": 18.3, "is_forecast": 0}, "2022-Q3": {"revenue": 57.251176462463256, "op_income": 8.090326447222276, "op_margin_pct": 14.1, "is_forecast": 0}, "2022-Q4": {"revenue": 51.83261553841268, "op_income": 3.170572991350534, "op_margin_pct": 6.1, "is_forecast": 0}, "2023-Q1": {"revenue": 49.94770181809634, "op_income": 0.5014357515855947, "op_margin_pct": 1.0, "is_forecast": 0}, "2023-Q2": {"revenue": 45.611317836899374, "op_income": 0.5092415089272219, "op_margin_pct": 1.1, "is_forecast": 0}, "2023-Q3": {"revenue": 51.32550390743879, "op_income": 1.8504595622414874, "op_margin_pct": 3.6, "is_forecast": 0}, "2023-Q4": {"revenue": 51.27676613337997, "op_income": 2.1333797653604534, "op_margin_pct": 4.2, "is_forecast": 0}, "2024-Q1": {"revenue": 54.090918015582375, "op_income": 4.971370523957168, "op_margin_pct": 9.2, "is_forecast": 0}, "2024-Q2": {"revenue": 54.06021286941225, "op_income": 7.61966548341655, "op_margin_pct": 14.1, "is_forecast": 0}, "2024-Q3": {"revenue": 58.35567800647407, "op_income": 6.772504729449204, "op_margin_pct": 11.6, "is_forecast": 0}, "2024-Q4": {"revenue": 54.1729615297631, "op_income": 4.6472779456705835, "op_margin_pct": 8.6, "is_forecast": 0}, "2025-Q1": {"revenue": 54.40749849157965, "op_income": 5.9917118591992775, "op_margin_pct": 11.0, "is_forecast": 0}, "2025-Q2": {"revenue": 58.93602195207797, "op_income": 7.715261055544753, "op_margin_pct": 13.1, "is_forecast": 0}, "2025-Q3": {"revenue": 62.07887164335431, "op_income": 8.796309338547301, "op_margin_pct": 14.17, "is_forecast": 0}, "2025-Q4": {"revenue": 64.74483590115562, "op_income": 13.873893407390492, "op_margin_pct": 21.43, "is_forecast": 0}, "2026-Q1": {"revenue": 91.36380039915514, "op_income": 39.029196287017726, "op_margin_pct": 42.72, "is_forecast": 0}, "2026-Q2": {"revenue": 114.29684299943523, "op_income": 59.64762360611926, "op_margin_pct": 52.19, "is_forecast": 0}, "2026-Q3": {"revenue": 66.05597385266054, "op_income": 11.743284240472985, "op_margin_pct": 17.8, "is_forecast": 1}, "2026-Q4": {"revenue": 72.37185704692979, "op_income": 13.056778333208984, "op_margin_pct": 18.0, "is_forecast": 1}}, "MICRON": {"2020-Q1": {"revenue": 4.797, "op_income": 0.44, "op_margin_pct": 9.17, "is_forecast": 0}, "2020-Q2": {"revenue": 5.438, "op_income": 0.888, "op_margin_pct": 16.33, "is_forecast": 0}, "2020-Q3": {"revenue": 6.056, "op_income": 1.157, "op_margin_pct": 19.11, "is_forecast": 0}, "2020-Q4": {"revenue": 5.773, "op_income": 0.866, "op_margin_pct": 15.0, "is_forecast": 0}, "2021-Q1": {"revenue": 6.236, "op_income": 0.663, "op_margin_pct": 10.63, "is_forecast": 0}, "2021-Q2": {"revenue": 7.422, "op_income": 1.799, "op_margin_pct": 24.24, "is_forecast": 0}, "2021-Q3": {"revenue": 8.274, "op_income": 2.955, "op_margin_pct": 35.71, "is_forecast": 0}, "2021-Q4": {"revenue": 7.687, "op_income": 2.631, "op_margin_pct": 34.23, "is_forecast": 0}, "2022-Q1": {"revenue": 7.786, "op_income": 2.546, "op_margin_pct": 32.7, "is_forecast": 0}, "2022-Q2": {"revenue": 8.642, "op_income": 3.004, "op_margin_pct": 34.76, "is_forecast": 0}, "2022-Q3": {"revenue": 6.643, "op_income": 1.521, "op_margin_pct": 22.9, "is_forecast": 0}, "2022-Q4": {"revenue": 4.085, "op_income": -0.209, "op_margin_pct": -5.12, "is_forecast": 0}, "2023-Q1": {"revenue": 3.693, "op_income": -2.303, "op_margin_pct": -62.36, "is_forecast": 0}, "2023-Q2": {"revenue": 3.752, "op_income": -1.761, "op_margin_pct": -46.93, "is_forecast": 0}, "2023-Q3": {"revenue": 4.01, "op_income": -1.472, "op_margin_pct": -36.71, "is_forecast": 0}, "2023-Q4": {"revenue": 4.726, "op_income": -1.128, "op_margin_pct": -23.87, "is_forecast": 0}, "2024-Q1": {"revenue": 5.824, "op_income": 0.191, "op_margin_pct": 3.28, "is_forecast": 0}, "2024-Q2": {"revenue": 6.811, "op_income": 0.719, "op_margin_pct": 10.56, "is_forecast": 0}, "2024-Q3": {"revenue": 7.75, "op_income": 1.522, "op_margin_pct": 19.64, "is_forecast": 0}, "2024-Q4": {"revenue": 8.709, "op_income": 2.174, "op_margin_pct": 24.96, "is_forecast": 0}, "2025-Q1": {"revenue": 8.053, "op_income": 1.773, "op_margin_pct": 22.02, "is_forecast": 0}, "2025-Q2": {"revenue": 9.301, "op_income": 2.169, "op_margin_pct": 23.32, "is_forecast": 0}, "2025-Q3": {"revenue": 11.315, "op_income": 3.654, "op_margin_pct": 32.29, "is_forecast": 0}, "2025-Q4": {"revenue": 13.643, "op_income": 6.136, "op_margin_pct": 44.98, "is_forecast": 0}, "2026-Q1": {"revenue": 23.86, "op_income": 16.135, "op_margin_pct": 67.62, "is_forecast": 0}, "2026-Q2": {"revenue": 41.456, "op_income": 33.318, "op_margin_pct": 80.37, "is_forecast": 0}}};
+    const FABS = [{"fab_id": "FAB-MU-TAICHUNG", "entity_id": "MICRON", "fab_name": "마이크론 타이중/히로시마 HBM 패키징 라인", "location_city": "타이중", "location_country": "대만/일본", "process_node": "1-beta / HBM3E", "fab_type": "HBM_PACKAGING", "wspm_current": 45000.0, "wspm_target": 100000.0, "ramp_start_date": "2025-Q4", "ramp_end_date": "2026-Q4", "capex_invested_b": 6.5, "utilization_pct": 92.0, "yield_pct": 88.0, "status": "RAMPING", "key_customers": "NVIDIA, AMD, ANTHROPIC", "key_notes": "월 6만 장 증설하여 연말까지 총 10만 장(100k wspm) 캐파 도달 계획 (기존 대비 2배 증설)", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "name_ko": "마이크론"}, {"fab_id": "FAB-SEC-P3", "entity_id": "SAMSUNG", "fab_name": "평택 P3 라인", "location_city": "Pyeongtaek", "location_country": "South Korea", "process_node": "1b nm DRAM / V-NAND / Foundry 4nm", "fab_type": "FAB", "wspm_current": 70000.0, "wspm_target": 90000.0, "ramp_start_date": "2023-Q1", "ramp_end_date": "2025-Q3", "capex_invested_b": 14.0, "utilization_pct": 92.0, "yield_pct": 87.0, "status": "OPERATING", "key_customers": "NVIDIA, AMD, Broadcom, Samsung Mobile", "key_notes": "메모리와 파운드리가 공존하는 복합 팹. HBM3E 양산 공급 라인.", "raw_source": "Samsung Electronics IR", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "삼성전자"}, {"fab_id": "FAB-SKH-YONGIN", "entity_id": "SK_HYNIX", "fab_name": "용인 반도체 클러스터 1기", "location_city": "Yongin", "location_country": "South Korea", "process_node": "1c nm DRAM / HBM4", "fab_type": "FAB", "wspm_current": 0.0, "wspm_target": 85000.0, "ramp_start_date": "2026-Q4", "ramp_end_date": "2027-Q3", "capex_invested_b": 9.4, "utilization_pct": 0.0, "yield_pct": 0.0, "status": "CONSTRUCTION", "key_customers": "NVIDIA (Rubin), Major AI Accelerator OEMs", "key_notes": "총 120조원 투자 메가 클러스터 1단계 팹. HBM4 16단 대량 양산 핵심 기지.", "raw_source": "Ministry of Trade, Industry and Energy Press Release", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "SK하이닉스"}, {"fab_id": "FAB-SEC-P4", "entity_id": "SAMSUNG", "fab_name": "평택 P4 라인", "location_city": "Pyeongtaek", "location_country": "South Korea", "process_node": "1c nm DRAM / HBM4 / 2nm Foundry", "fab_type": "FAB", "wspm_current": 20000.0, "wspm_target": 80000.0, "ramp_start_date": "2025-Q1", "ramp_end_date": "2026-Q4", "capex_invested_b": 16.0, "utilization_pct": 78.0, "yield_pct": 75.0, "status": "RAMP_UP", "key_customers": "Global Big Tech, NVIDIA, Google TPU", "key_notes": "차세대 HBM4 턴키(메모리+파운드리+어드밴스드 패키징 원스톱) 생산 기지.", "raw_source": "Samsung Electronics Earnings Call", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "삼성전자"}, {"fab_id": "FAB-SKH-M16", "entity_id": "SK_HYNIX", "fab_name": "이천 M16 팹", "location_city": "Icheon", "location_country": "South Korea", "process_node": "1b nm (10nm급 5세대) DRAM", "fab_type": "FAB", "wspm_current": 55000.0, "wspm_target": 75000.0, "ramp_start_date": "2023-Q2", "ramp_end_date": "2025-Q4", "capex_invested_b": 5.8, "utilization_pct": 96.0, "yield_pct": 90.0, "status": "OPERATING", "key_customers": "NVIDIA (HBM3E), Apple, Global Server", "key_notes": "EUV 기반 HBM3E용 1b nm 코어 다이 핵심 생산 팹.", "raw_source": "SK hynix IR Disclosures", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "SK하이닉스"}, {"fab_id": "FAB-SKH-M15X", "entity_id": "SK_HYNIX", "fab_name": "청주 M15X 팹", "location_city": "Cheongju", "location_country": "South Korea", "process_node": "HBM 패키징 및 차세대 DRAM", "fab_type": "PACKAGING", "wspm_current": 15000.0, "wspm_target": 50000.0, "ramp_start_date": "2025-Q2", "ramp_end_date": "2026-Q3", "capex_invested_b": 5.3, "utilization_pct": 85.0, "yield_pct": 86.0, "status": "CONSTRUCTION", "key_customers": "NVIDIA, CSPs (AWS, Google, MSFT)", "key_notes": "HBM 수요 급증에 맞춰 청주에 건설 중인 HBM 특화 생산기지. 2026년 가동 예정.", "raw_source": "SK hynix Board Resolution 2024", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "SK하이닉스"}, {"fab_id": "FAB-SEC-TAYLOR", "entity_id": "SAMSUNG", "fab_name": "미국 테일러 파운드리 팹", "location_city": "Taylor", "location_country": "USA", "process_node": "4nm / 2nm 파운드리", "fab_type": "FAB", "wspm_current": 0.0, "wspm_target": 30000.0, "ramp_start_date": "2025-Q4", "ramp_end_date": "2026-Q4", "capex_invested_b": 17.0, "utilization_pct": 60.0, "yield_pct": 65.0, "status": "CONSTRUCTION", "key_customers": "US Fabless, Groq, AI Startups", "key_notes": "미국 텍사스 테일러 시 신규 파운드리 거점. 고객사 확보 및 2nm 전환 준비.", "raw_source": "US CHIPS Act Agreement", "created_at": "2026-09-11 07:11:23", "updated_at": "2026-09-11 07:11:23", "name_ko": "삼성전자"}];
+    const CONTRACTS = [{"contract_id": "CON-NVDA-SKH-HBM", "buyer_id": "NVIDIA", "seller_id": "SK_HYNIX", "contract_type": "SUPPLY", "value_b": 18.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "엔비디아, SK하이닉스 HBM3E/HBM4 공급 계약", "product_type": "HBM", "confidence": "C4", "source": "어닝콜", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name": "엔비디아", "seller_name": "SK하이닉스"}, {"contract_id": "CON-2026-ANTH-SKH", "buyer_id": "ANTHROPIC", "seller_id": "SK_HYNIX", "contract_type": "SUPPLY", "value_b": 15.0, "currency": "USD", "announced_date": "2026-09-12", "start_date": "2027-01-01", "end_date": "2028-12-31", "description": "앤트로픽 메모리 직납(Direct Buy) 계약 — CY27 메모리 수요의 20% 직납 개시, CY28 엔비디아 규모 구매력 도달 전망", "product_type": "HBM_DRAM", "confidence": "C3", "source": "Edgewater Research / Sean", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name": "앤트로픽", "seller_name": "SK하이닉스"}, {"contract_id": "CON-NVDA-SAM-HBM", "buyer_id": "NVIDIA", "seller_id": "SAMSUNG", "contract_type": "SUPPLY", "value_b": 14.0, "currency": "USD", "announced_date": "2026-Q1", "start_date": null, "end_date": null, "description": "엔비디아, 삼성전자 HBM4 공급 계약", "product_type": "HBM", "confidence": "C3", "source": "업계 추정", "raw_source": null, "created_at": "2026-09-11 02:28:14", "updated_at": "2026-09-11 02:28:14", "buyer_name": "엔비디아", "seller_name": "삼성전자"}, {"contract_id": "CON-2026-ANTH-MU", "buyer_id": "ANTHROPIC", "seller_id": "MICRON", "contract_type": "SUPPLY", "value_b": 10.0, "currency": "USD", "announced_date": "2026-09-12", "start_date": "2027-01-01", "end_date": "2028-12-31", "description": "앤트로픽-마이크론 메모리 직접 조달 및 공급 다변화 파트너십", "product_type": "HBM_DRAM", "confidence": "C3", "source": "Edgewater Research / P Equity Research", "raw_source": "99.raw/contracts/bookmarks_index.json", "created_at": "2026-09-16 08:33:01", "updated_at": "2026-09-16 08:33:01", "buyer_name": "앤트로픽", "seller_name": "마이크론"}];
+
+    let metricView = 'rev'; // 'rev' | 'opm'
+    let trioChartInstance = null;
+
+    // 1. Chart ASP & Premium
+    function initAspChart() {
+      const ctx = document.getElementById('chart-asp').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['범용 DDR5', 'HBM3 (8단)', 'HBM3E (8/12단)', 'HBM4 (12/16단)'],
+          datasets: [
+            {
+              type: 'bar',
+              label: 'GB당 단가 ($/GB)',
+              data: [0.42, 1.45, 2.00, 2.85],
+              backgroundColor: 'rgba(56, 189, 248, 0.45)',
+              borderColor: '#38bdf8',
+              borderWidth: 1.5,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: 'DDR5 대비 프리미엄 배율 (X)',
+              data: [1.0, 3.45, 4.76, 6.78],
+              borderColor: '#f59e0b',
+              backgroundColor: '#f59e0b',
+              borderWidth: 2.5,
+              pointRadius: 5,
+              tension: 0.2,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#d1d5db', font: { family: 'Inter', size: 11 } } },
+            tooltip: {
+              backgroundColor: 'rgba(17, 24, 39, 0.95)',
+              callbacks: {
+                label: (ctx) => {
+                  if (ctx.dataset.type === 'line') return ` 프리미엄: ${ctx.raw}배`;
+                  return ` GB당 단가: $${ctx.raw}/GB`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: {
+              type: 'linear', position: 'left',
+              title: { display: true, text: 'GB당 단가 ($)', color: '#38bdf8' },
+              ticks: { color: '#9ca3af', callback: v => '$' + v },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y1: {
+              type: 'linear', position: 'right',
+              title: { display: true, text: '프리미엄 배율 (X)', color: '#f59e0b' },
+              ticks: { color: '#f59e0b', callback: v => v + 'x' },
+              grid: { drawOnChartArea: false }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Chart Market Share
+    function initShareChart() {
+      const ctx = document.getElementById('chart-share').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['SK하이닉스 ($20.0B)', '삼성전자 ($8.0B)', '마이크론 ($3.5B)'],
+          datasets: [{
+            data: [20.0, 8.0, 3.5],
+            backgroundColor: ['#f59e0b', '#38bdf8', '#a855f7'],
+            borderWidth: 2,
+            borderColor: '#0a0e17'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#d1d5db', font: { family: 'Inter', size: 12 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${((ctx.raw / 31.5)*100).toFixed(1)}%`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 3. Chart Trio Timeline
+    function renderTrioChart() {
+      const labels = PERIODS.map(p => p.period);
+      const isRev = (metricView === 'rev');
+
+      const skhData = labels.map(p => EARNINGS.SK_HYNIX[p] ? (isRev ? EARNINGS.SK_HYNIX[p].revenue : EARNINGS.SK_HYNIX[p].op_margin_pct) : null);
+      const samData = labels.map(p => EARNINGS.SAMSUNG[p] ? (isRev ? EARNINGS.SAMSUNG[p].revenue : EARNINGS.SAMSUNG[p].op_margin_pct) : null);
+      const muData = labels.map(p => EARNINGS.MICRON[p] ? (isRev ? EARNINGS.MICRON[p].revenue : EARNINGS.MICRON[p].op_margin_pct) : null);
+
+      if (trioChartInstance) trioChartInstance.destroy();
+
+      const ctx = document.getElementById('chart-trio-timeline').getContext('2d');
+      trioChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'SK하이닉스',
+              data: skhData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              borderWidth: 2.5,
+              tension: 0.25,
+              spanGaps: true
+            },
+            {
+              label: '삼성전자',
+              data: samData,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.15)',
+              borderWidth: 2.5,
+              tension: 0.25,
+              spanGaps: true
+            },
+            {
+              label: '마이크론',
+              data: muData,
+              borderColor: '#a855f7',
+              backgroundColor: 'rgba(168, 85, 247, 0.15)',
+              borderWidth: 2.5,
+              tension: 0.25,
+              spanGaps: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#d1d5db', font: { family: 'Inter', size: 12, weight: '600' } } },
+            tooltip: {
+              backgroundColor: 'rgba(17, 24, 39, 0.95)',
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ${isRev ? '$' + ctx.raw?.toFixed(1) + 'B' : ctx.raw?.toFixed(1) + '%'}`
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: {
+              title: { display: true, text: isRev ? '분기 매출 ($B)' : '영업이익률 (OPM %)', color: '#9ca3af' },
+              ticks: {
+                color: '#9ca3af',
+                callback: v => isRev ? '$' + v + 'B' : v + '%'
+              },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            }
+          }
+        }
+      });
+    }
+
+    function setMetricView(v) {
+      metricView = v;
+      renderTrioChart();
+    }
+
+    // 4. Interactive Simulator Logic
+    function updateSimulator() {
+      const cowos = parseInt(document.getElementById('range-cowos').value);
+      const fabs = parseInt(document.getElementById('range-fabs').value);
+      const demand = parseInt(document.getElementById('range-demand').value);
+
+      document.getElementById('val-cowos').innerText = cowos + 'K 장/월';
+      document.getElementById('val-fabs').innerText = fabs + 'K WSPM';
+      document.getElementById('val-demand').innerText = '+' + demand + '% YoY';
+
+      // Supply capacity index
+      const supplyCap = Math.min(cowos * 1.5, fabs * 0.9);
+      const demandIndex = 120 * (1 + demand / 100);
+
+      const ratio = supplyCap / demandIndex;
+      const statusEl = document.getElementById('sim-status');
+      const descEl = document.getElementById('sim-desc');
+      const aspEl = document.getElementById('sim-asp');
+      const opmEl = document.getElementById('sim-opm');
+
+      if (ratio < 0.85) {
+        statusEl.className = 'gauge-status status-shortage';
+        statusEl.innerText = '🚨 극심한 공급 부족 (Severe Shortage)';
+        descEl.innerText = 'CoWoS 패키징 및 웨이퍼 캐파가 가속기 수요를 따라가지 못하여 강력한 셀러 마켓(Seller Market)이 지속됩니다. HBM3E/HBM4 프리미엄이 사상 최고 수준을 유지합니다.';
+        aspEl.innerText = '$2.90 ~ $3.20 / GB';
+        opmEl.innerText = '70% ~ 78%';
+      } else if (ratio <= 1.15) {
+        statusEl.className = 'gauge-status status-balanced';
+        statusEl.innerText = '⚖️ 수급 균형 (Equilibrium)';
+        descEl.innerText = '2026년 말 TSMC 월 120k 패키징 완공 및 M15X/P4 팹 가동이 수요와 정밀하게 일치합니다. 안정적 고마진 구조가 유지됩니다.';
+        aspEl.innerText = '$2.40 ~ $2.60 / GB';
+        opmEl.innerText = '55% ~ 65%';
+      } else {
+        statusEl.className = 'gauge-status status-glut';
+        statusEl.innerText = '⚠️ 공급 과잉 및 피크아웃 위험 (Oversupply / Glut)';
+        descEl.innerText = '2027년 이후 3사의 공격적인 메가팹 증설이 한꺼번에 쏟아지며 범용화 압력이 시작됩니다. 커스텀 HBM4를 제외한 표준 HBM3E 단가가 급락할 수 있습니다.';
+        aspEl.innerText = '$1.60 ~ $1.90 / GB';
+        opmEl.innerText = '35% ~ 45%';
+      }
+    }
+
+    // Populate Tables
+    function populateTables() {
+      const cBody = document.getElementById('contracts-table-body');
+      cBody.innerHTML = '';
+      CONTRACTS.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-family:'JetBrains Mono'; font-size:0.75rem;">${c.contract_id}</td>
+          <td><b>${c.buyer_name}</b> $\rightarrow$ <b style="color:#f59e0b;">${c.seller_name}</b></td>
+          <td><span class="badge-co" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${c.product_type}</span></td>
+          <td style="font-family:'JetBrains Mono'; font-weight:700; color:#10b981;">$${c.value_b ? c.value_b + 'B' : '-'}</td>
+          <td style="font-size:0.75rem; color:#9ca3af;">${c.announced_date || '-'}</td>
+        `;
+        cBody.appendChild(tr);
+      });
+
+      const fBody = document.getElementById('fabs-table-body');
+      fBody.innerHTML = '';
+      FABS.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${f.fab_name}</b></td>
+          <td>${f.name_ko}</td>
+          <td>${f.process_node || '-'}</td>
+          <td style="font-family:'JetBrains Mono'; font-weight:700; color:#f59e0b;">${f.wspm_target ? f.wspm_target.toLocaleString() + '장' : '-'}</td>
+          <td style="font-size:0.75rem; color:#9ca3af;">${f.ramp_start_date || '-'}</td>
+        `;
+        fBody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initAspChart();
+      initShareChart();
+      renderTrioChart();
+      populateTables();
+      updateSimulator();
+    });
+  </script>
+</body>
+</html>

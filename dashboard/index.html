@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Memory Claude — AI·반도체 밸류체인 인텔리전스 대시보드</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -25,7 +28,12 @@
       --actual-badge: rgba(16, 185, 129, 0.15);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background-color: var(--bg-base);
@@ -48,11 +56,13 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .logo-group {
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
+
     .logo-badge {
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       color: white;
@@ -62,6 +72,7 @@
       border-radius: 8px;
       letter-spacing: 0.5px;
     }
+
     .title-group h1 {
       font-size: 1.25rem;
       font-weight: 700;
@@ -70,15 +81,18 @@
       align-items: center;
       gap: 0.5rem;
     }
+
     .title-group p {
       font-size: 0.75rem;
       color: var(--text-muted);
     }
+
     .header-meta {
       display: flex;
       align-items: center;
       gap: 1.5rem;
     }
+
     .status-tag {
       background: rgba(59, 130, 246, 0.1);
       border: 1px solid rgba(59, 130, 246, 0.3);
@@ -96,6 +110,7 @@
       gap: 1rem;
       padding: 1.5rem 2rem 0.5rem;
     }
+
     .summary-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
@@ -104,16 +119,19 @@
       backdrop-filter: blur(8px);
       transition: transform 0.2s, border-color 0.2s;
     }
+
     .summary-card:hover {
       transform: translateY(-2px);
       border-color: rgba(59, 130, 246, 0.3);
     }
+
     .summary-card .label {
       font-size: 0.75rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+
     .summary-card .value {
       font-size: 1.5rem;
       font-weight: 700;
@@ -121,6 +139,7 @@
       color: #ffffff;
       font-family: 'JetBrains Mono', monospace;
     }
+
     .summary-card .sub {
       font-size: 0.75rem;
       color: var(--accent);
@@ -135,6 +154,7 @@
       border-bottom: 1px solid var(--border-card);
       overflow-x: auto;
     }
+
     .tab-btn {
       background: transparent;
       border: none;
@@ -150,10 +170,12 @@
       align-items: center;
       gap: 0.5rem;
     }
+
     .tab-btn:hover {
       color: var(--text-main);
       background: rgba(255, 255, 255, 0.04);
     }
+
     .tab-btn.active {
       color: #ffffff;
       background: var(--primary);
@@ -166,8 +188,14 @@
       max-width: 1600px;
       margin: 0 auto;
     }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
 
     /* 카드 및 차트 컨테이너 */
     .card {
@@ -178,12 +206,14 @@
       backdrop-filter: blur(12px);
       margin-bottom: 1.5rem;
     }
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.25rem;
     }
+
     .card-title {
       font-size: 1.1rem;
       font-weight: 700;
@@ -196,6 +226,7 @@
       align-items: center;
       gap: 0.75rem;
     }
+
     select {
       background: #1f293d;
       border: 1px solid var(--border-card);
@@ -213,9 +244,13 @@
       grid-template-columns: 2fr 1fr;
       gap: 1.5rem;
     }
+
     @media (max-width: 1024px) {
-      .chart-grid { grid-template-columns: 1fr; }
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
     }
+
     .chart-box {
       height: 380px;
       position: relative;
@@ -226,12 +261,14 @@
       overflow-x: auto;
       margin-top: 1rem;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
       font-size: 0.85rem;
     }
+
     th {
       background: rgba(31, 41, 61, 0.6);
       color: var(--text-muted);
@@ -241,14 +278,17 @@
       text-transform: uppercase;
       font-size: 0.75rem;
     }
+
     td {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-main);
     }
+
     tr:hover td {
       background: rgba(255, 255, 255, 0.02);
     }
+
     .badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -256,10 +296,26 @@
       font-size: 0.7rem;
       font-weight: 600;
     }
-    .badge-actual { background: var(--actual-badge); color: #34d399; }
-    .badge-forecast { background: var(--forecast-badge); color: #fbbf24; }
-    .badge-critical { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-    .badge-high { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    .badge-actual {
+      background: var(--actual-badge);
+      color: #34d399;
+    }
+
+    .badge-forecast {
+      background: var(--forecast-badge);
+      color: #fbbf24;
+    }
+
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .badge-high {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
 
     /* 타임라인 레이아웃 */
     .timeline {
@@ -267,6 +323,7 @@
       padding-left: 2rem;
       margin-top: 1rem;
     }
+
     .timeline::before {
       content: '';
       position: absolute;
@@ -276,10 +333,12 @@
       width: 2px;
       background: rgba(255, 255, 255, 0.1);
     }
+
     .timeline-item {
       position: relative;
       margin-bottom: 1.5rem;
     }
+
     .timeline-dot {
       position: absolute;
       left: -2rem;
@@ -290,15 +349,18 @@
       background: var(--primary);
       border: 3px solid var(--bg-base);
     }
+
     .timeline-dot.future {
       background: var(--accent-amber);
     }
+
     .timeline-card {
       background: rgba(31, 41, 61, 0.5);
       border: 1px solid var(--border-card);
       border-radius: 10px;
       padding: 1rem 1.25rem;
     }
+
     .timeline-date {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.75rem;
@@ -312,6 +374,7 @@
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.25rem;
     }
+
     .info-card {
       background: rgba(26, 34, 52, 0.6);
       border: 1px solid var(--border-card);
@@ -319,10 +382,12 @@
       padding: 1.25rem;
       transition: all 0.2s;
     }
+
     .info-card:hover {
       border-color: rgba(59, 130, 246, 0.4);
       transform: translateY(-2px);
     }
+
     .info-card h4 {
       font-size: 1rem;
       font-weight: 700;
@@ -332,11 +397,13 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .info-card p {
       font-size: 0.8rem;
       color: var(--text-muted);
       margin-bottom: 0.75rem;
     }
+
     .metric-row {
       display: flex;
       justify-content: space-between;
@@ -344,6 +411,7 @@
       padding: 0.35rem 0;
       border-top: 1px solid rgba(255, 255, 255, 0.04);
     }
+
     .metric-row .val {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
@@ -351,6 +419,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- 헤더 -->
@@ -399,6 +468,21 @@
     <button class="tab-btn" onclick="switchTab('datacenters')">⚡ 데이터센터 & 전력 (MW)</button>
     <button class="tab-btn" onclick="switchTab('milestones')">📅 2022-2028 기술 타임라인</button>
     <button class="tab-btn" onclick="switchTab('contracts')">🔗 기업 간 자본·공급 계약</button>
+    <a href="multi_company_overlay.html" class="tab-btn"
+      style="text-decoration:none; color:#10b981; border:1px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.1); margin-left:auto;">🏆
+      멀티 기업 비교 ↗</a>
+    <a href="hbm_market_balance.html" class="tab-btn"
+      style="text-decoration:none; color:#f59e0b; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.1);">💾
+      HBM 수급 분석 ↗</a>
+    <a href="sankey_scenario.html" class="tab-btn"
+      style="text-decoration:none; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); background:rgba(56,189,248,0.1);">💹
+      자본 흐름 Sankey ↗</a>
+    <a href="layer_capital_absorption.html" class="tab-btn"
+      style="text-decoration:none; color:#06b6d4; border:1px solid rgba(6,182,212,0.4); background:rgba(6,182,212,0.1);">⚡
+      레이어별 자본 흡수 ↗</a>
+    <a href="network_graph.html" class="tab-btn"
+      style="text-decoration:none; color:#ec4899; border:1px solid rgba(236,72,153,0.4); background:rgba(236,72,153,0.1);">🕸
+      밸류체인 네트워크 ↗</a>
   </nav>
 
   <!-- 메인 콘텐츠 -->
@@ -411,13 +495,13 @@
           <div class="control-group">
             <label for="company-select" style="font-size:0.85rem; color:var(--text-muted);">기업 선택:</label>
             <select id="company-select" onchange="updateEarningsChart()">
-              <option value="NVDA">엔비디아 (NVIDIA)</option>
-              <option value="000660.KS">SK하이닉스 (SK hynix)</option>
-              <option value="005930.KS">삼성전자 (Samsung)</option>
-              <option value="TSM">TSMC</option>
-              <option value="MSFT">마이크로소프트 (Microsoft)</option>
-              <option value="GOOGL">알파벳 (Google)</option>
-              <option value="AMZN">아마존 (Amazon)</option>
+              <option value="NVIDIA" selected>엔비디아 (NVIDIA)</option>
+              <option value="SK_HYNIX">SK하이닉스 (SK hynix)</option>
+              <option value="SAMSUNG">삼성전자 (Samsung)</option>
+              <option value="TSMC">TSMC</option>
+              <option value="MICROSOFT">마이크로소프트 (Microsoft)</option>
+              <option value="GOOGLE">알파벳 (Google)</option>
+              <option value="AMAZON">아마존 (Amazon)</option>
               <option value="META">메타 (Meta)</option>
             </select>
           </div>
@@ -522,7 +606,31 @@
       }
     }
 
+    function initCompanySelect() {
+      const select = document.getElementById('company-select');
+      if (!select || !rawData.earnings) return;
+      const entityMap = new Map();
+      rawData.earnings.forEach(r => {
+        if (!entityMap.has(r.entity_id)) {
+          entityMap.set(r.entity_id, r.name_ko);
+        }
+      });
+      const currentVal = select.value || 'NVIDIA';
+      select.innerHTML = '';
+      entityMap.forEach((nameKo, entityId) => {
+        const opt = document.createElement('option');
+        opt.value = entityId;
+        opt.textContent = `${nameKo} (${entityId})`;
+        if (entityId === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+      if (!select.value && entityMap.has('NVIDIA')) {
+        select.value = 'NVIDIA';
+      }
+    }
+
     function initDashboard() {
+      initCompanySelect();
       updateEarningsChart();
       initFabTab();
       initDcTab();
@@ -771,4 +879,5 @@
     window.onload = loadData;
   </script>
 </body>
+
 </html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Claude — Capex 밸류체인 전파 워터폴</title>
+  <meta name="description" content="하이퍼스케일러 Capex가 밸류체인 각 레이어로 전파되는 흐름을 워터폴 차트로 시각화">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(26, 34, 52, 0.7);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-base); color: var(--text-main);
+      min-height: 100vh; line-height: 1.5;
+    }
+
+    /* Header */
+    header {
+      background: rgba(17,24,39,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-card);
+      position: sticky; top: 0; z-index: 100;
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo-group { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white; font-weight: 800; font-size: 0.9rem;
+      padding: 0.35rem 0.65rem; border-radius: 8px;
+    }
+    .title-group h1 { font-size: 1.25rem; font-weight: 700; }
+    .title-group .subtitle { font-size: 0.8rem; color: var(--text-muted); }
+    .nav-links { display: flex; gap: 0.5rem; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.82rem;
+      padding: 0.4rem 0.8rem; border-radius: 8px; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--primary-glow); color: var(--primary); }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+    /* Controls */
+    .controls {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+      display: flex; flex-wrap: wrap; gap: 2rem; align-items: center;
+    }
+    .control-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .control-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .capex-slider { width: 280px; accent-color: var(--primary); }
+    .capex-value {
+      font-size: 1.8rem; font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .source-toggle { display: flex; gap: 0.3rem; }
+    .source-btn {
+      background: var(--bg-surface); border: 1px solid var(--border-card);
+      color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 6px;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .source-btn.active { background: var(--primary-glow); color: var(--primary); border-color: rgba(59,130,246,0.3); }
+
+    /* Main layout */
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem;
+    }
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* Waterfall Chart */
+    .waterfall-card {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; padding: 1.5rem; overflow: hidden;
+    }
+    .waterfall-card h2 {
+      font-size: 1rem; font-weight: 600; margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .waterfall-tree { position: relative; }
+
+    .wf-node {
+      display: flex; align-items: center; gap: 0.8rem;
+      margin-bottom: 0.5rem; position: relative;
+      cursor: pointer; transition: transform 0.15s;
+    }
+    .wf-node:hover { transform: translateX(4px); }
+
+    .wf-indent { display: inline-block; flex-shrink: 0; }
+    .wf-indent-1 { width: 24px; }
+    .wf-indent-2 { width: 48px; }
+
+    .wf-connector {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      border-left: 2px solid rgba(255,255,255,0.06);
+    }
+
+    .wf-bar-container { flex: 1; display: flex; align-items: center; gap: 0.6rem; }
+
+    .wf-bar {
+      height: 38px; border-radius: 8px; position: relative;
+      display: flex; align-items: center; padding: 0 0.8rem;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      overflow: hidden; min-width: 60px;
+    }
+    .wf-bar::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+    }
+    .wf-bar.estimate { border: 1px dashed rgba(255,255,255,0.2); }
+
+    .wf-bar-label {
+      font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.95);
+      white-space: nowrap; z-index: 1;
+    }
+    .wf-meta {
+      display: flex; flex-direction: column; min-width: 140px;
+    }
+    .wf-meta-name { font-size: 0.82rem; font-weight: 600; }
+    .wf-meta-sub { font-size: 0.68rem; color: var(--text-muted); }
+    .wf-meta-badge {
+      font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 4px;
+      display: inline-block; width: fit-content; margin-top: 0.15rem;
+    }
+    .badge-estimate { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .badge-contract { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+
+    /* Side panel */
+    .side-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .info-card {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; padding: 1.2rem;
+    }
+    .info-card h3 {
+      font-size: 0.85rem; font-weight: 600; margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .hs-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .hs-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+    .hs-name { font-weight: 500; }
+    .hs-capex { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .hs-missing { color: var(--text-muted); font-style: italic; font-size: 0.75rem; }
+
+    /* Company drilldown */
+    .drilldown-card {
+      background: var(--bg-card); border: 1px solid var(--border-card);
+      border-radius: 14px; padding: 1.2rem;
+    }
+    .drilldown-card h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.8rem; }
+    .company-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .company-row {
+      display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem;
+    }
+    .company-bar-bg {
+      flex: 1; height: 16px; background: rgba(255,255,255,0.04);
+      border-radius: 4px; overflow: hidden;
+    }
+    .company-bar-fg { height: 100%; border-radius: 4px; transition: width 0.6s ease-out; }
+    .company-name { width: 80px; font-weight: 500; text-align: right; flex-shrink: 0; font-size: 0.72rem; }
+    .company-pct {
+      width: 40px; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0;
+    }
+
+    /* Contract flow list */
+    .flow-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .flow-item {
+      font-size: 0.75rem; padding: 0.5rem 0.6rem;
+      background: rgba(255,255,255,0.02); border-radius: 6px;
+      display: flex; justify-content: space-between;
+    }
+    .flow-parties { color: var(--text-muted); }
+    .flow-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }
+
+    footer {
+      text-align: center; padding: 2rem; font-size: 0.72rem;
+      color: var(--text-muted); border-top: 1px solid var(--border-card); margin-top: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge">MC</span>
+      <div class="title-group">
+        <h1>🏗️ Capex → 밸류체인 전파 워터폴</h1>
+        <div class="subtitle">Capex Value Chain Propagation Waterfall</div>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">📈 메인</a>
+      <a href="data_quality.html">📊 데이터 품질</a>
+      <a href="capex_waterfall.html" class="active">🏗️ Capex 워터폴</a>
+      <a href="multi_company_overlay.html">🔬 기업 비교</a>
+      <a href="network_graph.html">🕸️ 네트워크</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Capex 총액 ($B)</span>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <input type="range" id="capexSlider" class="capex-slider" min="50" max="500" value="100" step="10">
+          <span class="capex-value" id="capexValue">$100B</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">비율 소스</span>
+        <div class="source-toggle">
+          <button class="source-btn active" data-source="mixed" onclick="setSource('mixed')">혼합 (기본)</button>
+          <button class="source-btn" data-source="estimate" onclick="setSource('estimate')">산업 추정</button>
+          <button class="source-btn" data-source="contract" onclick="setSource('contract')">계약 기반</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Left: Waterfall -->
+      <div class="waterfall-card">
+        <h2>💰 Capex 배분 워터폴</h2>
+        <div class="waterfall-tree" id="waterfallTree"></div>
+      </div>
+
+      <!-- Right: Side Panel -->
+      <div class="side-panel">
+        <div class="info-card">
+          <h3>🏢 하이퍼스케일러 실제 Capex</h3>
+          <div class="hs-list" id="hsList"></div>
+        </div>
+
+        <div class="drilldown-card" id="drilldownCard" style="display:none">
+          <h3 id="drilldownTitle">레이어 상세</h3>
+          <div class="company-list" id="companyList"></div>
+        </div>
+
+        <div class="info-card">
+          <h3>🔗 주요 계약 흐름</h3>
+          <div class="flow-list" id="flowList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Memory Claude — Capex Waterfall · 기준 시점: 2026-09-10 ·
+    ⚠️ 추정 비율은 산업 보고서 기반이며, 계약 데이터 보강 시 정확도가 향상됩니다
+  </footer>
+
+  <script>
+    let DATA = null;
+    let capexTotal = 100;
+    let sourceMode = 'mixed';
+
+    const NODE_COLORS = {
+      'capex_total':      '#3b82f6',
+      'L3_COMPUTE':       '#10b981',
+      'L4_FOUNDRY_WAFER': '#f59e0b',
+      'L5_MEMORY_HBM':    '#ef4444',
+      'L6_OPTICAL':       '#06b6d4',
+      'L7L8_INFRA':       '#8b5cf6',
+      'L4_EQUIPMENT':     '#f97316',
+      'OTHER':            '#6b7280',
+    };
+
+    fetch('../data/capex_waterfall.json')
+      .then(r => r.json())
+      .then(data => { DATA = data; init(); })
+      .catch(err => {
+        document.querySelector('.container').innerHTML =
+          `<div style="padding:3rem;text-align:center;color:var(--danger)">
+            <h2>⚠️ 데이터 로드 실패</h2>
+            <p style="margin-top:1rem;color:var(--text-muted)">
+              <code>python3 scripts/export_capex_waterfall.py</code> 를 먼저 실행해 주세요.
+            </p>
+          </div>`;
+      });
+
+    function init() {
+      document.getElementById('capexSlider').addEventListener('input', e => {
+        capexTotal = parseInt(e.target.value);
+        document.getElementById('capexValue').textContent = `$${capexTotal}B`;
+        renderWaterfall();
+      });
+      renderWaterfall();
+      renderHyperscalers();
+      renderFlows();
+    }
+
+    function setSource(mode) {
+      sourceMode = mode;
+      document.querySelectorAll('.source-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.source === mode);
+      });
+      renderWaterfall();
+    }
+
+    function renderWaterfall() {
+      const tree = document.getElementById('waterfallTree');
+      tree.innerHTML = '';
+      const maxWidth = tree.clientWidth - 200;
+
+      DATA.waterfall_nodes.forEach(node => {
+        if (node.id === 'capex_total') {
+          // Root node
+          const el = createWfNode(node, capexTotal, 100, maxWidth, 0);
+          tree.appendChild(el);
+        } else {
+          const amount = round2(capexTotal * node.pct / 100);
+          const barWidthPct = node.pct;
+          const el = createWfNode(node, amount, barWidthPct, maxWidth, node.depth);
+          tree.appendChild(el);
+        }
+      });
+    }
+
+    function createWfNode(node, amount, barWidthPct, maxWidth, depth) {
+      const div = document.createElement('div');
+      div.className = 'wf-node';
+
+      // Indent
+      if (depth > 0) {
+        const indent = document.createElement('span');
+        indent.className = `wf-indent wf-indent-${depth}`;
+        indent.innerHTML = depth === 1 ? '├─' : '│&nbsp;&nbsp;└─';
+        indent.style.color = 'rgba(255,255,255,0.15)';
+        indent.style.fontFamily = 'monospace';
+        indent.style.fontSize = '0.8rem';
+        div.appendChild(indent);
+      }
+
+      // Bar container
+      const barContainer = document.createElement('div');
+      barContainer.className = 'wf-bar-container';
+
+      // Meta info (left of bar)
+      const meta = document.createElement('div');
+      meta.className = 'wf-meta';
+      meta.innerHTML = `
+        <span class="wf-meta-name">${node.label}</span>
+        <span class="wf-meta-sub">${node.pct}% · $${amount.toFixed(1)}B</span>
+        ${node.source === 'industry_estimate' ?
+          '<span class="wf-meta-badge badge-estimate">추정</span>' :
+          node.source === 'contract' ?
+          '<span class="wf-meta-badge badge-contract">계약 기반</span>' : ''}
+      `;
+      barContainer.appendChild(meta);
+
+      // Bar
+      const bar = document.createElement('div');
+      bar.className = `wf-bar ${node.source === 'industry_estimate' ? 'estimate' : ''}`;
+      const color = NODE_COLORS[node.id] || '#6b7280';
+      bar.style.background = `linear-gradient(135deg, ${color}, ${color}88)`;
+      bar.style.width = `${Math.max(barWidthPct * 0.9, 5)}%`;
+
+      const label = document.createElement('span');
+      label.className = 'wf-bar-label';
+      label.textContent = `$${amount.toFixed(1)}B`;
+      bar.appendChild(label);
+      barContainer.appendChild(bar);
+
+      div.appendChild(barContainer);
+
+      // Click handler for drilldown
+      div.addEventListener('click', () => showDrilldown(node, amount));
+
+      return div;
+    }
+
+    function showDrilldown(node, amount) {
+      const card = document.getElementById('drilldownCard');
+      const title = document.getElementById('drilldownTitle');
+      const list = document.getElementById('companyList');
+
+      // Map node to layer key for company shares
+      let layerKey = null;
+      if (node.id === 'L3_COMPUTE') layerKey = 'L3_COMPUTE';
+      else if (node.id === 'L4_FOUNDRY_WAFER' || node.id === 'L4_EQUIPMENT') layerKey = 'L4_FOUNDRY';
+      else if (node.id === 'L5_MEMORY_HBM') layerKey = 'L5_MEMORY';
+      else if (node.id === 'L6_OPTICAL') layerKey = 'L6_OPTICAL';
+      else if (node.id === 'L7L8_INFRA') {
+        // Combine L7 and L8
+        const l7 = DATA.company_shares['L7_INFRA'] || [];
+        const l8 = DATA.company_shares['L8_POWER'] || [];
+        renderCompanyList(title, list, card, node, amount, [...l7, ...l8]);
+        return;
+      }
+
+      const companies = layerKey ? (DATA.company_shares[layerKey] || []) : [];
+      renderCompanyList(title, list, card, node, amount, companies);
+    }
+
+    function renderCompanyList(title, list, card, node, amount, companies) {
+      if (!companies.length) {
+        card.style.display = 'none';
+        return;
+      }
+
+      title.textContent = `📊 ${node.label} — 기업별 배분 추정`;
+      list.innerHTML = '';
+
+      const maxRev = Math.max(...companies.map(c => c.latest_revenue), 1);
+      const color = NODE_COLORS[node.id] || '#6b7280';
+
+      companies.forEach(c => {
+        const estAmount = round2(amount * c.share_pct / 100);
+        const row = document.createElement('div');
+        row.className = 'company-row';
+        row.innerHTML = `
+          <span class="company-name">${c.name}</span>
+          <div class="company-bar-bg">
+            <div class="company-bar-fg" style="width:${c.share_pct}%;background:${color}"></div>
+          </div>
+          <span class="company-pct">${c.share_pct}%</span>
+        `;
+        list.appendChild(row);
+      });
+
+      card.style.display = 'block';
+    }
+
+    function renderHyperscalers() {
+      const list = document.getElementById('hsList');
+      const hyperscalers = ['GOOGLE', 'AMAZON', 'MICROSOFT', 'META', 'ORACLE'];
+
+      hyperscalers.forEach(hs => {
+        const data = DATA.hyperscaler_capex[hs];
+        const item = document.createElement('div');
+        item.className = 'hs-item';
+
+        if (data) {
+          item.innerHTML = `
+            <span class="hs-name">${hs}</span>
+            <span>
+              <span class="hs-capex" style="color:var(--accent)">$${data.latest_capex.toFixed(1)}B</span>
+              <span style="color:var(--text-muted);font-size:0.7rem"> /Q (${data.latest_q})</span>
+            </span>
+          `;
+        } else {
+          item.innerHTML = `
+            <span class="hs-name">${hs}</span>
+            <span class="hs-missing">⚠️ 데이터 미입력</span>
+          `;
+        }
+        list.appendChild(item);
+      });
+    }
+
+    function renderFlows() {
+      const list = document.getElementById('flowList');
+      const flows = Object.entries(DATA.layer_flows)
+        .sort((a, b) => b[1].total_b - a[1].total_b)
+        .slice(0, 8);
+
+      flows.forEach(([key, flow]) => {
+        const item = document.createElement('div');
+        item.className = 'flow-item';
+        item.innerHTML = `
+          <span class="flow-parties">${key.replace('→', ' → ')} (${flow.count}건)</span>
+          <span class="flow-value">$${flow.total_b.toFixed(1)}B</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function round2(n) { return Math.round(n * 100) / 100; }
+  </script>
+</body>
+</html>

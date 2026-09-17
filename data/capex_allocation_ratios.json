@@ -1,0 +1,26 @@
+{
+  "_comment": "Capex 밸류체인 배분 비율 설정 파일. contracts 테이블 데이터 부족 시 사용하는 기본 산업 추정 비율.",
+  "_updated": "2026-09-17",
+
+  "default_ratios": {
+    "L3_COMPUTE":   { "pct": 45, "label": "L3 컴퓨팅 (GPU/ASIC)", "source": "industry_estimate", "sub": {
+      "L4_FOUNDRY_WAFER": { "pct": 62, "label": "→ L4 파운드리 (웨이퍼)", "source": "industry_estimate" },
+      "L5_MEMORY_HBM":    { "pct": 38, "label": "→ L5 메모리 (HBM)", "source": "industry_estimate" }
+    }},
+    "L6_OPTICAL":   { "pct": 17, "label": "L6 네트워킹/광통신", "source": "industry_estimate" },
+    "L7L8_INFRA":   { "pct": 23, "label": "L7/L8 인프라·전력", "source": "industry_estimate" },
+    "L4_EQUIPMENT": { "pct":  7, "label": "L4 장비 (ASML/AMAT/LAM)", "source": "industry_estimate" },
+    "OTHER":        { "pct":  8, "label": "기타 (SW, 인력 등)", "source": "industry_estimate" }
+  },
+
+  "layer_companies": {
+    "L3_COMPUTE":      ["NVIDIA", "AMD", "BROADCOM", "ARM", "INTEL"],
+    "L4_FOUNDRY":      ["TSMC", "ASML", "APPLIED_MATERIALS", "LAM_RESEARCH", "KLA", "ASE", "AMKOR"],
+    "L5_MEMORY":       ["SK_HYNIX", "SAMSUNG", "MICRON", "WDC", "KIOXIA"],
+    "L6_OPTICAL":      ["MARVELL", "COHERENT", "ARISTA"],
+    "L7_INFRA":        ["SPACEX", "SOFTBANK", "APPLE"],
+    "L8_POWER":        ["VERTIV", "EATON", "GE_VERNOVA", "SCHNEIDER"]
+  },
+
+  "hyperscalers": ["GOOGLE", "AMAZON", "MICROSOFT", "META", "ORACLE"]
+}

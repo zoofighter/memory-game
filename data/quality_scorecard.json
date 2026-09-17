@@ -1,0 +1,1875 @@
+{
+  "generated_at": "2026-09-17",
+  "project_baseline": "2026-09-10",
+  "expected_quarters": 26,
+  "period_range": "2020-Q1 ~ 2026-Q2",
+  "fields": [
+    {
+      "key": "revenue",
+      "label": "매출",
+      "label_en": "Revenue"
+    },
+    {
+      "key": "op_margin_pct",
+      "label": "OPM",
+      "label_en": "OPM"
+    },
+    {
+      "key": "capex",
+      "label": "Capex",
+      "label_en": "Capex"
+    },
+    {
+      "key": "beat_miss_status",
+      "label": "Beat/Miss",
+      "label_en": "Beat/Miss"
+    },
+    {
+      "key": "guidance_next_q",
+      "label": "가이던스",
+      "label_en": "Guidance"
+    },
+    {
+      "key": "eps_actual",
+      "label": "EPS",
+      "label_en": "EPS"
+    },
+    {
+      "key": "consensus_revenue",
+      "label": "컨센서스매출",
+      "label_en": "Cons.Rev"
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "GOOGLE",
+      "name_en": "Alphabet/Google",
+      "name_ko": "구글",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "GOOGL",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "capex": {
+          "filled": 2,
+          "total": 26,
+          "pct": 7.7
+        },
+        "beat_miss_status": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        }
+      },
+      "total_filled": 105,
+      "total_possible": 182,
+      "total_pct": 57.7
+    },
+    {
+      "entity_id": "META",
+      "name_en": "Meta Platforms",
+      "name_ko": "메타",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "META",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "capex": {
+          "filled": 1,
+          "total": 26,
+          "pct": 3.8
+        },
+        "beat_miss_status": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        }
+      },
+      "total_filled": 104,
+      "total_possible": 182,
+      "total_pct": 57.1
+    },
+    {
+      "entity_id": "MICROSOFT",
+      "name_en": "Microsoft",
+      "name_ko": "마이크로소프트",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "MSFT",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 4,
+          "total": 26,
+          "pct": 15.4
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        }
+      },
+      "total_filled": 104,
+      "total_possible": 182,
+      "total_pct": 57.1
+    },
+    {
+      "entity_id": "NVIDIA",
+      "name_en": "NVIDIA",
+      "name_ko": "엔비디아",
+      "layer": "L3_COMPUTE",
+      "ticker": "NVDA",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 5,
+          "total": 26,
+          "pct": 19.2
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 23,
+          "total": 26,
+          "pct": 88.5
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 23,
+          "total": 26,
+          "pct": 88.5
+        }
+      },
+      "total_filled": 103,
+      "total_possible": 182,
+      "total_pct": 56.6
+    },
+    {
+      "entity_id": "AMAZON",
+      "name_en": "Amazon/AWS",
+      "name_ko": "아마존",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "AMZN",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 2,
+          "total": 26,
+          "pct": 7.7
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        }
+      },
+      "total_filled": 102,
+      "total_possible": 182,
+      "total_pct": 56.0
+    },
+    {
+      "entity_id": "TSMC",
+      "name_en": "TSMC",
+      "name_ko": "TSMC",
+      "layer": "L4_FOUNDRY",
+      "ticker": "TSM",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 2,
+          "total": 26,
+          "pct": 7.7
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "consensus_revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        }
+      },
+      "total_filled": 102,
+      "total_possible": 182,
+      "total_pct": 56.0
+    },
+    {
+      "entity_id": "SAMSUNG",
+      "name_en": "Samsung Electronics",
+      "name_ko": "삼성전자",
+      "layer": "L5_MEMORY",
+      "ticker": "005930",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 4,
+          "total": 26,
+          "pct": 15.4
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 22,
+          "total": 26,
+          "pct": 84.6
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 22,
+          "total": 26,
+          "pct": 84.6
+        }
+      },
+      "total_filled": 74,
+      "total_possible": 182,
+      "total_pct": 40.7
+    },
+    {
+      "entity_id": "AMD",
+      "name_en": "AMD",
+      "name_ko": "AMD",
+      "layer": "L3_COMPUTE",
+      "ticker": "AMD",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "BROADCOM",
+      "name_en": "Broadcom",
+      "name_ko": "브로드컴",
+      "layer": "L3_COMPUTE",
+      "ticker": "AVGO",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "INTEL",
+      "name_en": "Intel",
+      "name_ko": "인텔",
+      "layer": "L3_COMPUTE",
+      "ticker": "INTC",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "MICRON",
+      "name_en": "Micron Technology",
+      "name_ko": "마이크론",
+      "layer": "L5_MEMORY",
+      "ticker": "MU",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "SK_HYNIX",
+      "name_en": "SK hynix",
+      "name_ko": "SK하이닉스",
+      "layer": "L5_MEMORY",
+      "ticker": "000660",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 6,
+          "total": 26,
+          "pct": 23.1
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "ARISTA",
+      "name_en": "Arista Networks",
+      "name_ko": "아리스타",
+      "layer": "L6_OPTICAL",
+      "ticker": "ANET",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "EATON",
+      "name_en": "Eaton Corporation",
+      "name_ko": "이튼",
+      "layer": "L8_POWER",
+      "ticker": "ETN",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "VERTIV",
+      "name_en": "Vertiv Holdings",
+      "name_ko": "버티브",
+      "layer": "L8_POWER",
+      "ticker": "VRT",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "op_margin_pct": {
+          "filled": 26,
+          "total": 26,
+          "pct": 100.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 72,
+      "total_possible": 182,
+      "total_pct": 39.6
+    },
+    {
+      "entity_id": "MARVELL",
+      "name_en": "Marvell Technology",
+      "name_ko": "마벨",
+      "layer": "L6_OPTICAL",
+      "ticker": "MRVL",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "op_margin_pct": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 70,
+      "total_possible": 182,
+      "total_pct": 38.5
+    },
+    {
+      "entity_id": "ORACLE",
+      "name_en": "Oracle",
+      "name_ko": "오라클",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "ORCL",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "op_margin_pct": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 19,
+          "total": 26,
+          "pct": 73.1
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 69,
+      "total_possible": 182,
+      "total_pct": 37.9
+    },
+    {
+      "entity_id": "AMKOR",
+      "name_en": "Amkor Technology",
+      "name_ko": "앰코",
+      "layer": "L4_FOUNDRY",
+      "ticker": "AMKR",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "op_margin_pct": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 19,
+          "total": 26,
+          "pct": 73.1
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 69,
+      "total_possible": 182,
+      "total_pct": 37.9
+    },
+    {
+      "entity_id": "APPLE",
+      "name_en": "Apple",
+      "name_ko": "애플",
+      "layer": "L7_INFRA",
+      "ticker": "AAPL",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "op_margin_pct": {
+          "filled": 25,
+          "total": 26,
+          "pct": 96.2
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 19,
+          "total": 26,
+          "pct": 73.1
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 69,
+      "total_possible": 182,
+      "total_pct": 37.9
+    },
+    {
+      "entity_id": "APPLIED_MATERIALS",
+      "name_en": "Applied Materials",
+      "name_ko": "어플라이드",
+      "layer": "L4_FOUNDRY",
+      "ticker": "AMAT",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "op_margin_pct": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 19,
+          "total": 26,
+          "pct": 73.1
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 67,
+      "total_possible": 182,
+      "total_pct": 36.8
+    },
+    {
+      "entity_id": "LAM_RESEARCH",
+      "name_en": "Lam Research",
+      "name_ko": "램리서치",
+      "layer": "L4_FOUNDRY",
+      "ticker": "LRCX",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "op_margin_pct": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 18,
+          "total": 26,
+          "pct": 69.2
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 66,
+      "total_possible": 182,
+      "total_pct": 36.3
+    },
+    {
+      "entity_id": "WDC",
+      "name_en": "Western Digital",
+      "name_ko": "샌디스크/WDC",
+      "layer": "L5_MEMORY",
+      "ticker": "WDC",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 22,
+          "total": 26,
+          "pct": 84.6
+        },
+        "op_margin_pct": {
+          "filled": 22,
+          "total": 26,
+          "pct": 84.6
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 18,
+          "total": 26,
+          "pct": 69.2
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 62,
+      "total_possible": 182,
+      "total_pct": 34.1
+    },
+    {
+      "entity_id": "COHERENT",
+      "name_en": "Coherent/Novalit",
+      "name_ko": "노발리",
+      "layer": "L6_OPTICAL",
+      "ticker": "COHR",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "op_margin_pct": {
+          "filled": 20,
+          "total": 26,
+          "pct": 76.9
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 18,
+          "total": 26,
+          "pct": 69.2
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 62,
+      "total_possible": 182,
+      "total_pct": 34.1
+    },
+    {
+      "entity_id": "KLA",
+      "name_en": "KLA Corporation",
+      "name_ko": "KLA",
+      "layer": "L4_FOUNDRY",
+      "ticker": "KLAC",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 24,
+          "total": 26,
+          "pct": 92.3
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 18,
+          "total": 26,
+          "pct": 69.2
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 42,
+      "total_possible": 182,
+      "total_pct": 23.1
+    },
+    {
+      "entity_id": "ARM",
+      "name_en": "Arm Holdings",
+      "name_ko": "Arm",
+      "layer": "L3_COMPUTE",
+      "ticker": "ARM",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 14,
+          "total": 26,
+          "pct": 53.8
+        },
+        "op_margin_pct": {
+          "filled": 14,
+          "total": 26,
+          "pct": 53.8
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 12,
+          "total": 26,
+          "pct": 46.2
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 40,
+      "total_possible": 182,
+      "total_pct": 22.0
+    },
+    {
+      "entity_id": "GE_VERNOVA",
+      "name_en": "GE Vernova",
+      "name_ko": "GE 버노바",
+      "layer": "L8_POWER",
+      "ticker": "GEV",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 14,
+          "total": 26,
+          "pct": 53.8
+        },
+        "op_margin_pct": {
+          "filled": 14,
+          "total": 26,
+          "pct": 53.8
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 10,
+          "total": 26,
+          "pct": 38.5
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 38,
+      "total_possible": 182,
+      "total_pct": 20.9
+    },
+    {
+      "entity_id": "ASE",
+      "name_en": "ASE Technology",
+      "name_ko": "ASE",
+      "layer": "L4_FOUNDRY",
+      "ticker": "ASX",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "op_margin_pct": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 9,
+      "total_possible": 182,
+      "total_pct": 4.9
+    },
+    {
+      "entity_id": "KIOXIA",
+      "name_en": "Kioxia Holdings",
+      "name_ko": "키옥시아",
+      "layer": "L5_MEMORY",
+      "ticker": "285A",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "op_margin_pct": {
+          "filled": 3,
+          "total": 26,
+          "pct": 11.5
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 1,
+          "total": 26,
+          "pct": 3.8
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 7,
+      "total_possible": 182,
+      "total_pct": 3.8
+    },
+    {
+      "entity_id": "ANTHROPIC",
+      "name_en": "Anthropic",
+      "name_ko": "앤트로픽",
+      "layer": "L1_AI_LAB",
+      "ticker": null,
+      "is_public": 0,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "OPENAI",
+      "name_en": "OpenAI",
+      "name_ko": "오픈AI",
+      "layer": "L1_AI_LAB",
+      "ticker": null,
+      "is_public": 0,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "COREWEAVE",
+      "name_en": "CoreWeave",
+      "name_ko": "코어위브",
+      "layer": "L2_HYPERSCALER",
+      "ticker": null,
+      "is_public": 0,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "NEBIUS",
+      "name_en": "Nebius Group",
+      "name_ko": "네비우스",
+      "layer": "L2_HYPERSCALER",
+      "ticker": "NBIS",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "ASML",
+      "name_en": "ASML",
+      "name_ko": "ASML",
+      "layer": "L4_FOUNDRY",
+      "ticker": "ASML",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "SOFTBANK",
+      "name_en": "SoftBank Group",
+      "name_ko": "소프트뱅크",
+      "layer": "L7_INFRA",
+      "ticker": "9984",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "SPACEX",
+      "name_en": "SpaceX / xAI",
+      "name_ko": "스페이스X / xAI",
+      "layer": "L7_INFRA",
+      "ticker": null,
+      "is_public": 0,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    },
+    {
+      "entity_id": "SCHNEIDER",
+      "name_en": "Schneider Electric",
+      "name_ko": "슈나이더",
+      "layer": "L8_POWER",
+      "ticker": "SU",
+      "is_public": 1,
+      "fields": {
+        "revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "op_margin_pct": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "capex": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "beat_miss_status": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "guidance_next_q": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "eps_actual": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        },
+        "consensus_revenue": {
+          "filled": 0,
+          "total": 26,
+          "pct": 0.0
+        }
+      },
+      "total_filled": 0,
+      "total_possible": 182,
+      "total_pct": 0.0
+    }
+  ],
+  "field_summary": {
+    "revenue": {
+      "label": "매출",
+      "label_en": "Revenue",
+      "entities_with_data": 28,
+      "total_entities": 36,
+      "total_filled": 642,
+      "total_possible": 936,
+      "coverage_pct": 68.6
+    },
+    "op_margin_pct": {
+      "label": "OPM",
+      "label_en": "OPM",
+      "entities_with_data": 27,
+      "total_entities": 36,
+      "total_filled": 435,
+      "total_possible": 936,
+      "coverage_pct": 46.5
+    },
+    "capex": {
+      "label": "Capex",
+      "label_en": "Capex",
+      "entities_with_data": 2,
+      "total_entities": 36,
+      "total_filled": 3,
+      "total_possible": 936,
+      "coverage_pct": 0.3
+    },
+    "beat_miss_status": {
+      "label": "Beat/Miss",
+      "label_en": "Beat/Miss",
+      "entities_with_data": 8,
+      "total_entities": 36,
+      "total_filled": 185,
+      "total_possible": 936,
+      "coverage_pct": 19.8
+    },
+    "guidance_next_q": {
+      "label": "가이던스",
+      "label_en": "Guidance",
+      "entities_with_data": 1,
+      "total_entities": 36,
+      "total_filled": 1,
+      "total_possible": 936,
+      "coverage_pct": 0.1
+    },
+    "eps_actual": {
+      "label": "EPS",
+      "label_en": "EPS",
+      "entities_with_data": 25,
+      "total_entities": 36,
+      "total_filled": 489,
+      "total_possible": 936,
+      "coverage_pct": 52.2
+    },
+    "consensus_revenue": {
+      "label": "컨센서스매출",
+      "label_en": "Cons.Rev",
+      "entities_with_data": 8,
+      "total_entities": 36,
+      "total_filled": 185,
+      "total_possible": 936,
+      "coverage_pct": 19.8
+    }
+  },
+  "system_summary": {
+    "total_entities": 36,
+    "entities_with_earnings": 28,
+    "grand_total_filled": 1940,
+    "grand_total_possible": 6552,
+    "overall_pct": 29.6,
+    "contracts_count": 15,
+    "milestones_count": 25,
+    "fab_count": 12
+  },
+  "alerts": [
+    {
+      "level": "critical",
+      "field": "Capex",
+      "message": "Capex: 2/36사만 입력 (0.3%)"
+    },
+    {
+      "level": "warning",
+      "field": "Beat/Miss",
+      "message": "Beat/Miss: 커버리지 19.8% — 보강 필요"
+    },
+    {
+      "level": "critical",
+      "field": "가이던스",
+      "message": "가이던스: 1/36사만 입력 (0.1%)"
+    },
+    {
+      "level": "warning",
+      "field": "컨센서스매출",
+      "message": "컨센서스매출: 커버리지 19.8% — 보강 필요"
+    },
+    {
+      "level": "info",
+      "field": "general",
+      "message": "비상장/미수집 8사: 실적 0건"
+    }
+  ]
+}

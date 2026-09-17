@@ -61,18 +61,20 @@ b_0910_memory_claude/
 
 ---
 
-## 5. 핵심 밸류체인 21개 기업 — entity_id·티커 매핑
+## 5. 핵심 밸류체인 8대 레이어 (36개 기업 마스터 체계)
 
 에이전트는 쿼리 및 분석 시 다음 기업 마스터 체계를 준수합니다.  
 **DB `entity_id`** (대문자 스네이크) → 괄호 안은 거래소 **ticker**입니다.
 
 - **AI 프론티어 랩** (L1_AI_LAB): Anthropic (`ANTHROPIC`), OpenAI (`OPENAI`)
-- **하이퍼스케일러** (L2_HYPERSCALER): Alphabet (`GOOGLE` / GOOGL), Amazon (`AMAZON` / AMZN), Microsoft (`MICROSOFT` / MSFT), Oracle (`ORACLE` / ORCL), Meta (`META` / META)
-- **컴퓨팅/가속기** (L3_COMPUTE): NVIDIA (`NVIDIA` / NVDA), AMD (`AMD` / AMD), Broadcom (`BROADCOM` / AVGO)
-- **파운드리/장비** (L4_FOUNDRY): TSMC (`TSMC` / TSM), ASML (`ASML` / ASML)
-- **메모리/스토리지** (L5_MEMORY): SK하이닉스 (`SK_HYNIX` / 000660), 삼성전자 (`SAMSUNG` / 005930), Micron (`MICRON` / MU), WDC (`WDC` / WDC)
-- **광통신/네트워킹** (L6_OPTICAL): Marvell (`MARVELL` / MRVL), Coherent (`COHERENT` / COHR)
-- **인프라/특수** (L7_INFRA): SpaceX (`SPACEX`), SoftBank (`SOFTBANK` / 9984), Apple (`APPLE` / AAPL)
+- **하이퍼스케일러 & 네오클라우드** (L2_HYPERSCALER): Alphabet (`GOOGLE` / GOOGL), Amazon (`AMAZON` / AMZN), Microsoft (`MICROSOFT` / MSFT), Oracle (`ORACLE` / ORCL), Meta (`META` / META), CoreWeave (`COREWEAVE`), Nebius (`NEBIUS` / NBIS)
+- **컴퓨팅/가속기** (L3_COMPUTE): NVIDIA (`NVIDIA` / NVDA), AMD (`AMD` / AMD), Broadcom (`BROADCOM` / AVGO), Arm (`ARM` / ARM), Intel (`INTEL` / INTC)
+- **파운드리/장비/패키징** (L4_FOUNDRY): TSMC (`TSMC` / TSM), ASML (`ASML` / ASML), Applied Materials (`APPLIED_MATERIALS` / AMAT), Lam Research (`LAM_RESEARCH` / LRCX), KLA (`KLA` / KLAC), ASE (`ASE` / ASX), Amkor (`AMKOR` / AMKR)
+- **메모리/스토리지** (L5_MEMORY): SK하이닉스 (`SK_HYNIX` / 000660), 삼성전자 (`SAMSUNG` / 005930), Micron (`MICRON` / MU), WDC (`WDC` / WDC), Kioxia (`KIOXIA` / 285A)
+- **광통신/네트워킹** (L6_OPTICAL): Marvell (`MARVELL` / MRVL), Coherent (`COHERENT` / COHR), Arista Networks (`ARISTA` / ANET)
+- **인프라/특수 플랫폼** (L7_INFRA): SpaceX / xAI (`SPACEX`), SoftBank (`SOFTBANK` / 9984), Apple (`APPLE` / AAPL)  
+  *(※ xAI, Colossus, Grok은 독자 엔티티가 아니며 `SPACEX`로 통합 매핑됨)*
+- ⚡ **전력 & 에너지 인프라** (L8_POWER): Vertiv (`VERTIV` / VRT), Eaton (`EATON` / ETN), GE Vernova (`GE_VERNOVA` / GEV), Schneider Electric (`SCHNEIDER` / SU)
 
 ---
 
